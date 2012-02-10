@@ -1,0 +1,135 @@
+////////////////////////////////////////////////////////////////////////////////
+// Filename: graphicsclass.h
+////////////////////////////////////////////////////////////////////////////////
+#ifndef _GRAPHICSCLASS_H_
+#define _GRAPHICSCLASS_H_
+
+
+//////////////
+// INCLUDES //
+//////////////
+//#include <windows.h>
+
+///////////////////////
+// MY CLASS INCLUDES //
+///////////////////////
+
+#include "d3dclass.h"
+#include "cameraclass.h"
+#include "modelclass.h"
+#include "RenderTextureClass.h"
+#include "bitmapclass.h"
+#include "lightclass.h"
+
+#include "Shaders/BasicShader.h"
+#include "Shaders/TextureShader.h"
+#include "Shaders/LightShader.h"
+#include "Shaders/MultitextureShader.h"
+#include "Shaders/NormalMapShader.h"
+#include "Shaders/SpecMapShader.h"
+#include "Shaders/FogShader.h"
+#include "Shaders/ReflectionShader.h"
+#include "Shaders/TerrainShader.h"
+#include "Terrain.h"
+#include "QuadTree.h"
+#include "CameraMovement.h"
+#include "timerclass.h"
+
+#include "textclass.h"
+#include "inputclass.h"
+#include "ModelFactory.h"
+#include "MaterialFactory.h"
+#include "frustumclass.h"
+#include "fpsclass.h"
+#include "cpuclass.h"
+#include <string>
+
+
+/////////////
+// GLOBALS //
+/////////////
+const bool FULL_SCREEN = false;
+const bool VSYNC_ENABLED = false;
+const float SCREEN_DEPTH = 1000.0f;
+const float SCREEN_NEAR = 0.1f;
+
+////////////////////////////////////////////////////////////////////////////////
+// Class name: GraphicsClass
+////////////////////////////////////////////////////////////////////////////////
+class GraphicsClass
+{
+	public:
+		GraphicsClass();
+		GraphicsClass(const GraphicsClass&);
+		~GraphicsClass();
+
+		bool Initialize(int, int, HWND);
+		void Shutdown();
+		bool Frame();
+		bool Render();
+
+	private:
+		bool HandleInput(float);
+		
+		bool InitLights();
+		bool InitializeShaders(HWND hwnd);
+		bool InitMaterials();
+		bool InitObjects(HWND hwnd);
+
+		bool RenderText();
+		bool RenderToTextureFromCameraView();
+		bool RenderToTextureFromReflectionView();
+		bool RenderTerrain(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix);
+		bool RenderScene();
+		bool RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, float fogStart, float fogEnd);
+		void ShutdownShaders();
+		bool Render2D();
+		bool SetFillMode(D3D11_FILL_MODE mode);
+
+	private:
+
+		struct PointLightInfo 
+		{
+			D3DXVECTOR4 color;
+			D3DXVECTOR3 position;
+		};
+
+		ModelFactory* mObjectFactory;
+		MaterialFactory* mMaterialFactory;
+		Terrain* mTerrain;
+		QuadTree* mQuadTree;
+
+		D3DClass* mD3D;
+		CameraClass* mCamera;
+		FrustumClass* m_Frustum;
+
+		LightClass* mDirSpecLight;
+		LightClass* mDirAmbLight;
+		BitmapClass* m_Bitmap;
+		RenderTextureClass* m_RenderTexture;
+
+		TextClass* m_Text;
+
+		BasicShader* mBasicShader;
+		TextureShader* m_TextureShader;
+		LightShader* mDirSpecLightShader;
+		LightShader* mPointLightShader;
+		LightShader* mDirAmbLightShader;
+		TerrainShader* mTerrainShader;
+		MultitextureShader* m_MultiTextureShader;
+		NormalMapShader* m_BumpMapShader;
+		SpecMapShader* m_SpecMapShader;
+		SpecMapShader* m_SpecMapShaderNonInstanced;
+		FogShader* m_FogShader;
+
+		int mNumObjectsRendered;
+
+		ReflectionShader* m_ReflectionShader;
+		LightClass* mPointLights[4];
+		CameraMovement* mCameraMovement;
+
+		Timer* mTimer;
+		DWORD mDrawFuncTime;
+};
+
+#endif
