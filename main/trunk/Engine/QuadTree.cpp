@@ -336,7 +336,7 @@ void QuadTree::CreateTreeNode(NodeType* node, float positionX, float positionZ, 
 	// Create the index buffer.
 	device->CreateBuffer(&indexBufferDesc, &indexData, &node->indexBuffer);
 
-	CreateBoxBufferForNode(node, &node->linesVertixes, &node->lineInixes, device);
+	CreateBoxBufferForNode(*node, device);
 
 	// Release the vertex and index arrays now that the data is stored in the buffers in the node.
 	delete [] vertices;
@@ -346,6 +346,150 @@ void QuadTree::CreateTreeNode(NodeType* node, float positionX, float positionZ, 
 	indices = 0;
 
 	return;
+}
+
+void QuadTree::CreateBoxBufferForNode(NodeType &node, ID3D11Device* device)
+{
+	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
+	D3D11_SUBRESOURCE_DATA vertexData, indexData;
+	VertexTypeLine* vertices;
+	unsigned long* indices;
+
+	const int NUM_VERTEXES = 16;
+	// Create the index array.
+	indices = new unsigned long[NUM_VERTEXES];
+	vertices = new VertexTypeLine[NUM_VERTEXES];
+	int index = 0;
+	mDebugBoxNumVertexes = index;
+	
+	// Line from :
+	// x = 0; y = 0; z = 0
+	// to :
+	// x = 0; y = 1; z = 0
+	vertices[index].position = D3DXVECTOR3(node.positionX - node.width / 2, 0.0f, node.positionZ - node.width / 2);
+	indices[index] = index;
+	++index;
+
+	vertices[index].position = D3DXVECTOR3(node.positionX - node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
+	indices[index] = index;
+	++index;
+	
+	// Line from :
+	// x = 0; y = 0; z = 1
+	// to :
+	// x = 0; y = 1; z = 1
+	vertices[index].position = D3DXVECTOR3(node.positionX - node.width / 2, 0.0f, node.positionZ + node.width / 2);
+	indices[index] = index;
+	++index;
+
+	vertices[index].position = D3DXVECTOR3(node.positionX - node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ + node.width / 2);
+	indices[index] = index;
+	++index;
+	
+	// Line from :
+	// x = 1; y = 0; z = 1
+	// to :
+	// x = 1; y = 1; z = 1
+	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, 0.0f, node.positionZ + node.width / 2);
+	indices[index] = index;
+	++index;
+
+	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ + node.width / 2);
+	indices[index] = index;
+	++index;
+	
+	// Line from :
+	// x = 1; y = 0; z = 0
+	// to :
+	// x = 1; y = 1; z = 0
+	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, 0.0f, node.positionZ - node.width / 2);
+	indices[index] = index;
+	++index;
+
+	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
+	indices[index] = index;
+	++index;
+
+	// Line from :
+	// x = 0; y = 1; z = 0
+	// to :
+	// x = 0; y = 1; z = 1
+	vertices[index].position = D3DXVECTOR3(node.positionX - node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
+	indices[index] = index;
+	++index;
+
+	vertices[index].position = D3DXVECTOR3(node.positionX - node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ + node.width / 2);
+	indices[index] = index;
+	++index;
+
+	////////////////////////////////////////////////////////////////
+	/////// NEXT LINES ARE NOT RENDERED !!! ////////////////////////
+	////////////////////////////////////////////////////////////////
+	
+	// Line from :
+	// x = 0; y = 1; z = 1
+	// to :
+	// x = 1; y = 1; z = 1
+	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
+	indices[index] = index;
+	++index;
+
+	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
+	indices[index] = index;
+	++index;
+
+	// Line from :
+	// x = 1; y = 1; z = 1
+	// to :
+	// x = 1; y = 1; z = 0
+	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
+	indices[index] = index;
+	++index;
+
+	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
+	indices[index] = index;
+	++index;
+
+	// Line from :
+	// x = 1; y = 1; z = 0
+	// to :
+	// x = 0; y = 1; z = 0
+	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
+	indices[index] = index;
+	++index;
+	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
+	indices[index] = index;
+	++index;
+	
+	// Set up the description of the vertex buffer.
+	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexBufferDesc.ByteWidth = sizeof(VertexTypeLine) * index;
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufferDesc.CPUAccessFlags = 0;
+	vertexBufferDesc.MiscFlags = 0;
+	vertexBufferDesc.StructureByteStride = sizeof(VertexTypeLine) * index;
+	// Give the subresource structure a pointer to the vertex data.
+	vertexData.pSysMem = vertices;
+	vertexData.SysMemPitch = 0;
+	vertexData.SysMemSlicePitch = 0;
+	// Now finally create the vertex buffer.
+	mDevice->CreateBuffer(&vertexBufferDesc, &vertexData, &node.linesVertixes);
+
+	// Set up the description of the index buffer.
+	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	indexBufferDesc.ByteWidth = sizeof(unsigned long) * index;
+	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	indexBufferDesc.CPUAccessFlags = 0;
+	indexBufferDesc.MiscFlags = 0;
+	indexBufferDesc.StructureByteStride = sizeof(unsigned long) * index;
+	// Give the subresource structure a pointer to the index data.
+	indexData.pSysMem = indices;
+	indexData.SysMemPitch = 0;
+	indexData.SysMemSlicePitch = 0;
+	// Create the index buffer.
+	device->CreateBuffer(&indexBufferDesc, &indexData, &node.lineInixes);
+
+	mDebugBoxNumVertexes = index;
 }
 
 int QuadTree::CountTriangles(float positionX, float positionZ, float width)
@@ -528,7 +672,7 @@ void QuadTree::RenderNode(NodeType* node, FrustumClass* frustum, ID3D11DeviceCon
 	// Call the terrain shader to render the polygons in this node.
 	shader->RenderShader(deviceContext, indexCount);
 
-	DrawBoxForNode(node, deviceContext);
+	RenderDebugBoxForNode(node, deviceContext);
 	mDepth = 0;
 	// Increase the count of the number of polygons that have been rendered during this frame.
 	m_drawCount += node->triangleCount;
@@ -536,7 +680,7 @@ void QuadTree::RenderNode(NodeType* node, FrustumClass* frustum, ID3D11DeviceCon
 	return;
 }
 
-void QuadTree::DrawBoxForNode(NodeType* node, ID3D11DeviceContext* deviceContext)
+void QuadTree::RenderDebugBoxForNode(NodeType* node, ID3D11DeviceContext* deviceContext)
 {
 	unsigned int stride, offset;
 
@@ -546,70 +690,9 @@ void QuadTree::DrawBoxForNode(NodeType* node, ID3D11DeviceContext* deviceContext
 
 	// Set buffers for line
 	deviceContext->IASetVertexBuffers(0, 1, &node->linesVertixes, &stride, &offset);
-
-	deviceContext->IASetIndexBuffer(node->lineInixes, DXGI_FORMAT_R32_UINT, 0);
-	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
-	deviceContext->Draw(8, 0);
-}
-
-void QuadTree::CreateBoxBufferForNode(NodeType* node, ID3D11Buffer** lineVertexes, ID3D11Buffer** lineInexes, ID3D11Device* device)
-{
-	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
-	D3D11_SUBRESOURCE_DATA vertexData, indexData;
-	VertexTypeLine* vertices;
-	unsigned long* indices;
-
-	// Create the index array.
-	indices = new unsigned long[8];
-	vertices = new VertexTypeLine[8];
-
-	vertices[0].position = D3DXVECTOR3(node->positionX - node->width / 2, 0.0f, node->positionZ - node->width / 2);
-	indices[0] = 0;
-	vertices[1].position = D3DXVECTOR3(node->positionX - node->width / 2, LINE_HEIGHT / (mDepth + 1), node->positionZ - node->width / 2);
-	indices[1] = 1;
-	
-	vertices[2].position = D3DXVECTOR3(node->positionX - node->width / 2, 0.0f, node->positionZ + node->width / 2);
-	indices[2] = 2;
-	vertices[3].position = D3DXVECTOR3(node->positionX - node->width / 2, LINE_HEIGHT / (mDepth + 1), node->positionZ + node->width / 2);
-	indices[3] = 3;
-
-	vertices[4].position = D3DXVECTOR3(node->positionX + node->width / 2, 0.0f, node->positionZ + node->width / 2);
-	indices[4] = 4;
-	vertices[5].position = D3DXVECTOR3(node->positionX + node->width / 2, LINE_HEIGHT / (mDepth + 1), node->positionZ + node->width / 2);
-	indices[5] = 5;
-
-	vertices[6].position = D3DXVECTOR3(node->positionX + node->width / 2, 0.0f, node->positionZ - node->width / 2);
-	indices[6] = 6;
-	vertices[7].position = D3DXVECTOR3(node->positionX + node->width / 2, LINE_HEIGHT / (mDepth + 1), node->positionZ - node->width / 2);
-	indices[7] = 7;
-	
-	// Set up the description of the vertex buffer.
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(VertexTypeLine) * 8;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
-	vertexBufferDesc.MiscFlags = 0;
-	vertexBufferDesc.StructureByteStride = 0;
-	// Give the subresource structure a pointer to the vertex data.
-	vertexData.pSysMem = vertices;
-	vertexData.SysMemPitch = 0;
-	vertexData.SysMemSlicePitch = 0;
-	// Now finally create the vertex buffer.
-	mDevice->CreateBuffer(&vertexBufferDesc, &vertexData, lineVertexes);
-
-	// Set up the description of the index buffer.
-	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexBufferDesc.ByteWidth = sizeof(unsigned long) * 8;
-	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.CPUAccessFlags = 0;
-	indexBufferDesc.MiscFlags = 0;
-	indexBufferDesc.StructureByteStride = 0;
-	// Give the subresource structure a pointer to the index data.
-	indexData.pSysMem = indices;
-	indexData.SysMemPitch = 0;
-	indexData.SysMemSlicePitch = 0;
-	// Create the index buffer.
-	device->CreateBuffer(&indexBufferDesc, &indexData, lineInexes);
+	//deviceContext->IASetIndexBuffer(node->lineInixes, DXGI_FORMAT_R32_UINT, offset);
+	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST); // D3D11_PRIMITIVE_TOPOLOGY_LINELIST  // D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP
+	deviceContext->Draw(mDebugBoxNumVertexes, 0);
 }
 
 bool QuadTree::GetHeightAtPosition(float positionX, float positionZ, float& height)

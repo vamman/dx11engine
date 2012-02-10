@@ -56,12 +56,12 @@ class QuadTree
 	private:
 		void CalculateMeshDimensions(int, float&, float&, float&);
 		void CreateTreeNode(NodeType*, float, float, float, ID3D11Device*);
-		void CreateBoxBufferForNode(NodeType* node, ID3D11Buffer **lineVertexes, ID3D11Buffer **lineInexes, ID3D11Device* device);
+		void CreateBoxBufferForNode(NodeType &node, ID3D11Device* device);
 		int CountTriangles(float, float, float);
 		bool IsTriangleContained(int, float, float, float);
 		void ReleaseNode(NodeType*);
 		void RenderNode(NodeType* node, FrustumClass* frustum, ID3D11DeviceContext* deviceContext, TerrainShader* shader);
-		void DrawBoxForNode(NodeType* node, ID3D11DeviceContext* deviceContext);
+		void RenderDebugBoxForNode(NodeType* node, ID3D11DeviceContext* deviceContext);
 		void DrawLine(ID3D11Buffer *vertexBuffer, ID3D11Buffer *indexBuffer, ID3D11DeviceContext* deviceContext);
 		void FindNode(NodeType*, float, float, float&);
 		bool CheckHeightOfTriangle(float, float, float&, float[3], float[3], float[3]);
@@ -72,6 +72,7 @@ class QuadTree
 		NodeType* m_parentNode;
 		int mDepth;
 		ID3D11Device* mDevice;
+		int mDebugBoxNumVertexes;
 };
 
 #endif
