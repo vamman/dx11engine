@@ -5,7 +5,6 @@ QuadTree::QuadTree(void)
 {
 	m_vertexList = 0;
 	m_parentNode = 0;
-	mDevice = 0;
 }
 
 
@@ -157,7 +156,6 @@ void QuadTree::CreateTreeNode(NodeType* node, float positionX, float positionZ, 
 	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData, indexData;
 
-	mDevice = device;
 	// Store the node position and size.
 	node->positionX = positionX;
 	node->positionZ = positionZ;
@@ -175,9 +173,16 @@ void QuadTree::CreateTreeNode(NodeType* node, float positionX, float positionZ, 
 
 	// Initialize the children nodes of this node to null.
 	node->nodes[0] = 0;
+	//node->nodes[0]->bBox = new BoundingBox;
+
 	node->nodes[1] = 0;
+	//node->nodes[1]->bBox = new BoundingBox;
+
 	node->nodes[2] = 0;
+	//node->nodes[2]->bBox = new BoundingBox;
+
 	node->nodes[3] = 0;
+	//node->nodes[3]->bBox = new BoundingBox;
 
 	if (mDepth == 0)
 	{
@@ -194,7 +199,9 @@ void QuadTree::CreateTreeNode(NodeType* node, float positionX, float positionZ, 
 		return;
 	}
 	
-	CreateBoxBufferForNode(*node, device);
+	node->bBox = new BoundingBox;
+	D3DXVECTOR3 bBoxPos = D3DXVECTOR3(node->positionX, 0.0f, node->positionZ);
+	node->bBox->CreateBBBuffers(bBoxPos, node->width, 50.0f / node->depthLevel, node->width, device);
 
 	// Case 2: If there are too many triangles in this node then split it into four equal sized smaller tree nodes.
 	if(numTriangles > MAX_TRIANGLES)
@@ -211,6 +218,7 @@ void QuadTree::CreateTreeNode(NodeType* node, float positionX, float positionZ, 
 			{
 				// If there are triangles inside where this new node would be then create the child node.
 				node->nodes[i] = new NodeType;
+				// node->nodes[i]->bBox = new BoundingBox;
 
 				node->nodes[i]->depthLevel = node->depthLevel + 1;
 
@@ -358,79 +366,6 @@ void QuadTree::CreateTreeNode(NodeType* node, float positionX, float positionZ, 
 	indices = 0;
 
 	return;
-}
-
-void QuadTree::CreateBoxBufferForNode(NodeType &node, ID3D11Device* device)
-{
-	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
-	D3D11_SUBRESOURCE_DATA vertexData, indexData;
-	VertexTypeLine* vertices;
-	const int NUM_VERTEXES = 8;
-	vertices = new VertexTypeLine[NUM_VERTEXES];
-	
-	float height = LINE_HEIGHT / node.depthLevel;
-	// Front face
-	vertices[0].position = D3DXVECTOR3(node.positionX - node.width / 2, height, node.positionZ - node.width / 2);
-	vertices[1].position = D3DXVECTOR3(node.positionX + node.width / 2, height, node.positionZ - node.width / 2);
-	vertices[2].position = D3DXVECTOR3(node.positionX - node.width / 2, 0.0f, node.positionZ - node.width / 2);
-	vertices[3].position = D3DXVECTOR3(node.positionX + node.width / 2, 0.0f, node.positionZ - node.width / 2);
-
-	// Back face
-	vertices[4].position = D3DXVECTOR3(node.positionX - node.width / 2, height, node.positionZ + node.width / 2);
-	vertices[5].position = D3DXVECTOR3(node.positionX + node.width / 2, height, node.positionZ + node.width / 2);
-	vertices[6].position = D3DXVECTOR3(node.positionX - node.width / 2, 0.0f, node.positionZ + node.width / 2);
-	vertices[7].position = D3DXVECTOR3(node.positionX + node.width / 2, 0.0f, node.positionZ + node.width / 2);
-	
-	// Create the index array.
-	unsigned long indices[] = {
-		// front
-		0, 1,
-		0, 2,
-		1, 3,
-		2, 3,
-		// left
-		0, 4,
-		2, 6,
-		4, 6,
-		// far
-		4, 5,
-		5, 7,
-		6, 7,
-		// right
-		5, 1,
-		7, 3
-	};
-
-	// Set up the description of the vertex buffer.
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(VertexTypeLine) * NUM_VERTEXES;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
-	vertexBufferDesc.MiscFlags = 0;
-	vertexBufferDesc.StructureByteStride = sizeof(VertexTypeLine) * NUM_VERTEXES;
-	// Give the subresource structure a pointer to the vertex data.
-	vertexData.pSysMem = vertices;
-	vertexData.SysMemPitch = 0;
-	vertexData.SysMemSlicePitch = 0;
-	// Now finally create the vertex buffer.
-	mDevice->CreateBuffer(&vertexBufferDesc, &vertexData, &node.linesVertixes);
-
-	// Set up the description of the index buffer.
-	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexBufferDesc.ByteWidth = sizeof(unsigned long) * 24;
-	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.CPUAccessFlags = 0;
-	indexBufferDesc.MiscFlags = 0;
-	indexBufferDesc.StructureByteStride = 0;
-	// Give the subresource structure a pointer to the index data.
-	indexData.pSysMem = indices;
-	indexData.SysMemPitch = 0;
-	indexData.SysMemSlicePitch = 0;
-	// Create the index buffer.
-	device->CreateBuffer(&indexBufferDesc, &indexData, &node.lineInixes);
-
-	delete [] vertices;
-	vertices = 0;
 }
 
 int QuadTree::CountTriangles(float positionX, float positionZ, float width)
@@ -582,7 +517,9 @@ void QuadTree::RenderNode(NodeType* node, FrustumClass* frustum, ID3D11DeviceCon
 		if(node->nodes[i] != 0)
 		{
 			count++;
-			RenderDebugBoxForNode(node, deviceContext);
+			// RenderDebugBoxForNode(node, deviceContext);
+			node->bBox->RenderBBBuffers(deviceContext);
+
 			RenderNode(node->nodes[i], frustum, deviceContext, shader);
 		}
 	}
@@ -613,27 +550,13 @@ void QuadTree::RenderNode(NodeType* node, FrustumClass* frustum, ID3D11DeviceCon
 	// Call the terrain shader to render the polygons in this node.
 	shader->RenderShader(deviceContext, indexCount);
 
-	RenderDebugBoxForNode(node, deviceContext);
+	// RenderDebugBoxForNode(node, deviceContext);
+	node->bBox->RenderBBBuffers(deviceContext);
 
 	// Increase the count of the number of polygons that have been rendered during this frame.
 	m_drawCount += node->triangleCount;
 
 	return;
-}
-
-void QuadTree::RenderDebugBoxForNode(NodeType* node, ID3D11DeviceContext* deviceContext)
-{
-	unsigned int stride, offset;
-
-	// Create buffers for line
-	stride = sizeof(VertexTypeLine); 
-	offset = 0;
-
-	// Set buffers for line
-	deviceContext->IASetVertexBuffers(0, 1, &node->linesVertixes, &stride, &offset);
-	deviceContext->IASetIndexBuffer(node->lineInixes, DXGI_FORMAT_R32_UINT, offset);
-	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-	deviceContext->DrawIndexed(24, 0, 0);
 }
 
 bool QuadTree::GetHeightAtPosition(float positionX, float positionZ, float& height)

@@ -2,13 +2,14 @@
 #ifndef _QUADTREECLASS_H_
 #define _QUADTREECLASS_H_
 
-const int MAX_TRIANGLES = 5000;
+const int MAX_TRIANGLES = 1000;
 
 #include "Terrain.h"
 #include "frustumclass.h"
 #include "Shaders/TerrainShader.h"
 #include "timerclass.h"
 #include "Log.h"
+#include "BoundingBox.h"
 
 const float LINE_HEIGHT = 50.0f;
 
@@ -22,12 +23,6 @@ class QuadTree
 		D3DXVECTOR3 normal;
 	};
 
-	struct VertexTypeLine
-	{
-		D3DXVECTOR3 position;
-		// D3DXVECTOR4 color;
-	};
-
 	struct VectorType
 	{
 		float x, y, z;
@@ -38,9 +33,10 @@ class QuadTree
 	{
 		float positionX, positionZ, width;
 		int triangleCount;
-		ID3D11Buffer *vertexBuffer, *indexBuffer, *linesVertixes, *lineInixes;
+		ID3D11Buffer *vertexBuffer, *indexBuffer;
 		VectorType* vertexArray;
 		NodeType* nodes[4];
+		BoundingBox* bBox;
 		int depthLevel;
 	};
 
@@ -57,13 +53,10 @@ class QuadTree
 	private:
 		void CalculateMeshDimensions(int, float&, float&, float&);
 		void CreateTreeNode(NodeType*, float, float, float, ID3D11Device*);
-		void CreateBoxBufferForNode(NodeType &node, ID3D11Device* device);
 		int CountTriangles(float, float, float);
 		bool IsTriangleContained(int, float, float, float);
 		void ReleaseNode(NodeType*);
 		void RenderNode(NodeType* node, FrustumClass* frustum, ID3D11DeviceContext* deviceContext, TerrainShader* shader);
-		void RenderDebugBoxForNode(NodeType* node, ID3D11DeviceContext* deviceContext);
-		void DrawLine(ID3D11Buffer *vertexBuffer, ID3D11Buffer *indexBuffer, ID3D11DeviceContext* deviceContext);
 		void FindNode(NodeType*, float, float, float&);
 		bool CheckHeightOfTriangle(float, float, float&, float[3], float[3], float[3]);
 
@@ -72,7 +65,6 @@ class QuadTree
 		VertexType* m_vertexList;
 		NodeType* m_parentNode;
 		int mDepth;
-		ID3D11Device* mDevice;
 };
 
 #endif
