@@ -19,6 +19,7 @@ COMMON FORUMS:
 
 TUTORIALS:
   * http://rastertek.com/tutindex.html
+  * http://www.braynzarsoft.net/index.php?p=DX11Lessons
 
 CURRENT PROBLEMS:
   * http://stackoverflow.com/questions/5898107/d3d11-how-to-draw-a-simple-pixel-aligned-line
