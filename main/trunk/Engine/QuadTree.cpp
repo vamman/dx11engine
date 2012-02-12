@@ -6,7 +6,6 @@ QuadTree::QuadTree(void)
 	m_vertexList = 0;
 	m_parentNode = 0;
 	mDevice = 0;
-	mDepth = 1;
 }
 
 
@@ -17,6 +16,7 @@ QuadTree::~QuadTree(void)
 bool QuadTree::Initialize(Terrain* terrain, ID3D11Device* device)
 {
 	DWORD funcTime = -1;
+	mDepth = 0;
 
 	int vertexCount;
 	float centerX, centerZ, width;
@@ -179,6 +179,12 @@ void QuadTree::CreateTreeNode(NodeType* node, float positionX, float positionZ, 
 	node->nodes[2] = 0;
 	node->nodes[3] = 0;
 
+	if (mDepth == 0)
+	{
+		++mDepth;
+		node->depthLevel = mDepth;
+	}
+
 	// Count the number of triangles that are inside this node.
 	numTriangles = CountTriangles(positionX, positionZ, width);
 
@@ -187,6 +193,9 @@ void QuadTree::CreateTreeNode(NodeType* node, float positionX, float positionZ, 
 	{
 		return;
 	}
+	
+	CreateBoxBufferForNode(*node, device);
+
 	// Case 2: If there are too many triangles in this node then split it into four equal sized smaller tree nodes.
 	if(numTriangles > MAX_TRIANGLES)
 	{
@@ -203,8 +212,11 @@ void QuadTree::CreateTreeNode(NodeType* node, float positionX, float positionZ, 
 				// If there are triangles inside where this new node would be then create the child node.
 				node->nodes[i] = new NodeType;
 
+				node->nodes[i]->depthLevel = node->depthLevel + 1;
+
 				// Extend the tree starting from this new child node now.
 				CreateTreeNode(node->nodes[i], (positionX + offsetX), (positionZ + offsetZ), (width / 2.0f), device);
+				mDepth++;
 			}
 		}
 		return;
@@ -336,7 +348,7 @@ void QuadTree::CreateTreeNode(NodeType* node, float positionX, float positionZ, 
 	// Create the index buffer.
 	device->CreateBuffer(&indexBufferDesc, &indexData, &node->indexBuffer);
 
-	CreateBoxBufferForNode(*node, device);
+	//CreateBoxBufferForNode(*node, device);
 
 	// Release the vertex and index arrays now that the data is stored in the buffers in the node.
 	delete [] vertices;
@@ -353,121 +365,49 @@ void QuadTree::CreateBoxBufferForNode(NodeType &node, ID3D11Device* device)
 	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData, indexData;
 	VertexTypeLine* vertices;
-	unsigned long* indices;
-
-	const int NUM_VERTEXES = 16;
-	// Create the index array.
-	indices = new unsigned long[NUM_VERTEXES];
+	const int NUM_VERTEXES = 8;
 	vertices = new VertexTypeLine[NUM_VERTEXES];
-	int index = 0;
-	mDebugBoxNumVertexes = index;
 	
-	// Line from :
-	// x = 0; y = 0; z = 0
-	// to :
-	// x = 0; y = 1; z = 0
-	vertices[index].position = D3DXVECTOR3(node.positionX - node.width / 2, 0.0f, node.positionZ - node.width / 2);
-	indices[index] = index;
-	++index;
+	float height = LINE_HEIGHT / node.depthLevel;
+	// Front face
+	vertices[0].position = D3DXVECTOR3(node.positionX - node.width / 2, height, node.positionZ - node.width / 2);
+	vertices[1].position = D3DXVECTOR3(node.positionX + node.width / 2, height, node.positionZ - node.width / 2);
+	vertices[2].position = D3DXVECTOR3(node.positionX - node.width / 2, 0.0f, node.positionZ - node.width / 2);
+	vertices[3].position = D3DXVECTOR3(node.positionX + node.width / 2, 0.0f, node.positionZ - node.width / 2);
 
-	vertices[index].position = D3DXVECTOR3(node.positionX - node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
-	indices[index] = index;
-	++index;
+	// Back face
+	vertices[4].position = D3DXVECTOR3(node.positionX - node.width / 2, height, node.positionZ + node.width / 2);
+	vertices[5].position = D3DXVECTOR3(node.positionX + node.width / 2, height, node.positionZ + node.width / 2);
+	vertices[6].position = D3DXVECTOR3(node.positionX - node.width / 2, 0.0f, node.positionZ + node.width / 2);
+	vertices[7].position = D3DXVECTOR3(node.positionX + node.width / 2, 0.0f, node.positionZ + node.width / 2);
 	
-	// Line from :
-	// x = 0; y = 0; z = 1
-	// to :
-	// x = 0; y = 1; z = 1
-	vertices[index].position = D3DXVECTOR3(node.positionX - node.width / 2, 0.0f, node.positionZ + node.width / 2);
-	indices[index] = index;
-	++index;
+	// Create the index array.
+	unsigned long indices[] = {
+		// front
+		0, 1,
+		0, 2,
+		1, 3,
+		2, 3,
+		// left
+		0, 4,
+		2, 6,
+		4, 6,
+		// far
+		4, 5,
+		5, 7,
+		6, 7,
+		// right
+		5, 1,
+		7, 3
+	};
 
-	vertices[index].position = D3DXVECTOR3(node.positionX - node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ + node.width / 2);
-	indices[index] = index;
-	++index;
-	
-	// Line from :
-	// x = 1; y = 0; z = 1
-	// to :
-	// x = 1; y = 1; z = 1
-	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, 0.0f, node.positionZ + node.width / 2);
-	indices[index] = index;
-	++index;
-
-	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ + node.width / 2);
-	indices[index] = index;
-	++index;
-	
-	// Line from :
-	// x = 1; y = 0; z = 0
-	// to :
-	// x = 1; y = 1; z = 0
-	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, 0.0f, node.positionZ - node.width / 2);
-	indices[index] = index;
-	++index;
-
-	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
-	indices[index] = index;
-	++index;
-
-	// Line from :
-	// x = 0; y = 1; z = 0
-	// to :
-	// x = 0; y = 1; z = 1
-	vertices[index].position = D3DXVECTOR3(node.positionX - node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
-	indices[index] = index;
-	++index;
-
-	vertices[index].position = D3DXVECTOR3(node.positionX - node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ + node.width / 2);
-	indices[index] = index;
-	++index;
-
-	////////////////////////////////////////////////////////////////
-	/////// NEXT LINES ARE NOT RENDERED !!! ////////////////////////
-	////////////////////////////////////////////////////////////////
-	
-	// Line from :
-	// x = 0; y = 1; z = 1
-	// to :
-	// x = 1; y = 1; z = 1
-	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
-	indices[index] = index;
-	++index;
-
-	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
-	indices[index] = index;
-	++index;
-
-	// Line from :
-	// x = 1; y = 1; z = 1
-	// to :
-	// x = 1; y = 1; z = 0
-	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
-	indices[index] = index;
-	++index;
-
-	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
-	indices[index] = index;
-	++index;
-
-	// Line from :
-	// x = 1; y = 1; z = 0
-	// to :
-	// x = 0; y = 1; z = 0
-	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
-	indices[index] = index;
-	++index;
-	vertices[index].position = D3DXVECTOR3(node.positionX + node.width / 2, LINE_HEIGHT / (mDepth + 1), node.positionZ - node.width / 2);
-	indices[index] = index;
-	++index;
-	
 	// Set up the description of the vertex buffer.
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(VertexTypeLine) * index;
+	vertexBufferDesc.ByteWidth = sizeof(VertexTypeLine) * NUM_VERTEXES;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vertexBufferDesc.CPUAccessFlags = 0;
 	vertexBufferDesc.MiscFlags = 0;
-	vertexBufferDesc.StructureByteStride = sizeof(VertexTypeLine) * index;
+	vertexBufferDesc.StructureByteStride = sizeof(VertexTypeLine) * NUM_VERTEXES;
 	// Give the subresource structure a pointer to the vertex data.
 	vertexData.pSysMem = vertices;
 	vertexData.SysMemPitch = 0;
@@ -477,11 +417,11 @@ void QuadTree::CreateBoxBufferForNode(NodeType &node, ID3D11Device* device)
 
 	// Set up the description of the index buffer.
 	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexBufferDesc.ByteWidth = sizeof(unsigned long) * index;
+	indexBufferDesc.ByteWidth = sizeof(unsigned long) * 24;
 	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	indexBufferDesc.CPUAccessFlags = 0;
 	indexBufferDesc.MiscFlags = 0;
-	indexBufferDesc.StructureByteStride = sizeof(unsigned long) * index;
+	indexBufferDesc.StructureByteStride = 0;
 	// Give the subresource structure a pointer to the index data.
 	indexData.pSysMem = indices;
 	indexData.SysMemPitch = 0;
@@ -489,7 +429,8 @@ void QuadTree::CreateBoxBufferForNode(NodeType &node, ID3D11Device* device)
 	// Create the index buffer.
 	device->CreateBuffer(&indexBufferDesc, &indexData, &node.lineInixes);
 
-	mDebugBoxNumVertexes = index;
+	delete [] vertices;
+	vertices = 0;
 }
 
 int QuadTree::CountTriangles(float positionX, float positionZ, float width)
@@ -640,8 +581,8 @@ void QuadTree::RenderNode(NodeType* node, FrustumClass* frustum, ID3D11DeviceCon
 	{
 		if(node->nodes[i] != 0)
 		{
-			mDepth++;
 			count++;
+			RenderDebugBoxForNode(node, deviceContext);
 			RenderNode(node->nodes[i], frustum, deviceContext, shader);
 		}
 	}
@@ -673,7 +614,7 @@ void QuadTree::RenderNode(NodeType* node, FrustumClass* frustum, ID3D11DeviceCon
 	shader->RenderShader(deviceContext, indexCount);
 
 	RenderDebugBoxForNode(node, deviceContext);
-	mDepth = 0;
+
 	// Increase the count of the number of polygons that have been rendered during this frame.
 	m_drawCount += node->triangleCount;
 
@@ -690,15 +631,14 @@ void QuadTree::RenderDebugBoxForNode(NodeType* node, ID3D11DeviceContext* device
 
 	// Set buffers for line
 	deviceContext->IASetVertexBuffers(0, 1, &node->linesVertixes, &stride, &offset);
-	//deviceContext->IASetIndexBuffer(node->lineInixes, DXGI_FORMAT_R32_UINT, offset);
-	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST); // D3D11_PRIMITIVE_TOPOLOGY_LINELIST  // D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP
-	deviceContext->Draw(mDebugBoxNumVertexes, 0);
+	deviceContext->IASetIndexBuffer(node->lineInixes, DXGI_FORMAT_R32_UINT, offset);
+	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+	deviceContext->DrawIndexed(24, 0, 0);
 }
 
 bool QuadTree::GetHeightAtPosition(float positionX, float positionZ, float& height)
 {
 	float meshMinX, meshMaxX, meshMinZ, meshMaxZ;
-
 
 	meshMinX = m_parentNode->positionX - (m_parentNode->width / 2.0f);
 	meshMaxX = m_parentNode->positionX + (m_parentNode->width / 2.0f);
