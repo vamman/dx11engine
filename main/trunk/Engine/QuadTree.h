@@ -2,7 +2,7 @@
 #ifndef _QUADTREECLASS_H_
 #define _QUADTREECLASS_H_
 
-const int MAX_TRIANGLES = 10000;
+const int MAX_TRIANGLES = 5000;
 
 #include "Terrain.h"
 #include "frustumclass.h"
@@ -41,6 +41,7 @@ class QuadTree
 		ID3D11Buffer *vertexBuffer, *indexBuffer, *linesVertixes, *lineInixes;
 		VectorType* vertexArray;
 		NodeType* nodes[4];
+		int depthLevel;
 	};
 
 	public:
@@ -72,7 +73,6 @@ class QuadTree
 		NodeType* m_parentNode;
 		int mDepth;
 		ID3D11Device* mDevice;
-		int mDebugBoxNumVertexes;
 };
 
 #endif
