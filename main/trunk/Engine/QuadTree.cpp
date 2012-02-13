@@ -1,7 +1,7 @@
 #include "QuadTree.h"
 
 
-QuadTree::QuadTree(void)
+QuadTree::QuadTree(void) : mIsAllowToBBRender(false), mDepth(0)
 {
 	m_vertexList = 0;
 	m_parentNode = 0;
@@ -15,7 +15,6 @@ QuadTree::~QuadTree(void)
 bool QuadTree::Initialize(Terrain* terrain, ID3D11Device* device)
 {
 	DWORD funcTime = -1;
-	mDepth = 0;
 
 	int vertexCount;
 	float centerX, centerZ, width;
@@ -77,17 +76,6 @@ void QuadTree::Shutdown()
 		delete m_parentNode;
 		m_parentNode = 0;
 	}
-
-	return;
-}
-
-void QuadTree::Render(FrustumClass* frustum, ID3D11DeviceContext* deviceContext, TerrainShader* shader)
-{
-	// Reset the number of triangles that are drawn for this frame.
-	m_drawCount = 0;
-
-	// Render each node that is visible starting at the parent node and moving down the tree.
-	RenderNode(m_parentNode, frustum, deviceContext, shader);
 
 	return;
 }
@@ -173,16 +161,9 @@ void QuadTree::CreateTreeNode(NodeType* node, float positionX, float positionZ, 
 
 	// Initialize the children nodes of this node to null.
 	node->nodes[0] = 0;
-	//node->nodes[0]->bBox = new BoundingBox;
-
 	node->nodes[1] = 0;
-	//node->nodes[1]->bBox = new BoundingBox;
-
 	node->nodes[2] = 0;
-	//node->nodes[2]->bBox = new BoundingBox;
-
 	node->nodes[3] = 0;
-	//node->nodes[3]->bBox = new BoundingBox;
 
 	if (mDepth == 0)
 	{
@@ -258,69 +239,27 @@ void QuadTree::CreateTreeNode(NodeType* node, float positionX, float positionZ, 
 		{
 			// Calculate the index into the terrain vertex list.
 			vertexIndex = i * 3;
-			// TODO: Refactor this large loop!
-			/*
-			for (int ind = 0; ind < vertexCount; ++ind)
+			for (int ind = 0; ind < 3; ++ind)
 			{
 				// Get the three vertices of this triangle from the vertex list.
-				vertices[ind].position = m_vertexList[vertexIndex].position;
-				vertices[ind].texture = m_vertexList[vertexIndex].texture;
-				vertices[ind].normal = m_vertexList[vertexIndex].normal;
-				indices[ind] = ind;
+				vertices[index].position = m_vertexList[vertexIndex].position;
+				vertices[index].texture = m_vertexList[vertexIndex].texture;
+				vertices[index].normal = m_vertexList[vertexIndex].normal;
+				vertices[index].color = m_vertexList[vertexIndex].color;
+				indices[index] = index;
 
 				// Also store the vertex position information in the node vertex array.
-				node->vertexArray[ind].x = m_vertexList[vertexIndex].position.x;
-				node->vertexArray[ind].y = m_vertexList[vertexIndex].position.y;
-				node->vertexArray[ind].z = m_vertexList[vertexIndex].position.z;
-				if (ind % 3 != 0)
+				node->vertexArray[index].x = m_vertexList[vertexIndex].position.x;
+				node->vertexArray[index].y = m_vertexList[vertexIndex].position.y;
+				node->vertexArray[index].z = m_vertexList[vertexIndex].position.z;
+
+				// Increment the indexes.
+				++index;
+				if (ind % 2 != 0 || ind == 0)
 				{
-					vertexIndex++;
+					++vertexIndex;
 				}
 			}
-			*/
-			// Get the three vertices of this triangle from the vertex list.
-			vertices[index].position = m_vertexList[vertexIndex].position;
-			vertices[index].texture = m_vertexList[vertexIndex].texture;
-			vertices[index].normal = m_vertexList[vertexIndex].normal;
-			indices[index] = index;
-
-			// Also store the vertex position information in the node vertex array.
-			node->vertexArray[index].x = m_vertexList[vertexIndex].position.x;
-			node->vertexArray[index].y = m_vertexList[vertexIndex].position.y;
-			node->vertexArray[index].z = m_vertexList[vertexIndex].position.z;
-
-			// Increment the indexes.
-			index++;
-			vertexIndex++;
-
-			// Get the three vertices of this triangle from the vertex list.
-			vertices[index].position = m_vertexList[vertexIndex].position;
-			vertices[index].texture = m_vertexList[vertexIndex].texture;
-			vertices[index].normal = m_vertexList[vertexIndex].normal;
-			indices[index] = index;
-
-			// Also store the vertex position information in the node vertex array.
-			node->vertexArray[index].x = m_vertexList[vertexIndex].position.x;
-			node->vertexArray[index].y = m_vertexList[vertexIndex].position.y;
-			node->vertexArray[index].z = m_vertexList[vertexIndex].position.z;
-
-			// Increment the indexes.
-			index++;
-			vertexIndex++;
-
-			// Get the three vertices of this triangle from the vertex list.
-			vertices[index].position = m_vertexList[vertexIndex].position;
-			vertices[index].texture = m_vertexList[vertexIndex].texture;
-			vertices[index].normal = m_vertexList[vertexIndex].normal;
-			indices[index] = index;
-
-			// Also store the vertex position information in the node vertex array.
-			node->vertexArray[index].x = m_vertexList[vertexIndex].position.x;
-			node->vertexArray[index].y = m_vertexList[vertexIndex].position.y;
-			node->vertexArray[index].z = m_vertexList[vertexIndex].position.z;
-
-			// Increment the indexes.
-			index++;
 		}
 	}
 
@@ -495,6 +434,16 @@ void QuadTree::ReleaseNode(NodeType* node)
 	return;
 }
 
+void QuadTree::Render(FrustumClass* frustum, ID3D11DeviceContext* deviceContext, TerrainShader* shader)
+{
+	// Reset the number of triangles that are drawn for this frame.
+	m_drawCount = 0;
+	mIsAllowToBBRender = InputClass::GetInstance()->IsAllowToBBRender();
+	// Render each node that is visible starting at the parent node and moving down the tree.
+	RenderNode(m_parentNode, frustum, deviceContext, shader);
+	return;
+}
+
 void QuadTree::RenderNode(NodeType* node, FrustumClass* frustum, ID3D11DeviceContext* deviceContext, TerrainShader* shader)
 {
 	bool result;
@@ -517,9 +466,10 @@ void QuadTree::RenderNode(NodeType* node, FrustumClass* frustum, ID3D11DeviceCon
 		if(node->nodes[i] != 0)
 		{
 			count++;
-			// RenderDebugBoxForNode(node, deviceContext);
-			node->bBox->RenderBBBuffers(deviceContext);
-
+			if (mIsAllowToBBRender)
+			{
+				node->bBox->RenderBBBuffers(deviceContext);
+			}
 			RenderNode(node->nodes[i], frustum, deviceContext, shader);
 		}
 	}
@@ -550,9 +500,10 @@ void QuadTree::RenderNode(NodeType* node, FrustumClass* frustum, ID3D11DeviceCon
 	// Call the terrain shader to render the polygons in this node.
 	shader->RenderShader(deviceContext, indexCount);
 
-	// RenderDebugBoxForNode(node, deviceContext);
-	node->bBox->RenderBBBuffers(deviceContext);
-
+	if (mIsAllowToBBRender)
+	{
+		node->bBox->RenderBBBuffers(deviceContext);
+	}
 	// Increase the count of the number of polygons that have been rendered during this frame.
 	m_drawCount += node->triangleCount;
 

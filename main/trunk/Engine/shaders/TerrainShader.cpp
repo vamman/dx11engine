@@ -11,7 +11,15 @@ TerrainShader::~TerrainShader(void)
 bool TerrainShader::Initialize(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
 {
 	HRESULT result;
-	result = LightShader::Initialize(lightSource, device, hwnd, filename, VSname, PSname);
+	// result = LightShader::Initialize(lightSource, device, hwnd, filename, VSname, PSname);
+	vector<char *> layouts;
+
+	layouts.push_back("POSITION");
+	layouts.push_back("TEXCOORD");
+	layouts.push_back("NORMAL");
+	layouts.push_back("COLOR");
+
+	result = LightShader::InitializeShader(lightSource, device, hwnd, filename, VSname, PSname, layouts);
 	if (!result)
 	{
 		return false;

@@ -10,6 +10,7 @@ struct VertexInputType
     float4 position : POSITION;
 	float2 tex : TEXCOORD0;
     float3 normal : NORMAL;
+	float4 color : COLOR;
 };
 
 struct PixelInputType
@@ -17,6 +18,7 @@ struct PixelInputType
     float4 position : SV_POSITION;
 	float2 tex : TEXCOORD0;
     float3 normal : NORMAL;
+	float4 color : COLOR;
 };
 
 Texture2D shaderTexture;
@@ -56,6 +58,9 @@ PixelInputType TerrainVertexShader(VertexInputType input)
     // Normalize the normal vector.
     output.normal = normalize(output.normal);
 
+	// Send the color map color into the pixel shader.	
+    output.color = input.color;
+
     return output;
 }
 
@@ -92,6 +97,9 @@ float4 TerrainPixelShader(PixelInputType input) : SV_TARGET
 	
 	// Multiply the texture pixel and the final light color to get the result.
     color = color * textureColor;
+
+	// Combine the color map value into the final color.
+    color = saturate(color * input.color * 2.0f);
 
     return color;
 }

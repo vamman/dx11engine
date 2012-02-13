@@ -2,7 +2,7 @@
 #ifndef _QUADTREECLASS_H_
 #define _QUADTREECLASS_H_
 
-const int MAX_TRIANGLES = 1000;
+const int MAX_TRIANGLES = 5000;
 
 #include "Terrain.h"
 #include "frustumclass.h"
@@ -10,6 +10,7 @@ const int MAX_TRIANGLES = 1000;
 #include "timerclass.h"
 #include "Log.h"
 #include "BoundingBox.h"
+#include "InputClass.h"
 
 const float LINE_HEIGHT = 50.0f;
 
@@ -21,6 +22,7 @@ class QuadTree
 		D3DXVECTOR3 position;
 		D3DXVECTOR2 texture;
 		D3DXVECTOR3 normal;
+		D3DXVECTOR4 color;
 	};
 
 	struct VectorType
@@ -64,6 +66,7 @@ class QuadTree
 		int m_triangleCount, m_drawCount;
 		VertexType* m_vertexList;
 		NodeType* m_parentNode;
+		bool mIsAllowToBBRender;
 		int mDepth;
 };
 

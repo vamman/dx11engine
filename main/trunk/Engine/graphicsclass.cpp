@@ -7,6 +7,7 @@ GraphicsClass::GraphicsClass()
 	mMaterialFactory = 0;
 	mTerrain = 0;
 	mQuadTree = 0;
+	m_MiniMap = 0;
 
 	mD3D = 0;
 	mCamera = 0;
@@ -60,6 +61,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	float cameraX, cameraY, cameraZ;
 	char videoCard[128];
 	int videoMemory;
+	int terrainWidth, terrainHeight;
 
 	mTimer = Timer::GetInstance();
 	mTimer->Initialize();
@@ -110,7 +112,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the terrain object.
-	result = mTerrain->Initialize(mD3D->GetDevice(), "Engine/data/textures/heightmap01.bmp", L"Engine/data/textures/dirt01.dds");
+	result = mTerrain->Initialize(mD3D->GetDevice(), "Engine/data/textures/heightmap01.bmp", L"Engine/data/textures/dirt01.dds", "Engine/data/textures/colorm01.bmp");
 	if(!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the terrain object.", L"Error", MB_OK);
@@ -182,13 +184,11 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	InitObjects(hwnd);
 
 	// Create the frustum object.
-
 	m_Frustum = new FrustumClass;
 	if(!m_Frustum)
 	{
 		return false;
 	}
-
 
 	for (int i = 0; i < 4; ++i)
 	{
@@ -214,6 +214,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Create the render to texture object.
+	/*
 	m_RenderTexture = new RenderTextureClass;
 	if(!m_RenderTexture)
 	{
@@ -226,8 +227,9 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	{
 		return false;
 	}
-
+	*/
 	// Create the bitmap object.
+	/*
 	m_Bitmap = new BitmapClass;
 	if(!m_Bitmap)
 	{
@@ -239,6 +241,27 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	if(!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the bitmap object.", L"Error", MB_OK);
+		return false;
+	}
+	*/
+
+	// Probably need to initialize another instance of Texture shader for minimap
+	// Get the size of the terrain as the minimap will require this information.
+	mTerrain->GetTerrainSize(terrainWidth, terrainHeight);
+
+	// Create the mini map object.
+	m_MiniMap = new MiniMap;
+	if(!m_MiniMap)
+	{
+		return false;
+	}
+
+	// Initialize the mini map object.
+	result = m_MiniMap->Initialize(mD3D->GetDevice(), hwnd, screenWidth, screenHeight, baseViewMatrix, (float)(terrainWidth - 1), 
+				       (float)(terrainHeight - 1));
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the mini map object.", L"Error", MB_OK);
 		return false;
 	}
 
@@ -586,15 +609,13 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 	}
 
 	//  Create instanced sphere
-
 	object = mObjectFactory->CreateInstancedModel(mD3D->GetDevice(), hwnd, "instancedSphere", "Engine/data/models/sphere.txt", 5); // sphere cube
 	object->SetMaterial(mMaterialFactory->GetMaterialByName("NormalWithSpec"));
-
+	
 	// Create floor
-
 	object = mObjectFactory->CreateOrdinaryModel(mD3D->GetDevice(), hwnd, "floor", "Engine/data/models/floor.txt");
 	object->SetMaterial(mMaterialFactory->GetMaterialByName("TexturedFloor"));
-	mObjectFactory->SetPositionForObject(D3DXVECTOR3(130.0f, 0.0f, 132.0f), "floor");
+	mObjectFactory->SetPositionForObject(D3DXVECTOR3(0.0f, 0.0f, 2.0f), "floor"); // 130.0f, 0.0f, 132.0f
 
 	// Create 10 ordinary spheres
 	for (int i = 0; i < 5; ++i)
@@ -609,9 +630,9 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 		object->SetMaterial(mMaterialFactory->GetMaterialByName("NormalWithSpec"));
 
 		// Generate a random position in front of the viewer for the mode.
-		float positionX = 130.0f;
-		float positionY = 0.0f;
-		float positionZ = 130.0f;
+		float positionX = 0.0f; // 130.0f;
+		float positionY = 0.0f; // 0.0f;
+		float positionZ = 0.0f; // 130.0f;
 
 		// Generate a random position in front of the viewer for the mode.
 		positionX += (((float)rand()-(float)rand())/RAND_MAX) * 10.0f;
@@ -627,7 +648,7 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 	// Create cube
 
 	object = mObjectFactory->CreateOrdinaryModel(mD3D->GetDevice(), hwnd, "cube", "Engine/data/models/cube.txt");
-	object->SetPosition(D3DXVECTOR3(130.0f, 1.0f, 130.0f));
+	object->SetPosition(D3DXVECTOR3(0.0f, 1.0f, 0.0f)); // 130.0f, 1.0f, 130.0f
 	object->SetMaterial(mMaterialFactory->GetMaterialByName("NormalWithSpec"));
 
 	Timer::GetInstance()->SetTimeB();
@@ -664,6 +685,14 @@ void GraphicsClass::Shutdown()
 		m_Bitmap->Shutdown();
 		delete m_Bitmap;
 		m_Bitmap = 0;
+	}
+
+	// Release the mini map object.
+	if(m_MiniMap)
+	{
+		m_MiniMap->Shutdown();
+		delete m_MiniMap;
+		m_MiniMap = 0;
 	}
 
 	// Release the light object.
@@ -910,6 +939,9 @@ bool GraphicsClass::HandleInput(float frameTime)
 	mCamera->SetPosition(posX, posY, posZ);
 	mCamera->SetRotation(rotX, rotY, rotZ);
 
+	// Update the location of the camera on the mini map.
+	m_MiniMap->PositionUpdate(posX, posZ);
+
 	return true;
 }
 
@@ -974,12 +1006,13 @@ bool GraphicsClass::Render()
 
 	// Render the entire scene to the texture first.
 	// result = RenderToTextureFromCameraView();
+	/*
 	result = RenderToTextureFromReflectionView();
 	if(!result)
 	{
 		return false;
 	}
-
+	*/
 	// Clear the buffers to begin the scene.
 	mD3D->BeginScene(fogColor, fogColor, fogColor, 1.0);
 
@@ -1015,7 +1048,7 @@ bool GraphicsClass::Render2D()
 
 	// Turn off the Z buffer to begin all 2D rendering.
 	mD3D->TurnZBufferOff();
-
+	/*
 	// Get the world, view, and ortho matrices from the camera and d3d objects.
 	mD3D->GetWorldMatrix(worldMatrix);
 	mCamera->GetViewMatrix(viewMatrix);
@@ -1042,14 +1075,21 @@ bool GraphicsClass::Render2D()
 	{
 		return false;
 	}
+	*/
+	// Render the mini map.
+	result = m_MiniMap->Render(mD3D->GetDeviceContext(), worldMatrix, orthoMatrix, m_TextureShader);
+	if(!result)
+	{
+		return false;
+	}
 
 	// Turn on the alpha blending before rendering the text.
-	mD3D->TurnOnAlphaBlending();
+	//mD3D->TurnOnAlphaBlending();
 
-	RenderText();
+	//RenderText();
 
 	// Turn off alpha blending after rendering the text.
-	mD3D->TurnOffAlphaBlending();
+	//mD3D->TurnOffAlphaBlending();
 
 	// Turn the Z buffer back on now that all 2D rendering has completed.
 	mD3D->TurnZBufferOn();
@@ -1104,7 +1144,7 @@ bool GraphicsClass::RenderToTextureFromReflectionView()
 
 	mCamera->GetViewMatrix(viewMatrix);
 
-	RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
+	//RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
 
 	// Reset the render target back to the original back buffer and not the render to texture anymore.
 	mD3D->SetBackBufferRenderTarget();
@@ -1161,7 +1201,7 @@ bool GraphicsClass::RenderScene()
 		pointDiffuseColors[i]  = mPointLights[i]->GetDiffuseColor();
 		pointLightPositions[i] = mPointLights[i]->GetPosition();
 	}
-
+	
 	RenderTerrain(worldMatrix, viewMatrix, projectionMatrix);
 	RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
 	
@@ -1211,7 +1251,6 @@ bool GraphicsClass::RenderTerrain(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
 	texArr.push_back(mTerrain->GetTexture());
 
 	// Render the terrain using the terrain shader.
-	
 	mTerrainShader->SetTextureArray(deviceContext, texArr);
 	mTerrainShader->SetLightSource(deviceContext, mDirAmbLight);
 	result = mTerrainShader->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, false);
@@ -1293,8 +1332,8 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 				{
 					rotation -= 360.0f;
 				}
+				modelObj->SetRotation(rotation);
 
-				//modelObj->SetRotation(rotation);
 				float height;
 				// Set psition above terrain
 				bool foundHeight =  mQuadTree->GetHeightAtPosition(modelObj->GetPosition().x, modelObj->GetPosition().z, height);
@@ -1425,7 +1464,7 @@ bool GraphicsClass::RenderText()
 	strcpy_s(fpsString, "Fps: ");
 	strcat_s(fpsString, tempString);
 
-	result = m_Text->AddSentence(mD3D->GetDevice(), mD3D->GetDeviceContext(), fpsString, 800, 100, 0.0f, 0.0f, 1.0f, 0);
+	result = m_Text->AddSentence(mD3D, fpsString, 800, 100, 0.0f, 0.0f, 1.0f, 0);
 
 	// Convert the cpu integer to string format.
 	_itoa_s(CpuClass::GetInstance()->GetCpuPercentage(), tempString, 10);
@@ -1435,7 +1474,7 @@ bool GraphicsClass::RenderText()
 	strcat_s(cpuString, tempString);
 	strcat_s(cpuString, "%");
 
-	result = m_Text->AddSentence(mD3D->GetDevice(), mD3D->GetDeviceContext(), cpuString, 800, 100 + 20, 1.0f, 0.0f, 1.0f, 1);
+	result = m_Text->AddSentence(mD3D, cpuString, 800, 100 + 20, 1.0f, 0.0f, 1.0f, 1);
 
 	// Convert the count integer to string format.
 	_itoa_s(mNumObjectsRendered, tempString, 10);
@@ -1444,7 +1483,7 @@ bool GraphicsClass::RenderText()
 	strcpy_s(countString, "Render Count: ");
 	strcat_s(countString, tempString);
 
-	result = m_Text->AddSentence(mD3D->GetDevice(), mD3D->GetDeviceContext(), countString, 800, 100 + 20 * 5, 1.0f, 0.0f, 0.0f, 2);
+	result = m_Text->AddSentence(mD3D, countString, 800, 100 + 20 * 5, 1.0f, 0.0f, 0.0f, 2);
 	if(!result)
 	{
 		return false;
@@ -1459,7 +1498,7 @@ bool GraphicsClass::RenderText()
 	strcat_s(mouseString, tempString);
 
 	// Update the sentence vertex buffer with the new string information.
-	result = m_Text->AddSentence(mD3D->GetDevice(), mD3D->GetDeviceContext(), mouseString, mouseX, mouseY, 1.0f, 0.0f, 0.0f, 3);
+	result = m_Text->AddSentence(mD3D, mouseString, mouseX, mouseY, 1.0f, 0.0f, 0.0f, 3);
 	if(!result)
 	{
 		return false;
@@ -1472,7 +1511,7 @@ bool GraphicsClass::RenderText()
 	strcpy_s(mouseString, "Mouse Y: ");
 	strcat_s(mouseString, tempString);
 
-	result = m_Text->AddSentence(mD3D->GetDevice(), mD3D->GetDeviceContext(), mouseString, mouseX, mouseY + 20, 1.0f, 0.0f, 0.0f, 4);
+	result = m_Text->AddSentence(mD3D, mouseString, mouseX, mouseY + 20, 1.0f, 0.0f, 0.0f, 4);
 	if(!result)
 	{
 		return false;
@@ -1501,7 +1540,7 @@ bool GraphicsClass::RenderText()
 	strcpy_s(dataString, "X: ");
 	strcat_s(dataString, tempString);
 
-	result = m_Text->AddSentence(mD3D->GetDevice(), mD3D->GetDeviceContext(), dataString, 800, 240, 1.0f, 0.0f, 1.0f, 5);
+	result = m_Text->AddSentence(mD3D, dataString, 800, 240, 1.0f, 0.0f, 1.0f, 5);
 	if(!result)
 	{
 		return false;
@@ -1512,7 +1551,7 @@ bool GraphicsClass::RenderText()
 	strcpy_s(dataString, "Y: ");
 	strcat_s(dataString, tempString);
 
-	result = m_Text->AddSentence(mD3D->GetDevice(), mD3D->GetDeviceContext(), dataString, 800, 260, 1.0f, 0.0f, 1.0f, 6);
+	result = m_Text->AddSentence(mD3D, dataString, 800, 260, 1.0f, 0.0f, 1.0f, 6);
 	if(!result)
 	{
 		return false;
@@ -1523,7 +1562,7 @@ bool GraphicsClass::RenderText()
 	strcpy_s(dataString, "Z: ");
 	strcat_s(dataString, tempString);
 
-	result = m_Text->AddSentence(mD3D->GetDevice(), mD3D->GetDeviceContext(), dataString, 800, 280, 1.0f, 0.0f, 1.0f, 7);
+	result = m_Text->AddSentence(mD3D, dataString, 800, 280, 1.0f, 0.0f, 1.0f, 7);
 	if(!result)
 	{
 		return false;
@@ -1535,7 +1574,7 @@ bool GraphicsClass::RenderText()
 	strcpy_s(dataString, "rX: ");
 	strcat_s(dataString, tempString);
 
-	result = m_Text->AddSentence(mD3D->GetDevice(), mD3D->GetDeviceContext(), dataString, 800, 320, 0.0f, 1.0f, 1.0f, 8);
+	result = m_Text->AddSentence(mD3D, dataString, 800, 320, 0.0f, 1.0f, 1.0f, 8);
 	if(!result)
 	{
 		return false;
@@ -1545,7 +1584,7 @@ bool GraphicsClass::RenderText()
 	strcpy_s(dataString, "rY: ");
 	strcat_s(dataString, tempString);
 
-	result = m_Text->AddSentence(mD3D->GetDevice(), mD3D->GetDeviceContext(), dataString, 800, 340, 0.0f, 1.0f, 1.0f, 9);
+	result = m_Text->AddSentence(mD3D, dataString, 800, 340, 0.0f, 1.0f, 1.0f, 9);
 	if(!result)
 	{
 		return false;
@@ -1555,7 +1594,7 @@ bool GraphicsClass::RenderText()
 	strcpy_s(dataString, "rZ: ");
 	strcat_s(dataString, tempString);
 
-	result = m_Text->AddSentence(mD3D->GetDevice(), mD3D->GetDeviceContext(), dataString, 800, 360, 0.0f, 1.0f, 1.0f, 10);
+	result = m_Text->AddSentence(mD3D, dataString, 800, 360, 0.0f, 1.0f, 1.0f, 10);
 	if(!result)
 	{
 		return false;
@@ -1565,7 +1604,7 @@ bool GraphicsClass::RenderText()
 	strcpy_s(darwCountString, "terrain draw count: ");
 	strcat_s(darwCountString, tempString);
 
-	result = m_Text->AddSentence(mD3D->GetDevice(), mD3D->GetDeviceContext(), darwCountString, 800, 400, 0.0f, 1.0f, 1.0f, 11);
+	result = m_Text->AddSentence(mD3D, darwCountString, 800, 400, 0.0f, 1.0f, 1.0f, 11);
 	if(!result)
 	{
 		return false;
@@ -1578,7 +1617,7 @@ bool GraphicsClass::RenderText()
 		strcpy_s(drawTimeString, "draw time: ");
 		strcat_s(drawTimeString, tempString);
 
-		result = m_Text->AddSentence(mD3D->GetDevice(), mD3D->GetDeviceContext(), drawTimeString, 800, 440, 0.0f, 1.0f, 1.0f, 12);
+		result = m_Text->AddSentence(mD3D, drawTimeString, 800, 440, 0.0f, 1.0f, 1.0f, 12);
 		if(!result)
 		{
 			return false;

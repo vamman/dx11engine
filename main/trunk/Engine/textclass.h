@@ -10,6 +10,7 @@
 #include "Shaders/FontShader.h"
 #include "timerclass.h"
 #include "Log.h"
+#include "d3dclass.h"
 
 const int MAX_LENGTH = 35;
 
@@ -41,8 +42,7 @@ public:
 	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, HWND, int, int, D3DXMATRIX);
 	void Shutdown();
 	bool Render(ID3D11DeviceContext*, D3DXMATRIX, D3DXMATRIX);
-	bool AddSentence(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char *text,
-		int posX, int posY, float colorR, float colorG, float colorB, int numerator);
+	bool AddSentence(D3DClass* d3d, char *text, int posX, int posY, float colorR, float colorG, float colorB, int numerator);
 
 private:
 	bool InitializeSentence(SentenceType**, int, ID3D11Device*);

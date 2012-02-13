@@ -30,8 +30,8 @@ class InputClass
 		void Shutdown();
 		bool Frame();
 		bool IsEscapePressed();
-		bool IsTabPressed();
 		bool IsWireframeModeOn();
+		bool IsAllowToBBRender();
 		void GetMouseLocation(int&, int&);
 
 		bool IsLeftPressed();
@@ -48,6 +48,7 @@ class InputClass
 		bool ReadKeyboard();
 		bool ReadMouse();
 		void ProcessInput();
+		bool IsBtnPressedAndUnpressed(byte keyKode, bool& boolValue);
 
 	private:
 		IDirectInput8* m_directInput;
@@ -61,7 +62,7 @@ class InputClass
 
 		int m_screenWidth, m_screenHeight;
 		int m_mouseX, m_mouseY;
-		bool isWireframeModeOn;
+		bool isWireframeModeOn, isAllowToBBRender;
 
 		static InputClass* instance;
 };

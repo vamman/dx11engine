@@ -78,8 +78,7 @@ bool TextClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceCont
 	return true;
 }
 
-bool TextClass::AddSentence(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char *text,
-int posX, int posY, float colorR, float colorG, float colorB, int sentenceID)
+bool TextClass::AddSentence(D3DClass* d3d, char *text, int posX, int posY, float colorR, float colorG, float colorB, int sentenceID)
 {
 	bool result;
 	SentenceType* sentence = mSentence;
@@ -88,7 +87,7 @@ int posX, int posY, float colorR, float colorG, float colorB, int sentenceID)
 	it = find(mSentenceIDs.begin(), mSentenceIDs.end(), sentenceID);
 	if ( it ==  mSentenceIDs.end() )
 	{
-		result = InitializeSentence(&sentence, MAX_LENGTH, device);
+		result = InitializeSentence(&sentence, MAX_LENGTH, d3d->GetDevice());
 		if(!result)
 		{
 			return false;
@@ -97,7 +96,7 @@ int posX, int posY, float colorR, float colorG, float colorB, int sentenceID)
 		mSentenceVector.push_back(sentence);
 	}
 
-	result = UpdateSentence(mSentenceVector[sentenceID], text, posX, posY, colorR, colorG, colorB, deviceContext);
+	result = UpdateSentence(mSentenceVector[sentenceID], text, posX, posY, colorR, colorG, colorB, d3d->GetDeviceContext());
 	if(!result)
 	{
 		return false;

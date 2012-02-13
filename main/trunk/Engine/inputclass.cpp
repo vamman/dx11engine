@@ -6,7 +6,7 @@
 
 InputClass* InputClass::instance = 0;
 
-InputClass::InputClass() : isWireframeModeOn(true)
+InputClass::InputClass() : isWireframeModeOn(true), isAllowToBBRender(true)
 {
 	m_directInput = 0;
 	m_keyboard = 0;
@@ -221,33 +221,30 @@ void InputClass::ProcessInput()
 
 bool InputClass::IsWireframeModeOn()
 {
-	bool prevState = mPreviousKeyboardState[DIK_TAB] & 0x80;
-	bool currState = mCurrentKeyboardState[DIK_TAB] & 0x80;
-
-	if (
-			(prevState && !currState ) && 
-			isWireframeModeOn == false
-		)
-	{
-		isWireframeModeOn = true;
-	}
-	else if (
-				(prevState && !currState ) && 
-				isWireframeModeOn == true
-			)
-	{
-		isWireframeModeOn = false;
-	}
+	IsBtnPressedAndUnpressed(DIK_TAB, isWireframeModeOn);
 	return isWireframeModeOn;
 }
 
-bool InputClass::IsTabPressed()
+bool InputClass::IsAllowToBBRender()
 {
-	if(mCurrentKeyboardState[DIK_TAB] & 0x80)
+	IsBtnPressedAndUnpressed(DIK_HOME, isAllowToBBRender);
+	return isAllowToBBRender;
+}
+
+bool InputClass::IsBtnPressedAndUnpressed(byte keyKode, bool& boolValue)
+{
+	bool prevState = mPreviousKeyboardState[keyKode] & 0x80;
+	bool currState = mCurrentKeyboardState[keyKode] & 0x80;
+
+	if ((prevState && !currState ) && boolValue == false)
 	{
-		return true;
+		boolValue = true;
 	}
-	return false;
+	else if ((prevState && !currState ) && boolValue == true)
+	{
+		boolValue = false;
+	}
+	return boolValue;
 }
 
 bool InputClass::IsEscapePressed()
