@@ -34,6 +34,7 @@
 #include "QuadTree.h"
 #include "CameraMovement.h"
 #include "timerclass.h"
+#include "minimap.h"
 
 #include "textclass.h"
 #include "inputclass.h"
@@ -98,6 +99,7 @@ class GraphicsClass
 		MaterialFactory* mMaterialFactory;
 		Terrain* mTerrain;
 		QuadTree* mQuadTree;
+		MiniMap* m_MiniMap;
 
 		D3DClass* mD3D;
 		CameraClass* mCamera;

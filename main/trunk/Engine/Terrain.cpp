@@ -4,8 +4,6 @@
 
 Terrain::Terrain()
 {
-	// m_vertexBuffer = 0;
-	// m_indexBuffer = 0;
 	m_heightMap = 0;
 	m_Texture = 0;
 	m_vertices = 0;
@@ -19,7 +17,7 @@ Terrain::~Terrain()
 {
 }
 
-bool Terrain::Initialize(ID3D11Device* device, char* heightMapFileName, WCHAR* textureFilename)
+bool Terrain::Initialize(ID3D11Device* device, char* heightMapFileName, WCHAR* textureFilename, char* colorMapFilename)
 {
 	bool result;
 	DWORD funcTime = -1;
@@ -48,6 +46,13 @@ bool Terrain::Initialize(ID3D11Device* device, char* heightMapFileName, WCHAR* t
 
 	// Load the texture.
 	result = LoadTexture(device, textureFilename);
+	if(!result)
+	{
+		return false;
+	}
+
+	// Load in the color map for the terrain.
+	result = LoadColorMap(colorMapFilename);
 	if(!result)
 	{
 		return false;
@@ -427,6 +432,98 @@ bool Terrain::LoadTexture(ID3D11Device* device, WCHAR* filename)
 	return true;
 }
 
+bool Terrain::LoadColorMap(char* filename)
+{
+	int error, imageSize, i, j, k, index, colorMapWidth, colorMapHeight;
+	FILE* filePtr;
+	unsigned int count;
+	BITMAPFILEHEADER bitmapFileHeader;
+	BITMAPINFOHEADER bitmapInfoHeader;
+	unsigned char* bitmapImage;
+
+
+	// Open the color map file in binary.
+	error = fopen_s(&filePtr, filename, "rb");
+	if(error != 0)
+	{
+		return false;
+	}
+
+	// Read in the file header.
+	count = fread(&bitmapFileHeader, sizeof(BITMAPFILEHEADER), 1, filePtr);
+	if(count != 1)
+	{
+		return false;
+	}
+
+	// Read in the bitmap info header.
+	count = fread(&bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, filePtr);
+	if(count != 1)
+	{
+		return false;
+	}
+
+	// Make sure the color map dimensions are the same as the terrain dimensions for easy 1 to 1 mapping.
+	colorMapWidth = bitmapInfoHeader.biWidth;
+	colorMapHeight = bitmapInfoHeader.biHeight;
+
+	if((colorMapWidth != m_terrainWidth) || (colorMapHeight != m_terrainHeight))
+	{
+		return false;
+	}
+
+	// Calculate the size of the bitmap image data.
+	imageSize = colorMapWidth * colorMapHeight * 3;
+
+	// Allocate memory for the bitmap image data.
+	bitmapImage = new unsigned char[imageSize];
+	if(!bitmapImage)
+	{
+		return false;
+	}
+
+	// Move to the beginning of the bitmap data.
+	fseek(filePtr, bitmapFileHeader.bfOffBits, SEEK_SET);
+
+	// Read in the bitmap image data.
+	count = fread(bitmapImage, 1, imageSize, filePtr);
+	if(count != imageSize)
+	{
+		return false;
+	}
+
+	// Close the file.
+	error = fclose(filePtr);
+	if(error != 0)
+	{
+		return false;
+	}
+
+	// Initialize the position in the image data buffer.
+	k=0;
+
+	// Read the image data into the color map portion of the height map structure.
+	for(j=0; j<colorMapHeight; j++)
+	{
+		for(i=0; i<colorMapWidth; i++)
+		{
+			index = (colorMapHeight * j) + i;
+
+			m_heightMap[index].b = (float)bitmapImage[k]   / 255.0f;
+			m_heightMap[index].g = (float)bitmapImage[k+1] / 255.0f;
+			m_heightMap[index].r = (float)bitmapImage[k+2] / 255.0f;
+
+			k+=3;
+		}
+	}
+
+	// Release the bitmap image data.
+	delete [] bitmapImage;
+	bitmapImage = 0;
+
+	return true;
+}
+
 void Terrain::ReleaseTexture()
 {
 	// Release the texture object.
@@ -477,6 +574,7 @@ bool Terrain::InitializeBuffers(ID3D11Device* device)
 			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index3].x, m_heightMap[index3].y, m_heightMap[index3].z);
 			m_vertices[index].texture = D3DXVECTOR2(m_heightMap[index3].tu, tv);
 			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index3].nx, m_heightMap[index3].ny, m_heightMap[index3].nz);
+			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index3].r, m_heightMap[index3].g, m_heightMap[index3].b, 1.0f);
 			index++;
 
 			// Upper right.
@@ -490,18 +588,21 @@ bool Terrain::InitializeBuffers(ID3D11Device* device)
 			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index4].x, m_heightMap[index4].y, m_heightMap[index4].z);
 			m_vertices[index].texture = D3DXVECTOR2(tu, tv);
 			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index4].nx, m_heightMap[index4].ny, m_heightMap[index4].nz);
+			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index4].r, m_heightMap[index4].g, m_heightMap[index4].b, 1.0f);
 			index++;
 
 			// Bottom left.
 			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index1].x, m_heightMap[index1].y, m_heightMap[index1].z);
 			m_vertices[index].texture = D3DXVECTOR2(m_heightMap[index1].tu, m_heightMap[index1].tv);
 			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index1].nx, m_heightMap[index1].ny, m_heightMap[index1].nz);
+			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index1].r, m_heightMap[index1].g, m_heightMap[index1].b, 1.0f);
 			index++;
 
-			// Bottom left.
+			// Bottom right.
 			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index1].x, m_heightMap[index1].y, m_heightMap[index1].z);
 			m_vertices[index].texture = D3DXVECTOR2(m_heightMap[index1].tu, m_heightMap[index1].tv);
 			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index1].nx, m_heightMap[index1].ny, m_heightMap[index1].nz);
+			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index1].r, m_heightMap[index1].g, m_heightMap[index1].b, 1.0f);
 			index++;
 
 			// Upper right.
@@ -515,6 +616,7 @@ bool Terrain::InitializeBuffers(ID3D11Device* device)
 			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index4].x, m_heightMap[index4].y, m_heightMap[index4].z);
 			m_vertices[index].texture = D3DXVECTOR2(tu, tv);
 			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index4].nx, m_heightMap[index4].ny, m_heightMap[index4].nz);
+			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index4].r, m_heightMap[index4].g, m_heightMap[index4].b, 1.0f);
 			index++;
 
 			// Bottom right.
@@ -526,6 +628,7 @@ bool Terrain::InitializeBuffers(ID3D11Device* device)
 			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index2].x, m_heightMap[index2].y, m_heightMap[index2].z);
 			m_vertices[index].texture = D3DXVECTOR2(tu, m_heightMap[index2].tv);
 			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index2].nx, m_heightMap[index2].ny, m_heightMap[index2].nz);
+			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index2].r, m_heightMap[index2].g, m_heightMap[index2].b, 1.0f);
 			index++;
 		}
 	}
@@ -553,5 +656,13 @@ int Terrain::GetVertexCount()
 void Terrain::CopyVertexArray(void* vertexList)
 {
 	memcpy(vertexList, m_vertices, sizeof(VertexType) * m_vertexCount);
+	return;
+}
+
+void Terrain::GetTerrainSize(int& width, int& height)
+{
+	// Return the width and height of the terrain.
+	width = m_terrainWidth;
+	height = m_terrainHeight;
 	return;
 }

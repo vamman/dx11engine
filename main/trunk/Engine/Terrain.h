@@ -28,6 +28,7 @@ class Terrain
 			D3DXVECTOR3 position;
 			D3DXVECTOR2 texture;
 			D3DXVECTOR3 normal;
+			D3DXVECTOR4 color;
 		};
 
 		struct HeightMapType 
@@ -35,6 +36,7 @@ class Terrain
 			float x, y, z;
 			float tu, tv;
 			float nx, ny, nz;
+			float r, g, b;
 		};
 
 		struct VectorType 
@@ -47,14 +49,12 @@ class Terrain
 		Terrain(const Terrain&);
 		~Terrain();
 
-		bool Initialize(ID3D11Device* device, char* heightMapFileName, WCHAR* textureFilename);
+		bool Initialize(ID3D11Device* device, char* heightMapFileName, WCHAR* textureFilename, char* colorMapFilename);
 		void Shutdown();
-		// void Render(ID3D11DeviceContext*);
-
-		// int GetIndexCount();
 		ID3D11ShaderResourceView* GetTexture();
 		int GetVertexCount();
 		void CopyVertexArray(void*);
+		void GetTerrainSize(int&, int&);
 
 	private:
 		bool LoadHeightMap(char* heightMapFileName);
@@ -64,16 +64,15 @@ class Terrain
 
 		void CalculateTextureCoordinates();
 		bool LoadTexture(ID3D11Device*, WCHAR*);
+		bool LoadColorMap(char*);
 		void ReleaseTexture();
 
 		bool InitializeBuffers(ID3D11Device*);
 		void ShutdownBuffers();
-		// void RenderBuffers(ID3D11DeviceContext*);
 
 	private:
 		int m_terrainWidth, m_terrainHeight;
 		int m_vertexCount;
-		// ID3D11Buffer *m_vertexBuffer, *m_indexBuffer;
 		HeightMapType* m_heightMap;
 		TextureClass* m_Texture;
 		VertexType* m_vertices;
