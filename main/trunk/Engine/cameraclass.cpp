@@ -2,15 +2,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "cameraclass.h"
 
-CameraClass::CameraClass()
+CameraClass::CameraClass() : mCamYaw(0.0f), mCamPitch(0.0f), mPositionX(0.0f),
+							mPositionY(0.0f), mPositionZ(0.0f), mRotationX(0.0f), mRotationY(0.0f), mRotationZ(0.0f)
 {
-	m_positionX = 0.0f;
-	m_positionY = 0.0f;
-	m_positionZ = 0.0f;
-
-	m_rotationX = 0.0f;
-	m_rotationY = 0.0f;
-	m_rotationZ = 0.0f;
 }
 
 
@@ -25,30 +19,30 @@ CameraClass::~CameraClass()
 
 void CameraClass::SetPosition(float x, float y, float z)
 {
-	m_positionX = x;
-	m_positionY = y;
-	m_positionZ = z;
+	mPositionX = x;
+	mPositionY = y;
+	mPositionZ = z;
 	return;
 }
 
 
 void CameraClass::SetRotation(float x, float y, float z)
 {
-	m_rotationX = x;
-	m_rotationY = y;
-	m_rotationZ = z;
+	mRotationX = x;
+	mRotationY = y;
+	mRotationZ = z;
 	return;
 }
 
 D3DXVECTOR3 CameraClass::GetPosition()
 {
-	return D3DXVECTOR3(m_positionX, m_positionY, m_positionZ);
+	return D3DXVECTOR3(mPositionX, mPositionY, mPositionZ);
 }
 
 
 D3DXVECTOR3 CameraClass::GetRotation()
 {
-	return D3DXVECTOR3(m_rotationX, m_rotationY, m_rotationZ);
+	return D3DXVECTOR3(mRotationX, mRotationY, mRotationZ);
 }
 
 void CameraClass::Render()
@@ -64,9 +58,9 @@ void CameraClass::Render()
 	up.z = 0.0f;
 
 	// Setup the position of the camera in the world.
-	position.x = m_positionX;
-	position.y = m_positionY;
-	position.z = m_positionZ;
+	position.x = mPositionX;
+	position.y = mPositionY;
+	position.z = mPositionZ;
 
 	// Setup where the camera is looking by default.
 	lookAt.x = 0.0f;
@@ -74,9 +68,9 @@ void CameraClass::Render()
 	lookAt.z = 1.0f;
 
 	// Set the yaw (Y axis), pitch (X axis), and roll (Z axis) rotations in radians.
-	pitch = m_rotationX * 0.0174532925f;
-	yaw   = m_rotationY * 0.0174532925f;
-	roll  = m_rotationZ * 0.0174532925f;
+	pitch = mRotationX * 0.0174532925f;
+	yaw   = mRotationY * 0.0174532925f;
+	roll  = mRotationZ * 0.0174532925f;
 
 	// Create the rotation matrix from the yaw, pitch, and roll values.
 	D3DXMatrixRotationYawPitchRoll(&rotationMatrix, yaw, pitch, roll);
@@ -89,14 +83,14 @@ void CameraClass::Render()
 	lookAt = position + lookAt;
 
 	// Finally create the view matrix from the three updated vectors.
-	D3DXMatrixLookAtLH(&m_viewMatrix, &position, &lookAt, &up);
+	D3DXMatrixLookAtLH(&mViewMatrix, &position, &lookAt, &up);
 
 	return;
 }
 
 void CameraClass::GetViewMatrix(D3DXMATRIX& viewMatrix)
 {
-	viewMatrix = m_viewMatrix;
+	viewMatrix = mViewMatrix;
 	return;
 }
 
@@ -113,17 +107,17 @@ void CameraClass::RenderReflection(float height)
 
 	// Setup the position of the camera in the world.
 	// For planar reflection invert the Y position of the camera.
-	position.x = m_positionX;
-	position.y = -m_positionY + (height * 2.0f);
-	position.z = m_positionZ;
+	position.x = mPositionX;
+	position.y = -mPositionY + (height * 2.0f);
+	position.z = mPositionZ;
 
 	// Calculate the rotation in radians.
-	radians = m_rotationY * 0.0174532925f;
+	radians = mRotationY * 0.0174532925f;
 
 	// Setup where the camera is looking.
-	lookAt.x = sinf(radians) + m_positionX;
+	lookAt.x = sinf(radians) + mPositionX;
 	lookAt.y = position.y;
-	lookAt.z = cosf(radians) + m_positionZ;
+	lookAt.z = cosf(radians) + mPositionZ;
 
 	// Create the view matrix from the three vectors.
 	D3DXMatrixLookAtLH(&m_reflectionViewMatrix, &position, &lookAt, &up);

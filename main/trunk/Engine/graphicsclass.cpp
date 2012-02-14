@@ -926,30 +926,35 @@ bool GraphicsClass::HandleInput(float frameTime)
 	mCameraMovement->SetFrameTime(frameTime);
 
 	// Handle the input.
-	keyDown = InputClass::GetInstance()->IsLeftPressed();
+	keyDown = InputClass::GetInstance()->IsQPressed();
 	mCameraMovement->TurnLeft(keyDown);
-
-	keyDown = InputClass::GetInstance()->IsRightPressed();
+	keyDown = InputClass::GetInstance()->IsEPressed();
 	mCameraMovement->TurnRight(keyDown);
 
-	keyDown = InputClass::GetInstance()->IsUpPressed();
+	keyDown = InputClass::GetInstance()->IsWPressed();
 	mCameraMovement->MoveForward(keyDown);
-
-	keyDown = InputClass::GetInstance()->IsDownPressed();
+	keyDown = InputClass::GetInstance()->IsSPressed();
 	mCameraMovement->MoveBackward(keyDown);
 
+	keyDown = InputClass::GetInstance()->IsAPressed();
+	mCameraMovement->StrafeLeft(keyDown);
+	keyDown = InputClass::GetInstance()->IsDPressed();
+	mCameraMovement->StrafeRight(keyDown);
+
+	/*
 	keyDown = InputClass::GetInstance()->IsAPressed();
 	mCameraMovement->MoveUpward(keyDown);
 
 	keyDown = InputClass::GetInstance()->IsZPressed();
 	mCameraMovement->MoveDownward(keyDown);
+	*/
 
 	keyDown = InputClass::GetInstance()->IsPgUpPressed();
 	mCameraMovement->LookUpward(keyDown);
 
 	keyDown = InputClass::GetInstance()->IsPgDownPressed();
 	mCameraMovement->LookDownward(keyDown);
-	
+
 	// Get the view point position/rotation.
 	mCameraMovement->GetPosition(posX, posY, posZ);
 	mCameraMovement->GetRotation(rotX, rotY, rotZ);
@@ -958,6 +963,16 @@ bool GraphicsClass::HandleInput(float frameTime)
 	mCamera->SetPosition(posX, posY, posZ);
 	mCamera->SetRotation(rotX, rotY, rotZ);
 
+	// Rotate camera due to mouse movement
+	/*
+	mCameraMovement->GetPosition(posX, posY, posZ);
+	mCameraMovement->GetRotation(rotX, rotY, rotZ);
+
+	InputClass::GetInstance()->GetMouseDelta(rotX, rotY);
+
+	mCamera->SetPosition(posX, posY, posZ);
+	mCamera->SetRotation(rotX, rotY, rotZ);
+	*/
 	// Update the location of the camera on the mini map.
 	m_MiniMap->PositionUpdate(posX, posZ);
 

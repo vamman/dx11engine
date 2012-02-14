@@ -15,8 +15,10 @@ CameraMovement::CameraMovement()
 
 	m_frameTime = 0.0f;
 
-	m_forwardSpeed   = 0.0f;
-	m_backwardSpeed  = 0.0f;
+	mForwardSpeed   = 0.0f;
+	mBackwardSpeed  = 0.0f;
+	mStrafeLeftSpeed  = 0.0f;
+	mStrafeRightSpeed = 0.0f;
 	m_upwardSpeed    = 0.0f;
 	m_downwardSpeed  = 0.0f;
 	m_leftTurnSpeed  = 0.0f;
@@ -79,20 +81,20 @@ void CameraMovement::MoveForward(bool keydown)
 	// Update the forward speed movement based on the frame time and whether the user is holding the key down or not.
 	if(keydown)
 	{
-		m_forwardSpeed += m_frameTime * 0.001f;
+		mForwardSpeed += m_frameTime * 0.001f;
 
-		if(m_forwardSpeed > (m_frameTime * 0.03f))
+		if(mForwardSpeed > (m_frameTime * 0.03f))
 		{
-			m_forwardSpeed = m_frameTime * 0.03f;
+			mForwardSpeed = m_frameTime * 0.03f;
 		}
 	}
 	else
 	{
-		m_forwardSpeed -= m_frameTime * 0.0007f;
+		mForwardSpeed -= m_frameTime * 0.0007f;
 
-		if(m_forwardSpeed < 0.0f)
+		if(mForwardSpeed < 0.0f)
 		{
-			m_forwardSpeed = 0.0f;
+			mForwardSpeed = 0.0f;
 		}
 	}
 
@@ -100,8 +102,8 @@ void CameraMovement::MoveForward(bool keydown)
 	radians = m_rotationY * 0.0174532925f;
 
 	// Update the position.
-	m_positionX += sinf(radians) * m_forwardSpeed;
-	m_positionZ += cosf(radians) * m_forwardSpeed;
+	m_positionX += sinf(radians) * mForwardSpeed;
+	m_positionZ += cosf(radians) * mForwardSpeed;
 
 	return;
 }
@@ -112,20 +114,20 @@ void CameraMovement::MoveBackward(bool keydown)
 	// Update the backward speed movement based on the frame time and whether the user is holding the key down or not.
 	if(keydown)
 	{
-		m_backwardSpeed += m_frameTime * 0.001f;
+		mBackwardSpeed += m_frameTime * 0.001f;
 
-		if(m_backwardSpeed > (m_frameTime * 0.03f))
+		if(mBackwardSpeed > (m_frameTime * 0.03f))
 		{
-			m_backwardSpeed = m_frameTime * 0.03f;
+			mBackwardSpeed = m_frameTime * 0.03f;
 		}
 	}
 	else
 	{
-		m_backwardSpeed -= m_frameTime * 0.0007f;
+		mBackwardSpeed -= m_frameTime * 0.0007f;
 
-		if(m_backwardSpeed < 0.0f)
+		if(mBackwardSpeed < 0.0f)
 		{
-			m_backwardSpeed = 0.0f;
+			mBackwardSpeed = 0.0f;
 		}
 	}
 
@@ -133,12 +135,120 @@ void CameraMovement::MoveBackward(bool keydown)
 	radians = m_rotationY * 0.0174532925f;
 
 	// Update the position.
-	m_positionX -= sinf(radians) * m_backwardSpeed;
-	m_positionZ -= cosf(radians) * m_backwardSpeed;
+	m_positionX -= sinf(radians) * mBackwardSpeed;
+	m_positionZ -= cosf(radians) * mBackwardSpeed;
 
 	return;
 }
 
+void CameraMovement::StrafeLeft(bool keydown)
+{
+	float radians;
+	// Update the forward speed movement based on the frame time and whether the user is holding the key down or not.
+	if(keydown)
+	{
+		mStrafeLeftSpeed += m_frameTime * 0.001f;
+
+		if(mStrafeLeftSpeed > (m_frameTime * 0.03f))
+		{
+			mStrafeLeftSpeed = m_frameTime * 0.03f;
+		}
+	}
+	else
+	{
+		mStrafeLeftSpeed -= m_frameTime * 0.0007f;
+
+		if(mStrafeLeftSpeed < 0.0f)
+		{
+			mStrafeLeftSpeed = 0.0f;
+		}
+	}
+
+	// Convert degrees to radians.
+	radians = m_rotationY * 0.0174532925f;
+
+	// Update the position.
+	int sinValue = sinf(radians);
+	int cosValue = cosf(radians);
+	int tanValue = tanf(radians);
+	if (cosValue == 0)
+	{
+		m_positionX -= cosValue * mStrafeLeftSpeed;
+		m_positionZ -= sinValue * mStrafeLeftSpeed;
+	}
+	else if (sinValue == 0)
+	{
+		m_positionX -= cosValue * mStrafeLeftSpeed; // X // cosf
+		m_positionZ -= sinValue * mStrafeLeftSpeed; // Z // sinf
+	}
+	else
+	{
+		m_positionX -= tanValue * mStrafeLeftSpeed; // X // cosf
+		m_positionZ -= tanValue * mStrafeLeftSpeed; // Z // sinf
+	}
+
+	/*
+	m_positionX -= cosf(radians) * mStrafeLeftSpeed; // X // cosf
+	m_positionZ -= sinf(radians) * mStrafeLeftSpeed; // Z // sinf
+	*/
+	return;
+}
+
+void CameraMovement::StrafeRight(bool keydown)
+{
+	float radians;
+	// Update the forward speed movement based on the frame time and whether the user is holding the key down or not.
+	if(keydown)
+	{
+		mStrafeRightSpeed += m_frameTime * 0.001f;
+
+		if(mStrafeRightSpeed > (m_frameTime * 0.03f))
+		{
+			mStrafeRightSpeed = m_frameTime * 0.03f;
+		}
+	}
+	else
+	{
+		mStrafeRightSpeed -= m_frameTime * 0.0007f;
+
+		if(mStrafeRightSpeed < 0.0f)
+		{
+			mStrafeRightSpeed = 0.0f;
+		}
+	}
+
+	// Convert degrees to radians.
+	radians = m_rotationY * 0.0174532925f;
+
+	// Update the position.
+	int sinValue = sinf(radians);
+	int cosValue = cosf(radians);
+	int tanValue = tanf(radians);
+
+	if (cosValue == 0)
+	{
+		m_positionX -= cosValue * mStrafeLeftSpeed;
+		m_positionZ -= sinValue * mStrafeLeftSpeed;
+	}
+	else if (sinValue == 0)
+	{
+		m_positionX += cosValue * mStrafeRightSpeed; // X // cosf
+		m_positionZ += sinValue * mStrafeRightSpeed; // Z // sinf
+	}
+	else
+	{
+		m_positionX += tanValue * mStrafeLeftSpeed; // X // cosf
+		m_positionZ += tanValue * mStrafeLeftSpeed; // Z // sinf
+	}
+
+	/*
+	m_positionX += cosf(radians) * mStrafeRightSpeed; // X // cosf
+	m_positionZ += sinf(radians) * mStrafeRightSpeed; // Z // sinf
+	*/
+	return;
+}
+
+/*
 void CameraMovement::MoveUpward(bool keydown)
 {
 	// Update the upward speed movement based on the frame time and whether the user is holding the key down or not.
@@ -194,6 +304,7 @@ void CameraMovement::MoveDownward(bool keydown)
 
 	return;
 }
+*/
 
 void CameraMovement::TurnLeft(bool keydown)
 {

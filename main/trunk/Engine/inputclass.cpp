@@ -6,11 +6,12 @@
 
 InputClass* InputClass::instance = 0;
 
-InputClass::InputClass() : isWireframeModeOn(true), isAllowToBBRender(true), isAllowToCameraDisplayRender(true)
+InputClass::InputClass() : isWireframeModeOn(true), isAllowToBBRender(true), isAllowToCameraDisplayRender(true),
+						 mMouseX(0), mMouseY(0), mMouseDeltaX(0.0f), mMouseDeltaY(0.0f) 
 {
 	m_directInput = 0;
-	m_keyboard = 0;
-	m_mouse = 0;
+	mKeyboard = 0;
+	mMouse = 0;
 }
 
 InputClass* InputClass::GetInstance()
@@ -30,10 +31,6 @@ HRESULT InputClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidth, 
 	m_screenWidth = screenWidth;
 	m_screenHeight = screenHeight;
 
-	// Initialize the location of the mouse on the screen.
-	m_mouseX = 0;
-	m_mouseY = 0;
-
 	// Initialize the main direct input interface.
 	result = DirectInput8Create(hinstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_directInput, NULL);
 	if(FAILED(result))
@@ -42,28 +39,28 @@ HRESULT InputClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidth, 
 	}
 
 	// Initialize the direct input interface for the keyboard.
-	result = m_directInput->CreateDevice(GUID_SysKeyboard, &m_keyboard, NULL);
+	result = m_directInput->CreateDevice(GUID_SysKeyboard, &mKeyboard, NULL);
 	if(FAILED(result))
 	{
 		return result;
 	}
 
 	// Set the data format.  In this case since it is a keyboard we can use the predefined data format.
-	result = m_keyboard->SetDataFormat(&c_dfDIKeyboard);
+	result = mKeyboard->SetDataFormat(&c_dfDIKeyboard);
 	if(FAILED(result))
 	{
 		return result;
 	}
 
 	// Set the cooperative level of the keyboard to not share with other programs.
-	result = m_keyboard->SetCooperativeLevel(hwnd,  DISCL_BACKGROUND | DISCL_NONEXCLUSIVE); //  DISCL_FOREGROUND | DISCL_EXCLUSIVE
+	result = mKeyboard->SetCooperativeLevel(hwnd,  DISCL_BACKGROUND | DISCL_NONEXCLUSIVE); //  DISCL_FOREGROUND | DISCL_EXCLUSIVE
 	if(FAILED(result))
 	{
 		return result;
 	}
  
 	// Now acquire the keyboard.
-	result = m_keyboard->Acquire();
+	result = mKeyboard->Acquire();
 	if(FAILED(result))
 	{
 		int i = 0;
@@ -72,28 +69,28 @@ HRESULT InputClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidth, 
 	}
 
 	// Initialize the direct input interface for the mouse.
-	result = m_directInput->CreateDevice(GUID_SysMouse, &m_mouse, NULL);
+	result = m_directInput->CreateDevice(GUID_SysMouse, &mMouse, NULL);
 	if(FAILED(result))
 	{
 		return result;
 	}
 
 	// Set the data format for the mouse using the pre-defined mouse data format.
-	result = m_mouse->SetDataFormat(&c_dfDIMouse);
+	result = mMouse->SetDataFormat(&c_dfDIMouse);
 	if(FAILED(result))
 	{
 		return result;
 	}
  
 	// Set the cooperative level of the mouse to share with other programs.
-	result = m_mouse->SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
+	result = mMouse->SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
 	if(FAILED(result))
 	{
 		return result;
 	}
 
 	// Acquire the mouse.
-	result = m_mouse->Acquire();
+	result = mMouse->Acquire();
 	if(FAILED(result))
 	{
 		return result;
@@ -105,19 +102,19 @@ HRESULT InputClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidth, 
 void InputClass::Shutdown()
 {
 	// Release the mouse.
-	if(m_mouse)
+	if(mMouse)
 	{
-		m_mouse->Unacquire();
-		m_mouse->Release();
-		m_mouse = 0;
+		mMouse->Unacquire();
+		mMouse->Release();
+		mMouse = 0;
 	}
 
 	// Release the keyboard.
-	if(m_keyboard)
+	if(mKeyboard)
 	{
-		m_keyboard->Unacquire();
-		m_keyboard->Release();
-		m_keyboard = 0;
+		mKeyboard->Unacquire();
+		mKeyboard->Release();
+		mKeyboard = 0;
 	}
 
 	// Release the main interface to direct input.
@@ -163,13 +160,13 @@ bool InputClass::ReadKeyboard()
 	memcpy(mPreviousKeyboardState, mCurrentKeyboardState, sizeof(mCurrentKeyboardState));
 
 	// Read the keyboard device.
-	result = m_keyboard->GetDeviceState(sizeof(mCurrentKeyboardState), (LPVOID)&mCurrentKeyboardState);
+	result = mKeyboard->GetDeviceState(sizeof(mCurrentKeyboardState), (LPVOID)&mCurrentKeyboardState);
 	if(FAILED(result))
 	{
 		// If the keyboard lost focus or was not acquired then try to get control back.
 		if((result == DIERR_INPUTLOST) || (result == DIERR_NOTACQUIRED))
 		{
-			m_keyboard->Acquire();
+			mKeyboard->Acquire();
 		}
 		else
 		{
@@ -186,18 +183,27 @@ bool InputClass::ReadMouse()
 
 
 	// Read the mouse device.
-	result = m_mouse->GetDeviceState(sizeof(DIMOUSESTATE), (LPVOID)&m_mouseState);
+	result = mMouse->GetDeviceState(sizeof(DIMOUSESTATE), (LPVOID)&mMouseCurrentState);
 	if(FAILED(result))
 	{
 		// If the mouse lost focus or was not acquired then try to get control back.
 		if((result == DIERR_INPUTLOST) || (result == DIERR_NOTACQUIRED))
 		{
-			m_mouse->Acquire();
+			mMouse->Acquire();
 		}
 		else
 		{
 			return false;
 		}
+	}
+	
+	if((mMouseCurrentState.lX != mMousePreviouseState.lX) || (mMouseCurrentState.lY != mMousePreviouseState.lY))
+	{
+		// mMouseDeltaX += mMousePreviouseState.lX * 0.001f;
+		// mMouseDeltaY += mMouseCurrentState.lY * 0.001f;
+		mMouseDeltaX = (mMouseCurrentState.lX - mMousePreviouseState.lX) / 100.0f;
+		mMouseDeltaY = (mMouseCurrentState.lY - mMousePreviouseState.lY) / 100.0f;
+		mMousePreviouseState = mMouseCurrentState;
 	}
 
 	return true;
@@ -206,15 +212,15 @@ bool InputClass::ReadMouse()
 void InputClass::ProcessInput()
 {
 	// Update the location of the mouse cursor based on the change of the mouse location during the frame.
-	m_mouseX += m_mouseState.lX;
-	m_mouseY += m_mouseState.lY;
+	mMouseX += mMouseCurrentState.lX;
+	mMouseY += mMouseCurrentState.lY;
 
 	// Ensure the mouse location doesn't exceed the screen width or height.
-	if(m_mouseX < 0)  { m_mouseX = 0; }
-	if(m_mouseY < 0)  { m_mouseY = 0; }
+	if(mMouseX < 0)  { mMouseX = 0; }
+	if(mMouseY < 0)  { mMouseY = 0; }
 
-	if(m_mouseX > m_screenWidth)  { m_mouseX = m_screenWidth; }
-	if(m_mouseY > m_screenHeight) { m_mouseY = m_screenHeight; }
+	if(mMouseX > m_screenWidth)  { mMouseX = m_screenWidth; }
+	if(mMouseY > m_screenHeight) { mMouseY = m_screenHeight; }
 
 	return;
 }
@@ -237,8 +243,80 @@ bool InputClass::IsAllowToCameraDisplayRender()
 	return isAllowToCameraDisplayRender;
 }
 
+bool InputClass::IsEscapePressed()
+{
+	if(mCurrentKeyboardState[DIK_ESCAPE] & 0x80)
+	{
+		return true;
+	}
+	return false;
+}
+
+void InputClass::GetMouseLocation(int& mouseX, int& mouseY)
+{
+	mouseX = mMouseX;
+	mouseY = mMouseY;
+	return;
+}
+
+void InputClass::GetMouseDelta(float& mouseDeltaX, float& mouseDeltaY)
+{
+	mouseDeltaX = mMouseDeltaX;
+	mouseDeltaY = mMouseDeltaY;
+}
+
+
+bool InputClass::IsWPressed()
+{
+	return IsBtnPressed(DIK_W);
+}
+
+
+bool InputClass::IsSPressed()
+{
+	return IsBtnPressed(DIK_S);
+}
+
+bool InputClass::IsAPressed()
+{
+	return IsBtnPressed(DIK_A);
+}
+
+bool InputClass::IsDPressed()
+{
+	return IsBtnPressed(DIK_D);
+}
+
+bool InputClass::IsQPressed()
+{
+	return IsBtnPressed(DIK_Q);
+}
+
+bool InputClass::IsEPressed()
+{
+	return IsBtnPressed(DIK_E);
+}
+
+bool InputClass::IsZPressed()
+{
+	return IsBtnPressed(DIK_Z);
+}
+
+
+bool InputClass::IsPgUpPressed()
+{
+	return IsBtnPressed(DIK_PGUP);
+}
+
+
+bool InputClass::IsPgDownPressed()
+{
+	return IsBtnPressed(DIK_PGDN);
+}
+
 bool InputClass::IsBtnPressedAndUnpressed(byte keyKode, bool& boolValue)
 {
+
 	bool prevState = mPreviousKeyboardState[keyKode] & 0x80;
 	bool currState = mCurrentKeyboardState[keyKode] & 0x80;
 
@@ -253,95 +331,9 @@ bool InputClass::IsBtnPressedAndUnpressed(byte keyKode, bool& boolValue)
 	return boolValue;
 }
 
-bool InputClass::IsEscapePressed()
+bool InputClass::IsBtnPressed(byte keyKode)
 {
-	if(mCurrentKeyboardState[DIK_ESCAPE] & 0x80)
-	{
-		return true;
-	}
-	return false;
-}
-
-void InputClass::GetMouseLocation(int& mouseX, int& mouseY)
-{
-	mouseX = m_mouseX;
-	mouseY = m_mouseY;
-	return;
-}
-
-bool InputClass::IsLeftPressed()
-{
-	if(mCurrentKeyboardState[DIK_LEFT] & 0x80)
-	{
-		return true;
-	}
-	return false;
-}
-
-
-bool InputClass::IsRightPressed()
-{
-	if(mCurrentKeyboardState[DIK_RIGHT] & 0x80)
-	{
-		return true;
-	}
-	return false;
-}
-
-
-bool InputClass::IsUpPressed()
-{
-	if(mCurrentKeyboardState[DIK_UP] & 0x80)
-	{
-		return true;
-	}
-	return false;
-}
-
-
-bool InputClass::IsDownPressed()
-{
-	if(mCurrentKeyboardState[DIK_DOWN] & 0x80)
-	{
-		return true;
-	}
-	return false;
-}
-
-
-bool InputClass::IsAPressed()
-{
-	if(mCurrentKeyboardState[DIK_A] & 0x80)
-	{
-		return true;
-	}
-	return false;
-}
-
-
-bool InputClass::IsZPressed()
-{
-	if(mCurrentKeyboardState[DIK_Z] & 0x80)
-	{
-		return true;
-	}
-	return false;
-}
-
-
-bool InputClass::IsPgUpPressed()
-{
-	if(mCurrentKeyboardState[DIK_PGUP] & 0x80)
-	{
-		return true;
-	}
-	return false;
-}
-
-
-bool InputClass::IsPgDownPressed()
-{
-	if(mCurrentKeyboardState[DIK_PGDN] & 0x80)
+	if(mCurrentKeyboardState[keyKode] & 0x80)
 	{
 		return true;
 	}
