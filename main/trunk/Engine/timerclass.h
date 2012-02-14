@@ -26,6 +26,7 @@ public:
 	void SetTimeA();
 	void SetTimeB();
 	DWORD GetDeltaTime();
+	float GetStartTime();
 
 private:
 	Timer();
@@ -35,6 +36,7 @@ private:
 	float m_frameTime;
 	static Timer* instance;
 
+	DWORD mStartTime;
 	DWORD mTimeA;
 	DWORD mTimeB;
 	DWORD mDeltaTime;

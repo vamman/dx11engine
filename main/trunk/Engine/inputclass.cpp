@@ -28,8 +28,11 @@ HRESULT InputClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidth, 
 	HRESULT result;
 
 	// Store the screen size which will be used for positioning the mouse cursor.
-	m_screenWidth = screenWidth;
-	m_screenHeight = screenHeight;
+	mScreenWidth = screenWidth;
+	mScreenHeight = screenHeight;
+
+	mLeftRightRot = D3DX_PI / 2; // MathHelper.PiOver2;
+	mUpDownRot = - D3DX_PI / 10; // - MathHelper.Pi / 10.0f;
 
 	// Initialize the main direct input interface.
 	result = DirectInput8Create(hinstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_directInput, NULL);
@@ -139,8 +142,12 @@ bool InputClass::Frame()
 		return false;
 	}
 
+	float startTime = Timer::GetInstance()->GetStartTime();
+	float timePassed = (float) timeGetTime() - startTime;
+	float timeDifference = timePassed / 1000.0f;
+
 	// Read the current state of the mouse.
-	result = ReadMouse();
+	result = ReadMouse(timeDifference);
 	if(!result)
 	{
 		return false;
@@ -177,9 +184,12 @@ bool InputClass::ReadKeyboard()
 	return true;
 }
 
-bool InputClass::ReadMouse()
+bool InputClass::ReadMouse(float amount)
 {
+
 	HRESULT result;
+	float rotationSpeed = 0.3f;
+	//float amount = 1.0f;
 
 
 	// Read the mouse device.
@@ -201,12 +211,24 @@ bool InputClass::ReadMouse()
 	{
 		// mMouseDeltaX += mMousePreviouseState.lX * 0.001f;
 		// mMouseDeltaY += mMouseCurrentState.lY * 0.001f;
-		mMouseDeltaX = (mMouseCurrentState.lX - mMousePreviouseState.lX) / 100.0f;
-		mMouseDeltaY = (mMouseCurrentState.lY - mMousePreviouseState.lY) / 100.0f;
+		mMouseDeltaX = (mMouseCurrentState.lX - mMousePreviouseState.lX);
+		mMouseDeltaY = (mMouseCurrentState.lY - mMousePreviouseState.lY);
+
+		mLeftRightRot -= rotationSpeed * mMouseDeltaX * amount;
+		mUpDownRot -= rotationSpeed * mMouseDeltaY * amount;
+
 		mMousePreviouseState = mMouseCurrentState;
 	}
 
+	CenterMouseLocation();
+
 	return true;
+}
+
+void InputClass::GetMouseRotations(float& leftRight, float& upDown)
+{
+	leftRight = mLeftRightRot;
+	upDown = mUpDownRot;
 }
 
 void InputClass::ProcessInput()
@@ -219,10 +241,16 @@ void InputClass::ProcessInput()
 	if(mMouseX < 0)  { mMouseX = 0; }
 	if(mMouseY < 0)  { mMouseY = 0; }
 
-	if(mMouseX > m_screenWidth)  { mMouseX = m_screenWidth; }
-	if(mMouseY > m_screenHeight) { mMouseY = m_screenHeight; }
+	if(mMouseX > mScreenWidth)  { mMouseX = mScreenWidth; }
+	if(mMouseY > mScreenHeight) { mMouseY = mScreenHeight; }
 
 	return;
+}
+
+void InputClass::CenterMouseLocation()
+{
+	mMouseX = mScreenWidth / 2;
+	mMouseY = mScreenHeight / 2;
 }
 
 bool InputClass::IsWireframeModeOn()

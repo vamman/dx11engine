@@ -32,6 +32,8 @@ bool Timer::Initialize()
 
 	QueryPerformanceCounter((LARGE_INTEGER*)&m_startTime);
 
+	mStartTime = timeGetTime();
+
 	return true;
 }
 
@@ -69,6 +71,11 @@ void Timer::SetTimeB()
 DWORD Timer::GetDeltaTime()
 {
 	return mTimeB - mTimeA;
+}
+
+float Timer::GetStartTime()
+{
+	return (float)mStartTime;
 }
 
 

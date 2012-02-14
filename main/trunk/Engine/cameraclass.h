@@ -26,6 +26,8 @@ class CameraClass
 
 		D3DXVECTOR3 GetPosition();
 		D3DXVECTOR3 GetRotation();
+		D3DXVECTOR3 GetNormalDirectionVector();
+		D3DXVECTOR3 GetNormalRightVector();
 
 		void Render();
 		void GetViewMatrix(D3DXMATRIX&);
@@ -37,6 +39,8 @@ class CameraClass
 		float mPositionX, mPositionY, mPositionZ;
 		float mRotationX, mRotationY, mRotationZ;
 		float mCamYaw, mCamPitch;
+
+		D3DXVECTOR3 mCameraLookAt, mCameraUp, mCameraRight;
 
 		D3DXMATRIX mViewMatrix;
 
