@@ -1,7 +1,7 @@
 #include "graphicsclass.h"
 
 
-GraphicsClass::GraphicsClass()
+GraphicsClass::GraphicsClass() : mIsAllowToBBRender(true)
 {
 	mObjectFactory = 0;
 	mMaterialFactory = 0;
@@ -13,7 +13,8 @@ GraphicsClass::GraphicsClass()
 	mCamera = 0;
 	mCameraMovement = 0;
 	mBasicShader = 0;
-	m_TextureShader = 0;
+	mTextureShaderMiniMap = 0;
+	mTextureShaderCamDisplay = 0;
 	mDirSpecLightShader = 0;
 	mDirAmbLightShader = 0;
 	mPointLightShader = 0;
@@ -53,7 +54,6 @@ GraphicsClass::~GraphicsClass()
 bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
 	bool result;
-	D3DXMATRIX baseViewMatrix; // !!!
 	ModelObject* object = new ModelObject();
 	mDrawFuncTime = -1;
 	DWORD funcTime = -1;
@@ -89,18 +89,16 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	// Set the initial position of the camera.
+	// Initialize a base view matrix with the camera for 2D user interface rendering.
+	mCamera->SetPosition(0.0f, 0.0f, -1.0f);
 	mCamera->Render();
-	mCamera->GetViewMatrix(baseViewMatrix);
+	mCamera->GetViewMatrix(mBaseViewMatrix);
+	
 
 	// Set the initial position of the camera.
-	// cameraX = 130.0f; // 0.0f
-	// cameraY = 2.0f; // 2.0f
-	// cameraZ = 115.0f; // -15.0f
-
-	cameraX = 0.0f; // 0.0f
-	cameraY = 2.0f; // 2.0f
-	cameraZ = -15.0f; // -15.0f
+	cameraX = 50.0f;
+	cameraY = 2.0f;
+	cameraZ = -7.0f;
 
 	mCamera->SetPosition(cameraX, cameraY, cameraZ);
 
@@ -152,7 +150,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the text object.
-	result = m_Text->Initialize(mD3D->GetDevice(), mD3D->GetDeviceContext(), hwnd, screenWidth, screenHeight, baseViewMatrix);
+	result = m_Text->Initialize(mD3D->GetDevice(), mD3D->GetDeviceContext(), hwnd, screenWidth, screenHeight, mBaseViewMatrix);
 	if(!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the text object.", L"Error", MB_OK);
@@ -214,7 +212,6 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Create the render to texture object.
-	/*
 	m_RenderTexture = new RenderTextureClass;
 	if(!m_RenderTexture)
 	{
@@ -227,9 +224,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	{
 		return false;
 	}
-	*/
+	
 	// Create the bitmap object.
-	/*
 	m_Bitmap = new BitmapClass;
 	if(!m_Bitmap)
 	{
@@ -243,7 +239,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the bitmap object.", L"Error", MB_OK);
 		return false;
 	}
-	*/
+	
 
 	// Probably need to initialize another instance of Texture shader for minimap
 	// Get the size of the terrain as the minimap will require this information.
@@ -257,8 +253,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the mini map object.
-	result = m_MiniMap->Initialize(mD3D->GetDevice(), hwnd, screenWidth, screenHeight, baseViewMatrix, (float)(terrainWidth - 1), 
-				       (float)(terrainHeight - 1));
+	result = m_MiniMap->Initialize(mD3D->GetDevice(), hwnd, screenWidth, screenHeight, mBaseViewMatrix, (float)(terrainWidth - 1), (float)(terrainHeight - 1));
 	if(!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the mini map object.", L"Error", MB_OK);
@@ -408,20 +403,37 @@ bool GraphicsClass::InitializeShaders(HWND hwnd)
 		return false;
 	}
 
-	// Create the texture shader object.
-	m_TextureShader = new TextureShader;
-	if(!m_TextureShader)
+	// Create the texture shader object for mini map.
+	mTextureShaderMiniMap = new TextureShader;
+	if(!mTextureShaderMiniMap)
 	{
 		return false;
 	}
 	// Initialize the texture shader object.
-	result = m_TextureShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/TextureShaderNonInstanced.fx",
+	result = mTextureShaderMiniMap->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/TextureShaderNonInstanced.fx",
 		"TextureVertexShader", "TexturePixelShader");
 	if(!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the texture shader object.", L"Error", MB_OK);
 		return false;
 	}
+
+	// Create the texture shader object for camera display.
+	mTextureShaderCamDisplay = new TextureShader;
+	if(!mTextureShaderCamDisplay)
+	{
+		return false;
+	}
+	// Initialize the texture shader object.
+	result = mTextureShaderCamDisplay->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/TextureShaderNonInstanced.fx",
+		"TextureVertexShader", "TexturePixelShader");
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the texture shader object.", L"Error", MB_OK);
+		return false;
+	}
+
+	
 
 	// Create directional specular light shader object.
 	mDirSpecLightShader = new LightShader;
@@ -820,13 +832,23 @@ void GraphicsClass::ShutdownShaders()
 		mDirAmbLightShader = 0;
 	}
 	
-	// Release the texture shader object.
-	if(m_TextureShader)
+	// Release the texture shader object for mini map.
+	if(mTextureShaderMiniMap)
 	{
-		m_TextureShader->Shutdown();
-		delete m_TextureShader;
-		m_TextureShader = 0;
+		mTextureShaderMiniMap->Shutdown();
+		delete mTextureShaderMiniMap;
+		mTextureShaderMiniMap = 0;
 	}
+
+	// Release the texture shader object for camera display.
+	if(mTextureShaderCamDisplay)
+	{
+		mTextureShaderCamDisplay->Shutdown();
+		delete mTextureShaderCamDisplay;
+		mTextureShaderCamDisplay = 0;
+	}
+
+	
 
 	// Release the color shader object.
 	if(mBasicShader)
@@ -980,6 +1002,7 @@ bool GraphicsClass::Render()
 {
 	bool result;
 	float  fogColor, fogStart, fogEnd;
+	mIsAllowToBBRender = InputClass::GetInstance()->IsAllowToBBRender();
 
 	// Set the color of the fog.
 	fogColor = 0.5f;
@@ -993,6 +1016,9 @@ bool GraphicsClass::Render()
 
 	Timer::GetInstance()->SetTimeA();
 
+	// Generate the view matrix based on the camera's position.
+	mCamera->Render();
+
 	// Get the current position of the camera.
 	position = mCamera->GetPosition();
 
@@ -1004,10 +1030,11 @@ bool GraphicsClass::Render()
 		mCamera->SetPosition(position.x, height + 2.0f, position.z);
 	}
 
+	//result = RenderToTextureFromReflectionView(); // TODO
+
 	// Render the entire scene to the texture first.
-	// result = RenderToTextureFromCameraView();
 	/*
-	result = RenderToTextureFromReflectionView();
+	result = RenderToTextureFromCameraView();
 	if(!result)
 	{
 		return false;
@@ -1032,128 +1059,9 @@ bool GraphicsClass::Render()
 	return true;
 }
 
-bool GraphicsClass::Render2D()
-{
-	D3DXMATRIX viewMatrix, projectionMatrix, worldMatrix, orthoMatrix, staticWorldMatrix;
-	bool result;
-
-	// Get the world, view, and projection matrices from the camera and d3d objects.
-	mCamera->GetViewMatrix(viewMatrix);
-	mD3D->GetWorldMatrix(worldMatrix);
-	staticWorldMatrix = worldMatrix;
-	mD3D->GetProjectionMatrix(projectionMatrix);
-
-	// We now also get the ortho matrix from the D3DClass for 2D rendering. We will pass this in instead of the projection matrix.
-	mD3D->GetOrthoMatrix(orthoMatrix);
-
-	// Turn off the Z buffer to begin all 2D rendering.
-	mD3D->TurnZBufferOff();
-	/*
-	// Get the world, view, and ortho matrices from the camera and d3d objects.
-	mD3D->GetWorldMatrix(worldMatrix);
-	mCamera->GetViewMatrix(viewMatrix);
-	mD3D->GetOrthoMatrix(orthoMatrix);
-
-	// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
-	result = m_Bitmap->Render(mD3D->GetDeviceContext(), 0, 0);
-	if(!result)
-	{
-		return false;
-	}
-
-	vector<ID3D11ShaderResourceView*> textureArray;
-	textureArray.push_back(m_RenderTexture->GetShaderResourceView());
-
-	// Render the bitmap with the texture shader.
-	m_TextureShader->SetTextureArray(mD3D->GetDeviceContext(), textureArray);
-	result = m_TextureShader->RenderOrdinary(mD3D->GetDeviceContext(),
-		m_Bitmap->GetIndexCount(),
-		worldMatrix,
-		viewMatrix, 
-		orthoMatrix);
-	if(!result)
-	{
-		return false;
-	}
-	*/
-	// Render the mini map.
-	result = m_MiniMap->Render(mD3D->GetDeviceContext(), worldMatrix, orthoMatrix, m_TextureShader);
-	if(!result)
-	{
-		return false;
-	}
-
-	// Turn on the alpha blending before rendering the text.
-	//mD3D->TurnOnAlphaBlending();
-
-	//RenderText();
-
-	// Turn off alpha blending after rendering the text.
-	//mD3D->TurnOffAlphaBlending();
-
-	// Turn the Z buffer back on now that all 2D rendering has completed.
-	mD3D->TurnZBufferOn();
-	return true;
-}
-
-bool GraphicsClass::RenderToTextureFromCameraView()
-{
-	bool result;
-
-	// Set the render target to be the render to texture.
-	m_RenderTexture->SetRenderTarget(mD3D->GetDeviceContext(), mD3D->GetDepthStencilView());
-
-	// Clear the render to texture.
-	m_RenderTexture->ClearRenderTarget(mD3D->GetDeviceContext(), mD3D->GetDepthStencilView(), 0.0f, 0.0f, 1.0f, 1.0f);
-
-	// Render the scene now and it will draw to the render to texture instead of the back buffer.
-	result = RenderScene();
-	if(!result)
-	{
-		return false;
-	}
-
-	// Reset the render target back to the original back buffer and not the render to texture anymore.
-	mD3D->SetBackBufferRenderTarget();
-
-	return true;
-}
-
-bool GraphicsClass::RenderToTextureFromReflectionView()
-{
-	D3DXMATRIX worldMatrix, viewMatrix, reflectionViewMatrix, projectionMatrix;
-	float fogStart, fogEnd;
-	fogStart = 0.0f;
-	fogEnd = 10.0f;
-
-	// Set the render target to be the render to texture.
-	m_RenderTexture->SetRenderTarget(mD3D->GetDeviceContext(), mD3D->GetDepthStencilView());
-
-	// Clear the render to texture.
-	m_RenderTexture->ClearRenderTarget(mD3D->GetDeviceContext(), mD3D->GetDepthStencilView(), 0.0f, 0.0f, 0.0f, 1.0f);
-
-	// Use the camera to calculate the reflection matrix.
-	mCamera->RenderReflection(-1.5f);
- 
-	// Get the camera reflection view matrix instead of the normal view matrix.
-	reflectionViewMatrix = mCamera->GetReflectionViewMatrix();
-
-	// Get the world and projection matrices.
-	mD3D->GetWorldMatrix(worldMatrix);
-	mD3D->GetProjectionMatrix(projectionMatrix);
-
-	mCamera->GetViewMatrix(viewMatrix);
-
-	//RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
-
-	// Reset the render target back to the original back buffer and not the render to texture anymore.
-	mD3D->SetBackBufferRenderTarget();
-
-	return true;
-}
 bool GraphicsClass::RenderScene()
 {
-	D3DXMATRIX viewMatrix, projectionMatrix, worldMatrix, orthoMatrix, staticWorldMatrix, reflectionMatrix;
+	D3DXMATRIX viewMatrix, projectionMatrix, worldMatrix, staticWorldMatrix, reflectionMatrix;
 	int modelCount;
 	float fogColor, fogStart, fogEnd;
 	D3DXVECTOR4 color;
@@ -1178,9 +1086,6 @@ bool GraphicsClass::RenderScene()
 	mD3D->GetWorldMatrix(worldMatrix);
 	staticWorldMatrix = worldMatrix;
 	mD3D->GetProjectionMatrix(projectionMatrix);
-
-	// We now also get the ortho matrix from the D3DClass for 2D rendering. We will pass this in instead of the projection matrix.
-	mD3D->GetOrthoMatrix(orthoMatrix);
 
 	//////////////////////////////////////////////////////////////////////////
 	// 3D Rendering
@@ -1229,15 +1134,131 @@ bool GraphicsClass::RenderScene()
 		worldMatrix,
 		viewMatrix, 
 		projectionMatrix);
-	/*
-	result = m_ReflectionShader->RenderOrdinary(deviceContext, modelObj->GetModel()->GetIndexCount(), worldMatrix,
-		viewMatrix,	projectionMatrix, modelObj->GetMaterial()->GetTextureVector(), 
-		m_RenderTexture->GetShaderResourceView(), reflectionMatrix);
-	*/
+
 	if(!result)
 	{
 		return false;
 	}
+	return true;
+}
+
+bool GraphicsClass::Render2D()
+{
+	D3DXMATRIX viewMatrix, projectionMatrix, worldMatrix, orthoMatrix;
+	bool result;
+
+	// Generate the view matrix based on the camera's position.
+	mCamera->Render();
+
+	// Get the world, view, and projection matrices from the camera and d3d objects.
+	mD3D->GetWorldMatrix(worldMatrix);
+	mCamera->GetViewMatrix(viewMatrix);
+	mD3D->GetProjectionMatrix(projectionMatrix);
+
+	// We now also get the ortho matrix from the D3DClass for 2D rendering. We will pass this in instead of the projection matrix.
+	mD3D->GetOrthoMatrix(orthoMatrix);
+
+	// Turn off the Z buffer to begin all 2D rendering.
+	mD3D->TurnZBufferOff();
+
+	/*
+	// Render to camera display bitmap
+	// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	result = m_Bitmap->Render(mD3D->GetDeviceContext(), 0, 0);
+	if(!result)
+	{
+		return false;
+	}
+
+	vector<ID3D11ShaderResourceView*> textureArray;
+	textureArray.push_back(m_RenderTexture->GetShaderResourceView());
+
+	// Render the bitmap with the texture shader.
+	mTextureShaderCamDisplay->SetTextureArray(mD3D->GetDeviceContext(), textureArray);
+	result = mTextureShaderCamDisplay->RenderOrdinary(mD3D->GetDeviceContext(),
+		m_Bitmap->GetIndexCount(),
+		worldMatrix,
+		mBaseViewMatrix, 
+		orthoMatrix);
+	if(!result)
+	{
+		return false;
+	}
+	*/
+	// Render the mini map.
+	result = m_MiniMap->Render(mD3D->GetDeviceContext(), worldMatrix, orthoMatrix, mTextureShaderMiniMap);
+	if(!result)
+	{
+		return false;
+	}
+
+	// Turn on the alpha blending before rendering the text.
+	mD3D->TurnOnAlphaBlending();
+
+	RenderText();
+
+	// Turn off alpha blending after rendering the text.
+	mD3D->TurnOffAlphaBlending();
+
+	// Turn the Z buffer back on now that all 2D rendering has completed.
+	mD3D->TurnZBufferOn();
+	return true;
+}
+
+bool GraphicsClass::RenderToTextureFromCameraView()
+{
+	bool result;
+
+	// Set the render target to be the render to texture.
+	m_RenderTexture->SetRenderTarget(mD3D->GetDeviceContext(), mD3D->GetDepthStencilView());
+
+	// Clear the render to texture.
+	m_RenderTexture->ClearRenderTarget(mD3D->GetDeviceContext(), mD3D->GetDepthStencilView(), 0.0f, 0.0f, 1.0f, 1.0f);
+
+	// Render the scene now and it will draw to the render to texture instead of the back buffer.
+	result = RenderScene();
+	if(!result)
+	{
+		return false;
+	}
+
+	// Reset the render target back to the original back buffer and not the render to texture anymore.
+	mD3D->SetBackBufferRenderTarget();
+
+	return true;
+}
+
+// TODO
+bool GraphicsClass::RenderToTextureFromReflectionView()
+{
+	D3DXMATRIX worldMatrix, viewMatrix, reflectionViewMatrix, projectionMatrix;
+	float fogStart, fogEnd;
+	fogStart = 0.0f;
+	fogEnd = 10.0f;
+
+	// Set the render target to be the render to texture.
+	m_RenderTexture->SetRenderTarget(mD3D->GetDeviceContext(), mD3D->GetDepthStencilView());
+
+	// Clear the render to texture.
+	m_RenderTexture->ClearRenderTarget(mD3D->GetDeviceContext(), mD3D->GetDepthStencilView(), 0.0f, 0.0f, 0.0f, 1.0f);
+
+	// Use the camera to calculate the reflection matrix.
+	mCamera->RenderReflection(-1.5f);
+ 
+	// Get the camera reflection view matrix instead of the normal view matrix.
+	reflectionViewMatrix = mCamera->GetReflectionViewMatrix();
+
+	// Get the world and projection matrices.
+	mD3D->GetWorldMatrix(worldMatrix);
+	mD3D->GetProjectionMatrix(projectionMatrix);
+
+	mCamera->GetViewMatrix(viewMatrix);
+
+	//RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
+
+	// Reset the render target back to the original back buffer and not the render to texture anymore.
+	mD3D->SetBackBufferRenderTarget();
+
 	return true;
 }
 
@@ -1260,7 +1281,7 @@ bool GraphicsClass::RenderTerrain(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
 	}
 
 	// Render the terrain using the quad tree and terrain shader.
-	mQuadTree->Render(m_Frustum, deviceContext, mTerrainShader);
+	mQuadTree->Render(m_Frustum, deviceContext, mTerrainShader, mIsAllowToBBRender);
 	
 	return result;
 }
@@ -1452,6 +1473,9 @@ bool GraphicsClass::RenderText()
 	bool result;
 
 	SetFillMode(D3D11_FILL_SOLID);
+
+	// Generate the view matrix based on the camera's position.
+	mCamera->Render();
 
 	mD3D->GetOrthoMatrix(orthoMatrix);
 	mD3D->GetWorldMatrix(worldMatrix);
