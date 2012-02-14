@@ -8,8 +8,8 @@ class FontShader :public TextureShader
 		FontShader(void);
 		~FontShader(void);
 		virtual void Shutdown();
-		virtual bool Initialize(ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname);
-		bool InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
+		virtual HRESULT Initialize(ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname);
+		HRESULT InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
 							  LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts);
 		bool Render(ID3D11DeviceContext* deviceContext,
 					int indexCount,

@@ -16,11 +16,11 @@ class LightShader : public TextureShader
 		LightShader(void);
 		~LightShader(void);
 
-		virtual bool Initialize(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname);
-		bool InitializeShader(LightClass* lightSource, ID3D11Device*, HWND, WCHAR*, LPCSTR, LPCSTR, vector<char *>& layouts);
+		virtual HRESULT Initialize(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname);
+		HRESULT InitializeShader(LightClass* lightSource, ID3D11Device*, HWND, WCHAR*, LPCSTR, LPCSTR, vector<char *>& layouts);
 		virtual void Shutdown();
 
-		virtual bool SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType);
+		virtual HRESULT SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType);
 		virtual bool SetLightSource(ID3D11DeviceContext* deviceContext, LightClass* lightSource);
 		virtual void SetTextureArray(ID3D11DeviceContext* deviceContext, vector<ID3D11ShaderResourceView*>& textureArray);
 		virtual bool SetShaderParameters(ID3D11DeviceContext* deviceContext,
@@ -43,8 +43,8 @@ class LightShader : public TextureShader
 							D3DXMATRIX projectionMatrix);
 
 	private:
-		bool InitializeDirectionalLightShader(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts);
-		bool InitializePointLightShader(ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts);
+		HRESULT InitializeDirectionalLightShader(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts);
+		HRESULT InitializePointLightShader(ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts);
 
 		bool SetDirLightShaderParams(ID3D11DeviceContext* deviceContext, 
 			D3DXVECTOR3 cameraPosition,

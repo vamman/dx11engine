@@ -13,8 +13,7 @@ class ReflectionShader :
 		ReflectionShader(void);
 		~ReflectionShader(void);
 
-		bool Initialize(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
-			LPCSTR VSname, LPCSTR PSname);
+		virtual HRESULT Initialize(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname);
 		void Shutdown();
 		bool RenderInstanced(ID3D11DeviceContext* deviceContext, int vertexCount, int instanceCount, D3DXMATRIX worldMatrix, 
 					D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix,  vector<ID3D11ShaderResourceView*> textureVector,

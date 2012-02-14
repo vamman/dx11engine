@@ -6,7 +6,7 @@
 
 InputClass* InputClass::instance = 0;
 
-InputClass::InputClass() : isWireframeModeOn(true), isAllowToBBRender(true)
+InputClass::InputClass() : isWireframeModeOn(true), isAllowToBBRender(true), isAllowToCameraDisplayRender(true)
 {
 	m_directInput = 0;
 	m_keyboard = 0;
@@ -22,7 +22,7 @@ InputClass* InputClass::GetInstance()
 	return instance;
 }
 
-bool InputClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight)
+HRESULT InputClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight)
 {
 	HRESULT result;
 
@@ -38,28 +38,28 @@ bool InputClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidth, int
 	result = DirectInput8Create(hinstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_directInput, NULL);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the direct input interface for the keyboard.
 	result = m_directInput->CreateDevice(GUID_SysKeyboard, &m_keyboard, NULL);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	// Set the data format.  In this case since it is a keyboard we can use the predefined data format.
 	result = m_keyboard->SetDataFormat(&c_dfDIKeyboard);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	// Set the cooperative level of the keyboard to not share with other programs.
 	result = m_keyboard->SetCooperativeLevel(hwnd,  DISCL_BACKGROUND | DISCL_NONEXCLUSIVE); //  DISCL_FOREGROUND | DISCL_EXCLUSIVE
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
  
 	// Now acquire the keyboard.
@@ -68,38 +68,38 @@ bool InputClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidth, int
 	{
 		int i = 0;
 		i++;
-		return false;
+		return result;
 	}
 
 	// Initialize the direct input interface for the mouse.
 	result = m_directInput->CreateDevice(GUID_SysMouse, &m_mouse, NULL);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	// Set the data format for the mouse using the pre-defined mouse data format.
 	result = m_mouse->SetDataFormat(&c_dfDIMouse);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
  
 	// Set the cooperative level of the mouse to share with other programs.
 	result = m_mouse->SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	// Acquire the mouse.
 	result = m_mouse->Acquire();
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
-	return true;
+	return result;
 }
 
 void InputClass::Shutdown()
@@ -229,6 +229,12 @@ bool InputClass::IsAllowToBBRender()
 {
 	IsBtnPressedAndUnpressed(DIK_HOME, isAllowToBBRender);
 	return isAllowToBBRender;
+}
+
+bool InputClass::IsAllowToCameraDisplayRender()
+{
+	IsBtnPressedAndUnpressed(DIK_END, isAllowToCameraDisplayRender);
+	return isAllowToCameraDisplayRender;
 }
 
 bool InputClass::IsBtnPressedAndUnpressed(byte keyKode, bool& boolValue)

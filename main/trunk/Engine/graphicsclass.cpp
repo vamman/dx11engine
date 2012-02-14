@@ -1,7 +1,7 @@
 #include "graphicsclass.h"
 
 
-GraphicsClass::GraphicsClass() : mIsAllowToBBRender(true)
+GraphicsClass::GraphicsClass() : mIsAllowToBBRender(true), mIsAllowToCameraDisplayRender(true), mDirUp(true), mDirDown(false)
 {
 	mObjectFactory = 0;
 	mMaterialFactory = 0;
@@ -51,16 +51,16 @@ GraphicsClass::~GraphicsClass()
 }
 
 
-bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
+HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
-	bool result;
+	HRESULT result = S_FALSE;
 	ModelObject* object = new ModelObject();
 	mDrawFuncTime = -1;
 	DWORD funcTime = -1;
 
 	float cameraX, cameraY, cameraZ;
-	char videoCard[128];
-	int videoMemory;
+//	char videoCard[128];
+//	int videoMemory;
 	int terrainWidth, terrainHeight;
 
 	mTimer = Timer::GetInstance();
@@ -71,22 +71,22 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	mD3D = new D3DClass;
 	if(!mD3D)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the Direct3D object.
 	result = mD3D->Initialize(screenWidth, screenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR);
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize Direct3D", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	// Create the camera object.
 	mCamera = new CameraClass;
 	if(!mCamera)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize a base view matrix with the camera for 2D user interface rendering.
@@ -96,9 +96,9 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	
 
 	// Set the initial position of the camera.
-	cameraX = 50.0f;
+	cameraX = 130.0f;
 	cameraY = 2.0f;
-	cameraZ = -7.0f;
+	cameraZ = 110.0f;
 
 	mCamera->SetPosition(cameraX, cameraY, cameraZ);
 
@@ -106,15 +106,15 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	mTerrain = new Terrain;
 	if(!mTerrain)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the terrain object.
 	result = mTerrain->Initialize(mD3D->GetDevice(), "Engine/data/textures/heightmap01.bmp", L"Engine/data/textures/dirt01.dds", "Engine/data/textures/colorm01.bmp");
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the terrain object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	// Create the quad tree object.
@@ -126,10 +126,10 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	// Initialize the quad tree object.
 	result = mQuadTree->Initialize(mTerrain, mD3D->GetDevice());
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the quad tree object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	// Create the position object.
@@ -146,15 +146,15 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_Text = new TextClass;
 	if(!m_Text)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the text object.
 	result = m_Text->Initialize(mD3D->GetDevice(), mD3D->GetDeviceContext(), hwnd, screenWidth, screenHeight, mBaseViewMatrix);
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the text object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 
@@ -185,7 +185,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_Frustum = new FrustumClass;
 	if(!m_Frustum)
 	{
-		return false;
+		return result;
 	}
 
 	for (int i = 0; i < 4; ++i)
@@ -193,13 +193,13 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		char* prefix = "light_";
 		char resultName[20];
 		char number[5];
-		itoa(i, number, 10);
-		sprintf(resultName, "%s%s", prefix, number);
+		_itoa_s(i, number, 10);
+		sprintf_s(resultName, "%s%s", prefix, number);
 
 		mPointLights[i] = new LightClass;
 		if(!mPointLights[i])
 		{
-			return false;
+			return result;
 		}
 		D3DXVECTOR4 color	 = pointLightInfos[i]->color;
 		D3DXVECTOR3 position = pointLightInfos[i]->position;
@@ -220,26 +220,25 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	// Initialize the render to texture object.
 	result = m_RenderTexture->Initialize(mD3D->GetDevice(), screenWidth, screenHeight);
-	if(!result)
+	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 	
 	// Create the bitmap object.
 	m_Bitmap = new BitmapClass;
 	if(!m_Bitmap)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the bitmap object.
-	result = m_Bitmap->Initialize(mD3D->GetDevice(), screenWidth, screenHeight, L"Engine/data/textures/texture2.dds", 300, 225); // 256, 256
+	result = m_Bitmap->Initialize(mD3D->GetDevice(), screenWidth, screenHeight, L"Engine/data/textures/texture2.dds", 300, 225);
 	if(!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the bitmap object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
-	
 
 	// Probably need to initialize another instance of Texture shader for minimap
 	// Get the size of the terrain as the minimap will require this information.
@@ -249,15 +248,15 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_MiniMap = new MiniMap;
 	if(!m_MiniMap)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the mini map object.
 	result = m_MiniMap->Initialize(mD3D->GetDevice(), hwnd, screenWidth, screenHeight, mBaseViewMatrix, (float)(terrainWidth - 1), (float)(terrainHeight - 1));
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the mini map object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	Timer::GetInstance()->SetTimeB();
@@ -268,8 +267,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		Log::GetInstance()->WriteToLogFile(funcTime, "GraphicsClass::Initialize time: ");
 	}
 
-
-	return true;
+	return result;
 }
 
 bool GraphicsClass::InitMaterials()
@@ -381,9 +379,9 @@ bool GraphicsClass::InitLights()
 	return true;
 }
 
-bool GraphicsClass::InitializeShaders(HWND hwnd)
+HRESULT GraphicsClass::InitializeShaders(HWND hwnd)
 {
-	bool result;
+	HRESULT result = S_FALSE;
 	DWORD funcTime = -1;
 
 	Timer::GetInstance()->SetTimeA();
@@ -391,108 +389,106 @@ bool GraphicsClass::InitializeShaders(HWND hwnd)
 	mBasicShader = new BasicShader;
 	if(!mBasicShader)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the basic shader object.
 	result = mBasicShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/BasicShader.fx",
 		"BasicVertexShader", "BasicPixelShader");
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the color shader object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	// Create the texture shader object for mini map.
 	mTextureShaderMiniMap = new TextureShader;
 	if(!mTextureShaderMiniMap)
 	{
-		return false;
+		return result;
 	}
 	// Initialize the texture shader object.
 	result = mTextureShaderMiniMap->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/TextureShaderNonInstanced.fx",
 		"TextureVertexShader", "TexturePixelShader");
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the texture shader object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	// Create the texture shader object for camera display.
 	mTextureShaderCamDisplay = new TextureShader;
 	if(!mTextureShaderCamDisplay)
 	{
-		return false;
+		return result;
 	}
 	// Initialize the texture shader object.
 	result = mTextureShaderCamDisplay->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/TextureShaderNonInstanced.fx",
 		"TextureVertexShader", "TexturePixelShader");
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the texture shader object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
-
-	
 
 	// Create directional specular light shader object.
 	mDirSpecLightShader = new LightShader;
 	if(!mDirSpecLightShader)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize directional light shader object.
 	result = mDirSpecLightShader->Initialize(mDirSpecLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/SpecularLight.fx",
 		"LightVertexShader", "LightPixelShader");
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the light shader object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	// Create directional ambient light shader object.
 	mDirAmbLightShader = new LightShader;
 	if(!mDirAmbLightShader)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize directional light shader object.
 	result = mDirAmbLightShader->Initialize(mDirAmbLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/AmbientLight.fx",
 		"LightVertexShader", "LightPixelShader");
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the light shader object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	// Create terrain shader
 	mTerrainShader = new TerrainShader;
 	if(!mTerrainShader)
 	{
-		return false;
+		return result;
 	}
 	result = mTerrainShader->Initialize(mDirAmbLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/Terrain.fx",
 		"TerrainVertexShader", "TerrainPixelShader");
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the light shader object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	// Create directional light shader object.
 	mPointLightShader = new LightShader;
 	if(!mDirSpecLightShader)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize directional light shader object.
 	/*
 	result = mPointLightShader->Initialize(mPointLights[0], mD3D->GetDevice(), hwnd, L"Engine/data/shaders/PointLight.fx",
 		"LightVertexShader", "LightPixelShader");
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the light shader object.", L"Error", MB_OK);
 		return false;
@@ -502,48 +498,48 @@ bool GraphicsClass::InitializeShaders(HWND hwnd)
 	m_MultiTextureShader = new MultitextureShader;
 	if(!m_MultiTextureShader)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the multitexture shader object.
 	result = m_MultiTextureShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/LightmapShader.fx",
 		"LightMapVertexShader", "LightMapPixelShader");
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the multitexture shader object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	// Create the bump map shader object.
 	m_BumpMapShader = new NormalMapShader;
 	if(!m_BumpMapShader)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the bump map shader object.
 	result = m_BumpMapShader->Initialize(mDirSpecLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/NormalMapShader.fx",
 		"BumpMapVertexShader", "BumpMapPixelShader");
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the bump map shader object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	// Create the specular map shader object.
 	m_SpecMapShader = new SpecMapShader;
 	if(!m_SpecMapShader)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the specular map shader object.
 	result = m_SpecMapShader->Initialize(mDirSpecLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/SpecMapShader.fx",
 		"SpecMapVertexShader", "SpecMapPixelShader");
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the specular map shader object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	// Create the specular map shader object.
@@ -551,48 +547,48 @@ bool GraphicsClass::InitializeShaders(HWND hwnd)
 	m_SpecMapShaderNonInstanced = new SpecMapShader();
 	if(!m_SpecMapShader)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the specular map shader object.
 	result = m_SpecMapShaderNonInstanced->Initialize(mDirSpecLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/SpecMapShaderNonInstanced.fx",
 		"SpecMapVertexShader", "SpecMapPixelShader");
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the specular map shader object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 	
 	// Create the fog shader object.
 	m_FogShader = new FogShader;
 	if(!m_FogShader)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the fog shader object.
 	result = m_FogShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/FogShader.fx",
 		"FogVertexShader", "FogPixelShader");
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the fog shader object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	// Create the reflection shader object.
 	m_ReflectionShader = new ReflectionShader;
 	if(!m_ReflectionShader)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the reflection shader object.
 	result = m_ReflectionShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/ReflectionShader.fx", 
 											"ReflectionVertexShader", "ReflectionPixelShader");
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the reflection shader object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	Timer::GetInstance()->SetTimeB();
@@ -603,7 +599,7 @@ bool GraphicsClass::InitializeShaders(HWND hwnd)
 		Log::GetInstance()->WriteToLogFile(funcTime, "	GraphicsClass::InitializeShaders time: ");
 	}
 
-	return true;
+	return result;
 }
 
 bool GraphicsClass::InitObjects(HWND hwnd)
@@ -627,7 +623,7 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 	// Create floor
 	object = mObjectFactory->CreateOrdinaryModel(mD3D->GetDevice(), hwnd, "floor", "Engine/data/models/floor.txt");
 	object->SetMaterial(mMaterialFactory->GetMaterialByName("TexturedFloor"));
-	mObjectFactory->SetPositionForObject(D3DXVECTOR3(0.0f, 0.0f, 2.0f), "floor"); // 130.0f, 0.0f, 132.0f
+	mObjectFactory->SetPositionForObject(D3DXVECTOR3(130.0f, 0.0f, 132.0f), "floor"); // 130.0f, 0.0f, 132.0f
 
 	// Create 10 ordinary spheres
 	for (int i = 0; i < 5; ++i)
@@ -635,16 +631,16 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 		char* prefix = "sphere_";
 		char resultName[20];
 		char number[5];
-		itoa(i, number, 10);
-		sprintf(resultName, "%s%s", prefix, number);
+		_itoa_s(i, number, 10);
+		sprintf_s(resultName, "%s%s", prefix, number);
 
 		object = mObjectFactory->CreateOrdinaryModel(mD3D->GetDevice(), hwnd, resultName, "Engine/data/models/sphere.txt");
 		object->SetMaterial(mMaterialFactory->GetMaterialByName("NormalWithSpec"));
 
 		// Generate a random position in front of the viewer for the mode.
-		float positionX = 0.0f; // 130.0f;
+		float positionX = 130.0f; // 130.0f;
 		float positionY = 0.0f; // 0.0f;
-		float positionZ = 0.0f; // 130.0f;
+		float positionZ = 130.0f; // 130.0f;
 
 		// Generate a random position in front of the viewer for the mode.
 		positionX += (((float)rand()-(float)rand())/RAND_MAX) * 10.0f;
@@ -660,7 +656,7 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 	// Create cube
 
 	object = mObjectFactory->CreateOrdinaryModel(mD3D->GetDevice(), hwnd, "cube", "Engine/data/models/cube.txt");
-	object->SetPosition(D3DXVECTOR3(0.0f, 1.0f, 0.0f)); // 130.0f, 1.0f, 130.0f
+	object->SetPosition(D3DXVECTOR3(130.0f, 1.0f, 130.0f)); // 130.0f, 1.0f, 130.0f
 	object->SetMaterial(mMaterialFactory->GetMaterialByName("NormalWithSpec"));
 
 	Timer::GetInstance()->SetTimeB();
@@ -670,6 +666,7 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 	{
 		Log::GetInstance()->WriteToLogFile(funcTime, "	GraphicsClass::InitObjects time: ");
 	}
+	return true;
 }
 
 
@@ -1033,13 +1030,16 @@ bool GraphicsClass::Render()
 	//result = RenderToTextureFromReflectionView(); // TODO
 
 	// Render the entire scene to the texture first.
-	/*
-	result = RenderToTextureFromCameraView();
-	if(!result)
+	mIsAllowToCameraDisplayRender = InputClass::GetInstance()->IsAllowToCameraDisplayRender();
+	if (mIsAllowToCameraDisplayRender)
 	{
-		return false;
+		result = RenderToTextureFromCameraView();
+		if(!result)
+		{
+			return false;
+		}
 	}
-	*/
+
 	// Clear the buffers to begin the scene.
 	mD3D->BeginScene(fogColor, fogColor, fogColor, 1.0);
 
@@ -1161,30 +1161,31 @@ bool GraphicsClass::Render2D()
 	// Turn off the Z buffer to begin all 2D rendering.
 	mD3D->TurnZBufferOff();
 
-	/*
 	// Render to camera display bitmap
-	// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
-	result = m_Bitmap->Render(mD3D->GetDeviceContext(), 0, 0);
-	if(!result)
+	if (mIsAllowToCameraDisplayRender)
 	{
-		return false;
-	}
+		// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
+		result = m_Bitmap->Render(mD3D->GetDeviceContext(), 0, 0);
+		if(!result)
+		{
+			return false;
+		}
 
-	vector<ID3D11ShaderResourceView*> textureArray;
-	textureArray.push_back(m_RenderTexture->GetShaderResourceView());
+		vector<ID3D11ShaderResourceView*> textureArray;
+		textureArray.push_back(m_RenderTexture->GetShaderResourceView());
 
-	// Render the bitmap with the texture shader.
-	mTextureShaderCamDisplay->SetTextureArray(mD3D->GetDeviceContext(), textureArray);
-	result = mTextureShaderCamDisplay->RenderOrdinary(mD3D->GetDeviceContext(),
-		m_Bitmap->GetIndexCount(),
-		worldMatrix,
-		mBaseViewMatrix, 
-		orthoMatrix);
-	if(!result)
-	{
-		return false;
+		// Render the bitmap with the texture shader.
+		mTextureShaderCamDisplay->SetTextureArray(mD3D->GetDeviceContext(), textureArray);
+		result = mTextureShaderCamDisplay->RenderOrdinary(mD3D->GetDeviceContext(),
+			m_Bitmap->GetIndexCount(),
+			worldMatrix,
+			mBaseViewMatrix, 
+			orthoMatrix);
+		if(!result)
+		{
+			return false;
+		}
 	}
-	*/
 	// Render the mini map.
 	result = m_MiniMap->Render(mD3D->GetDeviceContext(), worldMatrix, orthoMatrix, mTextureShaderMiniMap);
 	if(!result)
@@ -1199,9 +1200,9 @@ bool GraphicsClass::Render2D()
 
 	// Turn off alpha blending after rendering the text.
 	mD3D->TurnOffAlphaBlending();
-
 	// Turn the Z buffer back on now that all 2D rendering has completed.
 	mD3D->TurnZBufferOn();
+
 	return true;
 }
 
@@ -1302,6 +1303,29 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 	vector<ModelObject*> listOfModels = mObjectFactory->GetVectorOfObjects();
 	vector<ModelObject*>::iterator modelIt;
 	ID3D11DeviceContext* deviceContext = mD3D->GetDeviceContext();
+	float dirDeltaStep = 0.01f;
+
+	if (mDirUp)
+	{
+		dirDelta += dirDeltaStep;
+	}
+	if (mDirDown)
+	{
+		dirDelta -= dirDeltaStep;
+	}
+
+	if (dirDelta > 1.0f)
+	{
+		mDirUp   = false;
+		mDirDown = true;
+	}
+	if (dirDelta < -1.0f)
+	{
+		mDirUp   = true;
+		mDirDown = false;
+	}
+	
+	mDirSpecLight->SetDirection(0.0f, dirDelta, 1.0f);
 
 	for (modelIt = listOfModels.begin(); modelIt != listOfModels.end(); ++modelIt)
 	{
@@ -1353,7 +1377,8 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 				{
 					rotation -= 360.0f;
 				}
-				modelObj->SetRotation(rotation);
+
+				// modelObj->SetRotation(rotation);
 
 				float height;
 				// Set psition above terrain
@@ -1371,7 +1396,7 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 				// material->GetMaterialShader() // m_SpecMapShaderNonInstanced
 				material->GetMaterialShader()->SetTextureArray(deviceContext, textureVector);
 				material->GetMaterialShader()->SetCameraPosition(deviceContext, mCamera->GetPosition(), LightClass::DIRECTIONAL_AMBIENT_LIGHT);
-				material->GetMaterialShader()->SetLightSource(deviceContext, mDirAmbLight);
+				material->GetMaterialShader()->SetLightSource(deviceContext, mDirSpecLight); // mDirAmbLight
 				result = material->GetMaterialShader()->RenderOrdinary(deviceContext,
 					model->GetIndexCount(),
 					worldMatrix,
@@ -1401,9 +1426,6 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 				{
 					if (strcmp(sphereObjPrefix.c_str(), "sphere_") == 0)
 					{
-						dirDelta += 0.00019f;
-						mDirSpecLight->SetDirection(0.0f, dirDelta, 1.0f);
-
 						float height;
 						// Set psition above terrain
 						bool foundHeight =  mQuadTree->GetHeightAtPosition(modelObj->GetPosition().x, modelObj->GetPosition().z, height);

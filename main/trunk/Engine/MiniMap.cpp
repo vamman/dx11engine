@@ -13,12 +13,12 @@ MiniMap::~MiniMap(void)
 {
 }
 
-bool MiniMap::Initialize(ID3D11Device* device, HWND hwnd, int screenWidth, int screenHeight, D3DXMATRIX viewMatrix, float terrainWidth, float terrainHeight)
+HRESULT MiniMap::Initialize(ID3D11Device* device, HWND hwnd, int screenWidth, int screenHeight, D3DXMATRIX viewMatrix, float terrainWidth, float terrainHeight)
 {
-	bool result;
+	HRESULT result = S_FALSE;
 
 	// Initialize the location of the mini-map on the screen.
-	m_mapLocationX = 300;
+	m_mapLocationX = 302;
 	m_mapLocationY = 73;
 
 	// Set the size of the mini-map.
@@ -36,48 +36,48 @@ bool MiniMap::Initialize(ID3D11Device* device, HWND hwnd, int screenWidth, int s
 	m_MiniMapBitmap = new BitmapClass;
 	if(!m_MiniMapBitmap)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the mini-map bitmap object.
 	result = m_MiniMapBitmap->Initialize(device, screenWidth, screenHeight, L"Engine/data/textures/colorm01.dds", 150, 150);
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the mini-map object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	// Create the border bitmap object.
 	m_Border = new BitmapClass;
 	if(!m_Border)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the border bitmap object.
 	result = m_Border->Initialize(device, screenWidth, screenHeight, L"Engine/data/textures/border01.dds", 154, 154);
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the border object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	// Create the point bitmap object.
 	m_Point = new BitmapClass;
 	if(!m_Point)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the point bitmap object.
 	result = m_Point->Initialize(device, screenWidth, screenHeight, L"Engine/data/textures/point01.dds", 3, 3);
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the point object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
-	return true;
+	return result;
 }
 
 void MiniMap::Shutdown()
@@ -121,10 +121,10 @@ bool MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix,
 	}
 
 	// Render the border bitmap using the texture shader.
-	textureShader->RenderOrdinary(deviceContext, m_Border->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
 	vector<ID3D11ShaderResourceView*> borderTextureArray;
 	borderTextureArray.push_back(m_Border->GetTexture());
 	textureShader->SetTextureArray(deviceContext, borderTextureArray);
+	textureShader->RenderOrdinary(deviceContext, m_Border->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
 
 	// Put the mini-map bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	result = m_MiniMapBitmap->Render(deviceContext, m_mapLocationX, m_mapLocationY);
@@ -133,10 +133,10 @@ bool MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix,
 		return false;
 	}
 	// Render the mini-map bitmap using the texture shader.
-	textureShader->RenderOrdinary(deviceContext, m_MiniMapBitmap->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
 	vector<ID3D11ShaderResourceView*> minimapTextureArray;
 	minimapTextureArray.push_back(m_MiniMapBitmap->GetTexture());
 	textureShader->SetTextureArray(deviceContext, minimapTextureArray);
+	textureShader->RenderOrdinary(deviceContext, m_MiniMapBitmap->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
 
 	// Put the point bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	result = m_Point->Render(deviceContext, m_pointLocationX, m_pointLocationY);
@@ -145,12 +145,11 @@ bool MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix,
 		return false;
 	}
 	// Render the point bitmap using the texture shader.
-	textureShader->RenderOrdinary(deviceContext, m_Point->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
 	vector<ID3D11ShaderResourceView*> pointTextureArray;
 	pointTextureArray.push_back(m_Point->GetTexture());
 	textureShader->SetTextureArray(deviceContext, pointTextureArray);
+	textureShader->RenderOrdinary(deviceContext, m_Point->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
 	
-
 	return true;
 }
 

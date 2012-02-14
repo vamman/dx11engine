@@ -25,8 +25,8 @@ class BasicShader: public BaseShaderClass
 		BasicShader(void);
 		BasicShader(const BasicShader&);
 		~BasicShader();
-		virtual bool Initialize(ID3D11Device*, HWND, WCHAR*, LPCSTR, LPCSTR);
-		bool InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
+		virtual HRESULT Initialize(ID3D11Device*, HWND, WCHAR*, LPCSTR, LPCSTR);
+		HRESULT InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
 							  LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts);
 		void OutputShaderErrorMessage(ID3D10Blob*, HWND, WCHAR*);
 
@@ -47,7 +47,7 @@ class BasicShader: public BaseShaderClass
 									 D3DXMATRIX projectionMatrix) const;
 
 		virtual void SetTextureArray(ID3D11DeviceContext* deviceContext, vector<ID3D11ShaderResourceView*>& textureArray);
-		virtual bool SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType);
+		virtual HRESULT SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType);
 		virtual bool SetLightSource(ID3D11DeviceContext* deviceContext, LightClass* lightSource);
 
 		virtual bool SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, 

@@ -22,7 +22,7 @@ void FontShader::Shutdown()
 	}
 }
 
-bool FontShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
+HRESULT FontShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
 {
 	HRESULT result;
 
@@ -33,22 +33,23 @@ bool FontShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* filename, LP
 
 	result = InitializeShader(device, hwnd, filename, VSname, PSname, layouts);
 
-	if (!result)
+	if (FAILED(result))
 	{
-		return false;
+		return result;
 	}
+	return result;
 }
 
-bool FontShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
+HRESULT FontShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
 	LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts)
 {
 	HRESULT result;
 	D3D11_BUFFER_DESC pixelBufferDesc;
 
 	result = TextureShader::InitializeShader(device, hwnd, FXfilename, VSname, PSname, layouts);
-	if (!result)
+	if (FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	// Setup the description of the dynamic pixel constant buffer that is in the pixel shader.
@@ -63,10 +64,10 @@ bool FontShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfile
 	result = device->CreateBuffer(&pixelBufferDesc, NULL, &m_pixelBuffer);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
-	return true;
+	return result;
 }
 
 bool FontShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, 

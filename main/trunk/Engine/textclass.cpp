@@ -21,10 +21,10 @@ TextClass::~TextClass()
 }
 
 
-bool TextClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, HWND hwnd, int screenWidth, int screenHeight, 
+HRESULT TextClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, HWND hwnd, int screenWidth, int screenHeight, 
 	D3DXMATRIX baseViewMatrix)
 {
-	bool result;
+	HRESULT result = S_FALSE;
 	DWORD funcTime = -1;
 
 	Timer::GetInstance()->SetTimeA();
@@ -40,31 +40,31 @@ bool TextClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceCont
 	m_Font = new FontClass;
 	if(!m_Font)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the font object.
 	result = m_Font->Initialize(device, "Engine/data/fonts/fontdata.txt", L"Engine/data/fonts/font.dds");
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the font object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	// Create the font shader object.
 	m_FontShader = new FontShader;
 	if(!m_FontShader)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the font shader object.
 	result = m_FontShader->Initialize(device, hwnd, L"Engine/data/shaders/FontShader.fx",
 		"FontVertexShader", "FontPixelShader");
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the font shader object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	Timer::GetInstance()->SetTimeB();
@@ -75,7 +75,7 @@ bool TextClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceCont
 		Log::GetInstance()->WriteToLogFile(funcTime, "	TextClass::Initialize time: ");
 	}
 
-	return true;
+	return result;
 }
 
 bool TextClass::AddSentence(D3DClass* d3d, char *text, int posX, int posY, float colorR, float colorG, float colorB, int sentenceID)

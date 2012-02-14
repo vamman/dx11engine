@@ -22,7 +22,7 @@ ModelClass::ModelClass(const ModelClass& existingModel) : mInstanceCount(-1), mV
 	mVertexCount = existingModel.GetVertexCount();
 	mModel = existingModel.GetModelTypeData();
 
-	strcpy(mModelFileName, existingModel.GetModelFileName());
+	strcpy_s(mModelFileName, existingModel.GetModelFileName());
 }
 
 ModelClass::~ModelClass()
@@ -33,7 +33,7 @@ bool ModelClass::InitializeInstanced(ID3D11Device* device, char* modelFilename, 
 {
 	bool result;
 
-	strcpy(mModelFileName, modelFilename);
+	strcpy_s(mModelFileName, modelFilename);
 
 	// Load in the model data,
 	result = LoadModel(modelFilename);
@@ -59,7 +59,7 @@ bool ModelClass::InitializeOrdinary(ID3D11Device* device, char* modelFilename)
 {
 	bool result;
 
-	strcpy(mModelFileName, modelFilename);
+	strcpy_s(mModelFileName, modelFilename);
 
 	// Load in the model data,
 	result = LoadModel(modelFilename);

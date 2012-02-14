@@ -11,7 +11,7 @@ TextureShader::~TextureShader(void)
 {
 }
 
-bool TextureShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
+HRESULT TextureShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
 {
 	HRESULT result;
 
@@ -22,22 +22,22 @@ bool TextureShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* filename,
 
 	result = InitializeShader(device, hwnd, filename, VSname, PSname, layouts);
 
-	if (!result)
+	if (FAILED(result))
 	{
-		return false;
+		return result;
 	}
+	return result;
 }
 
-bool TextureShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
-	LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts)
+HRESULT TextureShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts)
 {
 	HRESULT result;
 	D3D11_SAMPLER_DESC samplerDesc;
 
 	result = BasicShader::InitializeShader(device, hwnd, FXfilename, VSname, PSname, layouts);
-	if (!result)
+	if (FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	// Create a texture sampler state description.
@@ -59,9 +59,9 @@ bool TextureShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXf
 	result = device->CreateSamplerState(&samplerDesc, &m_sampleState);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
-	return true;
+	return result;
 }
 
 void TextureShader::Shutdown()

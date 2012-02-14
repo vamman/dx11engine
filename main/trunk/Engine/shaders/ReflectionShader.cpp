@@ -10,7 +10,7 @@ ReflectionShader::~ReflectionShader(void)
 {
 }
 
-bool ReflectionShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
+HRESULT ReflectionShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
 								  LPCSTR VSname, LPCSTR PSname)
 {
 	D3D11_BUFFER_DESC reflectionBufferDesc;
@@ -24,7 +24,7 @@ bool ReflectionShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* FXfile
 	// layouts.push_back("TEXCOORD_INST");
 
 	result = TextureShader::InitializeShader(device, hwnd, FXfilename, VSname, PSname, layouts);
-	if (!result)
+	if (FAILED(result))
 	{
 		return false;
 	}
@@ -41,12 +41,9 @@ bool ReflectionShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* FXfile
 	result = device->CreateBuffer(&reflectionBufferDesc, NULL, &m_reflectionBuffer);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
-
-	return true;
-
-	return true;
+	return result;
 }
 
 

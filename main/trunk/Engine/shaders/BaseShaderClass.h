@@ -31,7 +31,7 @@ class BaseShaderClass
 			D3DXMATRIX projectionMatrix) const = 0;
 
 		virtual void SetTextureArray(ID3D11DeviceContext* deviceContext, vector<ID3D11ShaderResourceView*>& textureArray) = 0;
-		virtual bool SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType) = 0;
+		virtual HRESULT SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType) = 0;
 		virtual bool SetLightSource(ID3D11DeviceContext* deviceContext, LightClass* lightSource) = 0;
 
 		virtual bool SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, 

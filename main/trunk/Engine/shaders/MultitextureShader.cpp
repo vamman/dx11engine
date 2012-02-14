@@ -15,15 +15,15 @@ void MultitextureShader::Shutdown()
 	TextureShader::Shutdown();
 }
 
-bool MultitextureShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
+HRESULT MultitextureShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
 {
-	bool result;
+	HRESULT result;
 	result = TextureShader::Initialize(device, hwnd, filename, VSname, PSname);
-	if(!result)
+	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
-	return true;
+	return result;
 }
 
 bool MultitextureShader::RenderInstanced(ID3D11DeviceContext* deviceContext,

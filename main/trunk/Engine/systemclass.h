@@ -35,7 +35,7 @@ class SystemClass
 		SystemClass(const SystemClass&);
 		~SystemClass();
 
-		bool Initialize();
+		HRESULT Initialize();
 		void Shutdown();
 		void Run();
 		LRESULT CALLBACK MessageHandler(HWND, UINT, WPARAM, LPARAM);
