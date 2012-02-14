@@ -2,7 +2,7 @@
 #ifndef _QUADTREECLASS_H_
 #define _QUADTREECLASS_H_
 
-const int MAX_TRIANGLES = 5000;
+const int MAX_TRIANGLES = 15000;
 
 #include "Terrain.h"
 #include "frustumclass.h"
@@ -47,7 +47,7 @@ class QuadTree
 		~QuadTree(void);
 		bool Initialize(Terrain*, ID3D11Device*);
 		void Shutdown();
-		void Render(FrustumClass*, ID3D11DeviceContext*, TerrainShader*);
+		void Render(FrustumClass*, ID3D11DeviceContext*, TerrainShader*, bool isAllowToBBRender);
 
 		int GetDrawCount();
 		bool GetHeightAtPosition(float, float, float&);

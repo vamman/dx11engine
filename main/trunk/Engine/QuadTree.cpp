@@ -434,11 +434,11 @@ void QuadTree::ReleaseNode(NodeType* node)
 	return;
 }
 
-void QuadTree::Render(FrustumClass* frustum, ID3D11DeviceContext* deviceContext, TerrainShader* shader)
+void QuadTree::Render(FrustumClass* frustum, ID3D11DeviceContext* deviceContext, TerrainShader* shader, bool isAllowToBBRender)
 {
 	// Reset the number of triangles that are drawn for this frame.
 	m_drawCount = 0;
-	mIsAllowToBBRender = InputClass::GetInstance()->IsAllowToBBRender();
+	mIsAllowToBBRender = isAllowToBBRender;
 	// Render each node that is visible starting at the parent node and moving down the tree.
 	RenderNode(m_parentNode, frustum, deviceContext, shader);
 	return;

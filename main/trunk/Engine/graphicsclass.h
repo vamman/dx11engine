@@ -113,7 +113,8 @@ class GraphicsClass
 		TextClass* m_Text;
 
 		BasicShader* mBasicShader;
-		TextureShader* m_TextureShader;
+		TextureShader* mTextureShaderMiniMap;
+		TextureShader* mTextureShaderCamDisplay;
 		LightShader* mDirSpecLightShader;
 		LightShader* mPointLightShader;
 		LightShader* mDirAmbLightShader;
@@ -132,6 +133,8 @@ class GraphicsClass
 
 		Timer* mTimer;
 		DWORD mDrawFuncTime;
+		bool mIsAllowToBBRender;
+		D3DXMATRIX mBaseViewMatrix;
 };
 
 #endif
