@@ -63,6 +63,8 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 //	int videoMemory;
 	int terrainWidth, terrainHeight;
 
+	InputClass::GetInstance()->CenterMouseLocation();
+
 	mTimer = Timer::GetInstance();
 	mTimer->Initialize();
 	Timer::GetInstance()->SetTimeA();
@@ -912,6 +914,7 @@ bool GraphicsClass::HandleInput(float frameTime)
 {
 	bool keyDown;
 	float posX, posY, posZ, rotX, rotY, rotZ;
+	D3DXVECTOR3 normalCameraDirectionVector, normalCameraRightVector;
 
 	if (InputClass::GetInstance()->IsWireframeModeOn())
 	{
@@ -921,6 +924,9 @@ bool GraphicsClass::HandleInput(float frameTime)
 	{
 		SetFillMode(D3D11_FILL_SOLID);
 	}
+
+	normalCameraDirectionVector = mCamera->GetNormalDirectionVector();
+	normalCameraRightVector = mCamera->GetNormalRightVector();
 
 	// Set the frame time for calculating the updated position.
 	mCameraMovement->SetFrameTime(frameTime);
@@ -932,14 +938,14 @@ bool GraphicsClass::HandleInput(float frameTime)
 	mCameraMovement->TurnRight(keyDown);
 
 	keyDown = InputClass::GetInstance()->IsWPressed();
-	mCameraMovement->MoveForward(keyDown);
+	mCameraMovement->MoveForward(keyDown, normalCameraDirectionVector);
 	keyDown = InputClass::GetInstance()->IsSPressed();
-	mCameraMovement->MoveBackward(keyDown);
+	mCameraMovement->MoveBackward(keyDown, normalCameraDirectionVector);
 
 	keyDown = InputClass::GetInstance()->IsAPressed();
-	mCameraMovement->StrafeLeft(keyDown);
+	mCameraMovement->StrafeLeft(keyDown, normalCameraRightVector);
 	keyDown = InputClass::GetInstance()->IsDPressed();
-	mCameraMovement->StrafeRight(keyDown);
+	mCameraMovement->StrafeRight(keyDown, normalCameraRightVector);
 
 	/*
 	keyDown = InputClass::GetInstance()->IsAPressed();
@@ -960,17 +966,22 @@ bool GraphicsClass::HandleInput(float frameTime)
 	mCameraMovement->GetRotation(rotX, rotY, rotZ);
 
 	// Set the position of the camera.
+	/*
 	mCamera->SetPosition(posX, posY, posZ);
 	mCamera->SetRotation(rotX, rotY, rotZ);
+	*/
 
 	// Rotate camera due to mouse movement
-	/*
-	mCameraMovement->GetPosition(posX, posY, posZ);
-	mCameraMovement->GetRotation(rotX, rotY, rotZ);
+	float rotLeftRight = 0.0f;
+	float rotUpDown = 0.0f;
+	InputClass::GetInstance()->GetMouseRotations(rotLeftRight, rotUpDown);
+	mCamera->SetPosition(posX, posY, posZ);
+	mCamera->SetRotation(rotUpDown, rotLeftRight, rotZ);
 
+	/*
 	InputClass::GetInstance()->GetMouseDelta(rotX, rotY);
 
-	mCamera->SetPosition(posX, posY, posZ);
+	//mCamera->SetPosition(posX, posY, posZ);
 	mCamera->SetRotation(rotX, rotY, rotZ);
 	*/
 	// Update the location of the camera on the mini map.

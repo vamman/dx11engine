@@ -51,6 +51,9 @@ void CameraClass::Render()
 	float yaw, pitch, roll;
 	D3DXMATRIX rotationMatrix;
 
+	mCameraLookAt = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	mCameraRight = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	mCameraUp = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 
 	// Setup the vector that points upwards.
 	up.x = 0.0f;
@@ -79,13 +82,36 @@ void CameraClass::Render()
 	D3DXVec3TransformCoord(&lookAt, &lookAt, &rotationMatrix);
 	D3DXVec3TransformCoord(&up, &up, &rotationMatrix);
 
+	mCameraUp = up;
+
 	// Translate the rotated camera position to the location of the viewer.
 	lookAt = position + lookAt;
+	mCameraLookAt = lookAt;
 
 	// Finally create the view matrix from the three updated vectors.
-	D3DXMatrixLookAtLH(&mViewMatrix, &position, &lookAt, &up);
+	D3DXMatrixLookAtLH(&mViewMatrix, &position, &mCameraLookAt, &up);
 
 	return;
+}
+
+D3DXVECTOR3 CameraClass::GetNormalDirectionVector()
+{
+	D3DXVECTOR3 cameraPosition = D3DXVECTOR3(mPositionX, mPositionY, mPositionZ);
+	D3DXVECTOR3 cameraDirection = mCameraLookAt - cameraPosition;
+	D3DXVECTOR3 normalCameraDirection = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	D3DXVec3Normalize(&normalCameraDirection, &cameraDirection);
+	return normalCameraDirection;
+}
+
+D3DXVECTOR3 CameraClass::GetNormalRightVector()
+{
+	D3DXVECTOR3 normalCameraRight = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	D3DXVECTOR3 normalCameraUp = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	D3DXVec3Normalize(&normalCameraUp, &mCameraUp);
+	D3DXVECTOR3 normalCameraDirection = GetNormalDirectionVector();
+
+	D3DXVec3Cross(&normalCameraRight, &normalCameraDirection, &normalCameraUp);
+	return normalCameraRight;
 }
 
 void CameraClass::GetViewMatrix(D3DXMATRIX& viewMatrix)

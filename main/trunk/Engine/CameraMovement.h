@@ -7,6 +7,7 @@
 //////////////
 // INCLUDES //
 //////////////
+#include <d3dx10math.h>
 #include <math.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -27,10 +28,10 @@ public:
 
 	void SetFrameTime(float);
 
-	void MoveForward(bool);
-	void MoveBackward(bool);
-	void StrafeLeft(bool);
-	void StrafeRight(bool);
+	void MoveForward(bool keyDown, D3DXVECTOR3 normalCameraDirection);
+	void MoveBackward(bool keyDown, D3DXVECTOR3 normalCameraDirection);
+	void StrafeLeft(bool keyDown, D3DXVECTOR3 normalCameraRightVector);
+	void StrafeRight(bool keyDown, D3DXVECTOR3 normalCameraRightVector);
 
 	//void MoveUpward(bool);
 	//void MoveDownward(bool);

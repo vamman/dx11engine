@@ -75,7 +75,7 @@ void CameraMovement::SetFrameTime(float time)
 	return;
 }
 
-void CameraMovement::MoveForward(bool keydown)
+void CameraMovement::MoveForward(bool keydown, D3DXVECTOR3 normalCameraDirection)
 {
 	float radians;
 	// Update the forward speed movement based on the frame time and whether the user is holding the key down or not.
@@ -98,17 +98,24 @@ void CameraMovement::MoveForward(bool keydown)
 		}
 	}
 
+	if (mForwardSpeed > 0.0f )
+	{
+		m_positionX += normalCameraDirection.x * mForwardSpeed;
+		m_positionZ += normalCameraDirection.z * mForwardSpeed;
+	}
+
 	// Convert degrees to radians.
+	/*
 	radians = m_rotationY * 0.0174532925f;
 
 	// Update the position.
 	m_positionX += sinf(radians) * mForwardSpeed;
 	m_positionZ += cosf(radians) * mForwardSpeed;
-
+	*/
 	return;
 }
 
-void CameraMovement::MoveBackward(bool keydown)
+void CameraMovement::MoveBackward(bool keydown, D3DXVECTOR3 normalCameraDirection)
 {
 	float radians;
 	// Update the backward speed movement based on the frame time and whether the user is holding the key down or not.
@@ -131,17 +138,24 @@ void CameraMovement::MoveBackward(bool keydown)
 		}
 	}
 
+	if (mBackwardSpeed > 0.0f )
+	{
+		m_positionX -= normalCameraDirection.x * mBackwardSpeed;
+		m_positionZ -= normalCameraDirection.z * mBackwardSpeed;
+	}
+
 	// Convert degrees to radians.
+	/*
 	radians = m_rotationY * 0.0174532925f;
 
 	// Update the position.
 	m_positionX -= sinf(radians) * mBackwardSpeed;
 	m_positionZ -= cosf(radians) * mBackwardSpeed;
-
+	*/
 	return;
 }
 
-void CameraMovement::StrafeLeft(bool keydown)
+void CameraMovement::StrafeLeft(bool keydown, D3DXVECTOR3 normalCameraRightVector)
 {
 	float radians;
 	// Update the forward speed movement based on the frame time and whether the user is holding the key down or not.
@@ -164,37 +178,16 @@ void CameraMovement::StrafeLeft(bool keydown)
 		}
 	}
 
-	// Convert degrees to radians.
-	radians = m_rotationY * 0.0174532925f;
-
-	// Update the position.
-	int sinValue = sinf(radians);
-	int cosValue = cosf(radians);
-	int tanValue = tanf(radians);
-	if (cosValue == 0)
+	if (mStrafeLeftSpeed > 0.0f )
 	{
-		m_positionX -= cosValue * mStrafeLeftSpeed;
-		m_positionZ -= sinValue * mStrafeLeftSpeed;
-	}
-	else if (sinValue == 0)
-	{
-		m_positionX -= cosValue * mStrafeLeftSpeed; // X // cosf
-		m_positionZ -= sinValue * mStrafeLeftSpeed; // Z // sinf
-	}
-	else
-	{
-		m_positionX -= tanValue * mStrafeLeftSpeed; // X // cosf
-		m_positionZ -= tanValue * mStrafeLeftSpeed; // Z // sinf
+		m_positionX += normalCameraRightVector.x * mStrafeLeftSpeed;
+		m_positionZ += normalCameraRightVector.z * mStrafeLeftSpeed;
 	}
 
-	/*
-	m_positionX -= cosf(radians) * mStrafeLeftSpeed; // X // cosf
-	m_positionZ -= sinf(radians) * mStrafeLeftSpeed; // Z // sinf
-	*/
 	return;
 }
 
-void CameraMovement::StrafeRight(bool keydown)
+void CameraMovement::StrafeRight(bool keydown, D3DXVECTOR3 normalCameraRightVector)
 {
 	float radians;
 	// Update the forward speed movement based on the frame time and whether the user is holding the key down or not.
@@ -217,34 +210,12 @@ void CameraMovement::StrafeRight(bool keydown)
 		}
 	}
 
-	// Convert degrees to radians.
-	radians = m_rotationY * 0.0174532925f;
-
-	// Update the position.
-	int sinValue = sinf(radians);
-	int cosValue = cosf(radians);
-	int tanValue = tanf(radians);
-
-	if (cosValue == 0)
+	if (mStrafeRightSpeed > 0.0f )
 	{
-		m_positionX -= cosValue * mStrafeLeftSpeed;
-		m_positionZ -= sinValue * mStrafeLeftSpeed;
-	}
-	else if (sinValue == 0)
-	{
-		m_positionX += cosValue * mStrafeRightSpeed; // X // cosf
-		m_positionZ += sinValue * mStrafeRightSpeed; // Z // sinf
-	}
-	else
-	{
-		m_positionX += tanValue * mStrafeLeftSpeed; // X // cosf
-		m_positionZ += tanValue * mStrafeLeftSpeed; // Z // sinf
+		m_positionX -= normalCameraRightVector.x * mStrafeRightSpeed;
+		m_positionZ -= normalCameraRightVector.z * mStrafeRightSpeed;
 	}
 
-	/*
-	m_positionX += cosf(radians) * mStrafeRightSpeed; // X // cosf
-	m_positionZ += sinf(radians) * mStrafeRightSpeed; // Z // sinf
-	*/
 	return;
 }
 

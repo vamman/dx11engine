@@ -21,6 +21,9 @@
 //////////////
 
 #include <dinput.h>
+#include <d3d11.h>
+#include <d3dx10math.h>
+#include "timerclass.h"
 
 class InputClass
 {
@@ -30,7 +33,10 @@ class InputClass
 		void Shutdown();
 		bool Frame();
 		bool IsEscapePressed();
-		void GetMouseLocation(int&, int&);	
+		void GetMouseLocation(int&, int&);
+
+		void CenterMouseLocation();
+
 		void GetMouseDelta(float&, float&);
 
 		bool IsWPressed();
@@ -50,10 +56,12 @@ class InputClass
 		bool IsAllowToBBRender();
 		bool IsAllowToCameraDisplayRender();
 
+		void GetMouseRotations(float& leftRight, float& upDown);
+
 	private:
 		InputClass();
 		bool ReadKeyboard();
-		bool ReadMouse();
+		bool ReadMouse(float amount);
 		void ProcessInput();
 		bool IsBtnPressed(byte keyKode);
 		bool IsBtnPressedAndUnpressed(byte keyKode, bool& boolValue);
@@ -68,9 +76,10 @@ class InputClass
 		
 		DIMOUSESTATE mMouseCurrentState, mMousePreviouseState;
 
-		int m_screenWidth, m_screenHeight;
+		int mScreenWidth, mScreenHeight;
 		int mMouseX, mMouseY;
 		float mMouseDeltaX, mMouseDeltaY;
+		float mLeftRightRot, mUpDownRot;
 
 		// Press/Unpress flags
 		bool isWireframeModeOn, isAllowToBBRender, isAllowToCameraDisplayRender;
