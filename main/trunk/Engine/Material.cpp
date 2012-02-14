@@ -10,7 +10,7 @@ Material::Material()
 Material::Material(char* materialName)
 {
 	mTextureVector = new TextureArrayClass();
-	strcpy(mMaterialName, materialName);
+	strcpy_s(mMaterialName, materialName);
 }
 
 Material::~Material(void)

@@ -13,7 +13,7 @@ ModelObject::ModelObject(D3DXVECTOR3 position, ModelClass* model, const char* mo
 	mMaterial = 0; // Set default material instead
 	mPosition = position;
 	mModel = model;
-	strcpy(mModelName, modelName);
+	strcpy_s(mModelName, modelName);
 	mIsInstanced = isInstanced;
 	mInstancesVector = instancesVector;
 }
@@ -23,7 +23,7 @@ ModelObject::ModelObject(D3DXVECTOR3 position, ModelClass* model, const char* mo
 	mMaterial = 0; // Set default material instead
 	mPosition = position;
 	mModel = model;
-	strcpy(mModelName, modelName);
+	strcpy_s(mModelName, modelName);
 	mIsInstanced = false;
 }
 

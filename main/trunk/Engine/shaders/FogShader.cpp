@@ -24,7 +24,7 @@ void FogShader::Shutdown()
 	}
 }
 
-bool FogShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname)
+HRESULT FogShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname)
 {
 	HRESULT result;
 	vector<char *> layouts;
@@ -34,20 +34,24 @@ bool FogShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, L
 
 	result = InitializeShader(device, hwnd, FXfilename, VSname, PSname,  layouts);
 
-	if (!result)
+	if (FAILED(result))
 	{
-		return false;
+		return result;
 	}
-	return true;
+	return result;
 }
 
-bool FogShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
+HRESULT FogShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
 						   LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts)
 {
 	HRESULT result;
 	D3D11_BUFFER_DESC fogBufferDesc;
 
-	TextureShader::InitializeShader(device, hwnd, FXfilename, VSname, PSname, layouts);
+	result = TextureShader::InitializeShader(device, hwnd, FXfilename, VSname, PSname, layouts);
+	if (FAILED(result))
+	{
+		return result;
+	}
 
 	// Setup the description of the dynamic fog constant buffer that is in the vertex shader.
 	fogBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -61,10 +65,10 @@ bool FogShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilen
 	result = device->CreateBuffer(&fogBufferDesc, NULL, &m_fogBuffer);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
-	return true;
+	return result;
 }
 
 bool FogShader::SetShaderParameters(ID3D11DeviceContext* deviceContext,

@@ -17,7 +17,7 @@ void Log::WriteToLogFile(DWORD deltaTime, char* functionName)
 	char tempString[10];
 	char funcName[50];
 
-	strcpy(funcName, functionName);
+	strcpy_s(funcName, functionName);
 
 	// Open a file to write the message to.
 	fout.open("log.txt", ios::app);

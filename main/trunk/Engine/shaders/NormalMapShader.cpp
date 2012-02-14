@@ -17,7 +17,7 @@ void NormalMapShader::Shutdown()
 	return;
 }
 
-bool NormalMapShader::Initialize(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
+HRESULT NormalMapShader::Initialize(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
 {
 	HRESULT result;
 
@@ -30,11 +30,11 @@ bool NormalMapShader::Initialize(LightClass* lightSource, ID3D11Device* device, 
 	layouts.push_back("BINORMAL");
 
 	result = LightShader::InitializeShader(lightSource, device, hwnd, filename, VSname, PSname, layouts);
-	if (!result)
+	if (FAILED(result))
 	{
-		return false;
+		return result;
 	}
-	return true;
+	return result;
 }
 
 void NormalMapShader::SetTextureArray(ID3D11DeviceContext* deviceContext, vector<ID3D11ShaderResourceView*>& textureArray)
@@ -42,9 +42,9 @@ void NormalMapShader::SetTextureArray(ID3D11DeviceContext* deviceContext, vector
 	LightShader::SetTextureArray(deviceContext, textureArray);
 }
 
-bool NormalMapShader::SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType)
+HRESULT NormalMapShader::SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType)
 {
-	bool result = LightShader::SetCameraPosition(deviceContext, cameraPosition, lightType);
+	HRESULT result = LightShader::SetCameraPosition(deviceContext, cameraPosition, lightType);
 	return result;
 }
 

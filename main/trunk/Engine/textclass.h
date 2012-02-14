@@ -39,7 +39,7 @@ public:
 	TextClass(const TextClass&);
 	~TextClass();
 
-	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, HWND, int, int, D3DXMATRIX);
+	HRESULT Initialize(ID3D11Device*, ID3D11DeviceContext*, HWND, int, int, D3DXMATRIX);
 	void Shutdown();
 	bool Render(ID3D11DeviceContext*, D3DXMATRIX, D3DXMATRIX);
 	bool AddSentence(D3DClass* d3d, char *text, int posX, int posY, float colorR, float colorG, float colorB, int numerator);

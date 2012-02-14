@@ -16,7 +16,7 @@ BasicShader::~BasicShader()
 {
 }
 
-bool BasicShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname)
+HRESULT BasicShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname)
 {
 	HRESULT result;
 	vector<char *> layouts;
@@ -28,12 +28,12 @@ bool BasicShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
 
 	if (!result)
 	{
-		return false;
+		return result;
 	}
-	return true;
+	return result;
 }
 
-bool BasicShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
+HRESULT BasicShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
 	LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts)
 {
 	HRESULT result;
@@ -59,7 +59,7 @@ bool BasicShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfil
 			MessageBox(hwnd, FXfilename, L"Missing Shader File", MB_OK);
 		}
 
-		return false;
+		return result;
 	}
 
 	// Compile the pixel shader code.
@@ -78,7 +78,7 @@ bool BasicShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfil
 			MessageBox(hwnd, FXfilename, L"Missing Shader File", MB_OK);
 		}
 
-		return false;
+		return result;
 	}
 
 	if (FAILED(result))
@@ -98,14 +98,14 @@ bool BasicShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfil
 	result = device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	// Create the pixel shader from the buffer.
 	result = device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	vector<D3D11_INPUT_ELEMENT_DESC> polygonLayoutVector;
@@ -122,7 +122,7 @@ bool BasicShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfil
 		vertexShaderBuffer->GetBufferSize(), &m_layout);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	// Release the vertex shader buffer and pixel shader buffer since they are no longer needed.
@@ -144,10 +144,10 @@ bool BasicShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfil
 	result = device->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
-	return true;
+	return result;
 }
 
 vector<D3D11_INPUT_ELEMENT_DESC> BasicShader::CreateInputLayout(vector<char *>& layouts)
@@ -353,7 +353,7 @@ void BasicShader::SetTextureArray(ID3D11DeviceContext* deviceContext, vector<ID3
 {
 	
 }
-bool BasicShader::SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType)
+HRESULT BasicShader::SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType)
 {
 	return true;
 }

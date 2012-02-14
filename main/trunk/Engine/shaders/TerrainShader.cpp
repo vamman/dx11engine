@@ -8,7 +8,7 @@ TerrainShader::~TerrainShader(void)
 {
 }
 
-bool TerrainShader::Initialize(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
+HRESULT TerrainShader::Initialize(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
 {
 	HRESULT result;
 	// result = LightShader::Initialize(lightSource, device, hwnd, filename, VSname, PSname);
@@ -20,11 +20,11 @@ bool TerrainShader::Initialize(LightClass* lightSource, ID3D11Device* device, HW
 	layouts.push_back("COLOR");
 
 	result = LightShader::InitializeShader(lightSource, device, hwnd, filename, VSname, PSname, layouts);
-	if (!result)
+	if (FAILED(result))
 	{
-		return false;
+		return result;
 	}
-	return true;
+	return result;
 }
 
 void TerrainShader::Shutdown()
@@ -34,9 +34,9 @@ void TerrainShader::Shutdown()
 	return;
 }
 
-bool TerrainShader::SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType)
+HRESULT TerrainShader::SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType)
 {
-	bool result = LightShader::SetCameraPosition(deviceContext, cameraPosition, lightType);
+	HRESULT result = LightShader::SetCameraPosition(deviceContext, cameraPosition, lightType);
 	return result;
 }
 

@@ -14,8 +14,8 @@ class FogShader : public TextureShader
 		FogShader(void);
 		~FogShader(void);
 
-		bool Initialize(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname);
-		bool InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
+		virtual HRESULT Initialize(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname);
+		virtual HRESULT InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
 						LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts);
 		void Shutdown();
 

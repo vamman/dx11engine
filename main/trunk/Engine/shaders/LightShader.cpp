@@ -43,7 +43,7 @@ void LightShader::Shutdown()
 	}
 }
 
-bool LightShader::Initialize(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
+HRESULT LightShader::Initialize(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
 {
 	HRESULT result;
 	vector<char *> layouts;
@@ -53,31 +53,31 @@ bool LightShader::Initialize(LightClass* lightSource, ID3D11Device* device, HWND
 	layouts.push_back("NORMAL");
 
 	result = InitializeShader(lightSource, device, hwnd, filename, VSname, PSname, layouts);
-	if (!result)
+	if (FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	return result;
 }
 
-bool LightShader::InitializeShader(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
+HRESULT LightShader::InitializeShader(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
 	LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts)
 {
-	bool result;
+	HRESULT result;
 	result = InitializeDirectionalLightShader(lightSource, device, hwnd, FXfilename, VSname, PSname, layouts);
 	return result;
 }
 
-bool LightShader::InitializeDirectionalLightShader(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts)
+HRESULT LightShader::InitializeDirectionalLightShader(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts)
 {
 	HRESULT result;
 	D3D11_BUFFER_DESC cameraBufferDesc, lightBufferDesc;
 
 	result = TextureShader::InitializeShader(device, hwnd, FXfilename, VSname, PSname, layouts);
-	if (!result)
+	if (FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	// Setup the description of the camera dynamic constant buffer that is in the vertex shader.
@@ -94,7 +94,7 @@ bool LightShader::InitializeDirectionalLightShader(LightClass* lightSource, ID3D
 		result = device->CreateBuffer(&cameraBufferDesc, NULL, &m_cameraBuffer);
 		if(FAILED(result))
 		{
-			return false;
+			return result;
 		}
 	}
 
@@ -114,21 +114,21 @@ bool LightShader::InitializeDirectionalLightShader(LightClass* lightSource, ID3D
 	result = device->CreateBuffer(&lightBufferDesc, NULL, &m_lightBuffer);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 	
-	return true;
+	return result;
 }
 
-bool LightShader::InitializePointLightShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts)
+HRESULT LightShader::InitializePointLightShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts)
 {
 	HRESULT result;
 	D3D11_BUFFER_DESC lightColorBufferDesc, lightPositionBufferDesc;
 
 	result = TextureShader::InitializeShader(device, hwnd, FXfilename, VSname, PSname, layouts);
-	if (!result)
+	if (FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	// Setup the description of the dynamic constant buffer that is in the pixel shader.
@@ -143,7 +143,7 @@ bool LightShader::InitializePointLightShader(ID3D11Device* device, HWND hwnd, WC
 	result = device->CreateBuffer(&lightColorBufferDesc, NULL, &m_lightColorBuffer);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	// Setup the description of the dynamic constant buffer that is in the vertex shader.
@@ -158,10 +158,10 @@ bool LightShader::InitializePointLightShader(ID3D11Device* device, HWND hwnd, WC
 	result = device->CreateBuffer(&lightPositionBufferDesc, NULL, &m_lightPositionBuffer);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
-	return true;
+	return result;
 }
 
 void LightShader::SetTextureArray(ID3D11DeviceContext* deviceContext, vector<ID3D11ShaderResourceView*>& textureArray)
@@ -170,9 +170,9 @@ void LightShader::SetTextureArray(ID3D11DeviceContext* deviceContext, vector<ID3
 	TextureShader::SetTextureArray(deviceContext, textureArray);
 }
 
-bool LightShader::SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType)
+HRESULT LightShader::SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType)
 {
-	HRESULT result;
+	HRESULT result = S_OK;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	unsigned int bufferNumber;
 	CameraBufferType* CameraDataPtr;
@@ -183,7 +183,7 @@ bool LightShader::SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECT
 		result = deviceContext->Map(m_cameraBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 		if(FAILED(result))
 		{
-			return false;
+			return result;
 		}
 
 		// Get a pointer to the data in the constant buffer.
@@ -202,10 +202,12 @@ bool LightShader::SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECT
 		// Now set the camera constant buffer in the vertex shader with the updated values.
 		deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_cameraBuffer);
 	}
+	return result;
 }
+
 bool LightShader::SetLightSource(ID3D11DeviceContext* deviceContext, LightClass* lightSource)
 {
-	HRESULT result;
+	HRESULT result = S_FALSE;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	unsigned int bufferNumber;
 	SpecLightBufferType* SpecLightDataPtr;

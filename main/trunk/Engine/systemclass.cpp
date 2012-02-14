@@ -20,10 +20,10 @@ SystemClass::~SystemClass()
 {
 }
 
-bool SystemClass::Initialize()
+HRESULT SystemClass::Initialize()
 {
 	int screenWidth, screenHeight;
-	bool result;
+	HRESULT result = S_FALSE;
 
 	// Initialize the width and height of the screen to zero before sending the variables into the function.
 	screenWidth = 0;
@@ -34,24 +34,24 @@ bool SystemClass::Initialize()
 
 	// Initialize the input object.
 	result = InputClass::GetInstance()->Initialize(m_hinstance, m_hwnd, screenWidth, screenHeight);
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(m_hwnd, L"Could not initialize the input object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 
 	// Create the graphics object.  This object will handle rendering all the graphics for this application.
 	m_Graphics = new GraphicsClass;
 	if(!m_Graphics)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the graphics object.
 	result = m_Graphics->Initialize(screenWidth, screenHeight, m_hwnd);
-	if(!result)
+	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the fps object.
@@ -65,15 +65,15 @@ bool SystemClass::Initialize()
 	m_Timer = new Timer;
 	if(!m_Timer)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the timer object.
 	result = m_Timer->Initialize();
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(m_hwnd, L"Could not initialize the Timer object.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 	*/
 	// Create the position object.
@@ -81,26 +81,26 @@ bool SystemClass::Initialize()
 	m_Position = new PositionClass;
 	if(!m_Position)
 	{
-		return false;
+		return result;
 	}
 	*/
 	// Create the sound object.
 	m_Sound = new SoundClass;
 	if(!m_Sound)
 	{
-		return false;
+		return result;
 	}
 
 	// Initialize the sound object.
 	/*
 	result = m_Sound->Initialize(m_hwnd);
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(m_hwnd, L"Could not initialize Direct Sound.", L"Error", MB_OK);
-		return false;
+		return result;
 	}
 	*/
-	return true;
+	return result;
 }
 
 void SystemClass::Shutdown()

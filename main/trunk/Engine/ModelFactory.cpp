@@ -31,9 +31,9 @@ ModelObject* ModelFactory::CreateInstancedModel(ID3D11Device* device, HWND hwnd,
 	srand((unsigned int)time(NULL));
 
 	// Go through all the models and randomly generate the model color and position.
-	float positionX = 0.0f; // 60.0f;
+	float positionX = 60.0f; // 60.0f;
 	float positionY = 0.0f; // 0.0f;
-	float positionZ = 0.0f; // 55.0f;
+	float positionZ = 55.0f; // 55.0f;
 
 	//InstanceType* instance = new InstanceType();
 	InstanceType* instances = new InstanceType[numberOfModels];

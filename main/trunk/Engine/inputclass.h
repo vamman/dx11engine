@@ -26,13 +26,11 @@ class InputClass
 {
 	public:
 		static InputClass* GetInstance();
-		bool Initialize(HINSTANCE, HWND, int, int);
+		HRESULT Initialize(HINSTANCE, HWND, int, int);
 		void Shutdown();
 		bool Frame();
 		bool IsEscapePressed();
-		bool IsWireframeModeOn();
-		bool IsAllowToBBRender();
-		void GetMouseLocation(int&, int&);
+		void GetMouseLocation(int&, int&);	
 
 		bool IsLeftPressed();
 		bool IsRightPressed();
@@ -42,6 +40,11 @@ class InputClass
 		bool IsZPressed();
 		bool IsPgUpPressed();
 		bool IsPgDownPressed();
+
+		// Press/Unpress functions
+		bool IsWireframeModeOn();
+		bool IsAllowToBBRender();
+		bool IsAllowToCameraDisplayRender();
 
 	private:
 		InputClass();
@@ -62,7 +65,9 @@ class InputClass
 
 		int m_screenWidth, m_screenHeight;
 		int m_mouseX, m_mouseY;
-		bool isWireframeModeOn, isAllowToBBRender;
+
+		// Press/Unpress flags
+		bool isWireframeModeOn, isAllowToBBRender, isAllowToCameraDisplayRender;
 
 		static InputClass* instance;
 };

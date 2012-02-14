@@ -64,7 +64,7 @@ class GraphicsClass
 		GraphicsClass(const GraphicsClass&);
 		~GraphicsClass();
 
-		bool Initialize(int, int, HWND);
+		HRESULT Initialize(int, int, HWND);
 		void Shutdown();
 		bool Frame();
 		bool Render();
@@ -73,7 +73,7 @@ class GraphicsClass
 		bool HandleInput(float);
 		
 		bool InitLights();
-		bool InitializeShaders(HWND hwnd);
+		HRESULT InitializeShaders(HWND hwnd);
 		bool InitMaterials();
 		bool InitObjects(HWND hwnd);
 
@@ -133,8 +133,15 @@ class GraphicsClass
 
 		Timer* mTimer;
 		DWORD mDrawFuncTime;
-		bool mIsAllowToBBRender;
 		D3DXMATRIX mBaseViewMatrix;
+
+		// For directional light animation
+		bool mDirUp;
+		bool mDirDown;
+
+		// Input flags
+		bool mIsAllowToCameraDisplayRender;
+		bool mIsAllowToBBRender;
 };
 
 #endif

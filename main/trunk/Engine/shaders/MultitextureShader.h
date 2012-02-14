@@ -6,7 +6,7 @@ class MultitextureShader : public TextureShader
 	public:
 		MultitextureShader(void);
 		~MultitextureShader(void);
-		virtual bool Initialize(ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname);
+		virtual HRESULT Initialize(ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname);
 
 		virtual bool RenderInstanced(ID3D11DeviceContext* deviceContext,
 									int vertexCount,
