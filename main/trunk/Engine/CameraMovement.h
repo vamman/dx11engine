@@ -29,8 +29,12 @@ public:
 
 	void MoveForward(bool);
 	void MoveBackward(bool);
-	void MoveUpward(bool);
-	void MoveDownward(bool);
+	void StrafeLeft(bool);
+	void StrafeRight(bool);
+
+	//void MoveUpward(bool);
+	//void MoveDownward(bool);
+
 	void TurnLeft(bool);
 	void TurnRight(bool);
 	void LookUpward(bool);
@@ -42,7 +46,7 @@ private:
 
 	float m_frameTime;
 
-	float m_forwardSpeed, m_backwardSpeed;
+	float mForwardSpeed, mBackwardSpeed, mStrafeLeftSpeed, mStrafeRightSpeed;
 	float m_upwardSpeed, m_downwardSpeed;
 	float m_leftTurnSpeed, m_rightTurnSpeed;
 	float m_lookUpSpeed, m_lookDownSpeed;

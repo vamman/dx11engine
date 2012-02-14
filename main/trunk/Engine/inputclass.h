@@ -31,12 +31,16 @@ class InputClass
 		bool Frame();
 		bool IsEscapePressed();
 		void GetMouseLocation(int&, int&);	
+		void GetMouseDelta(float&, float&);
 
-		bool IsLeftPressed();
-		bool IsRightPressed();
-		bool IsUpPressed();
-		bool IsDownPressed();
+		bool IsWPressed();
+		bool IsSPressed();
 		bool IsAPressed();
+		bool IsDPressed();
+
+		bool IsQPressed();
+		bool IsEPressed();
+		
 		bool IsZPressed();
 		bool IsPgUpPressed();
 		bool IsPgDownPressed();
@@ -51,20 +55,22 @@ class InputClass
 		bool ReadKeyboard();
 		bool ReadMouse();
 		void ProcessInput();
+		bool IsBtnPressed(byte keyKode);
 		bool IsBtnPressedAndUnpressed(byte keyKode, bool& boolValue);
 
 	private:
 		IDirectInput8* m_directInput;
-		IDirectInputDevice8* m_keyboard;
-		IDirectInputDevice8* m_mouse;
+		IDirectInputDevice8* mKeyboard;
+		IDirectInputDevice8* mMouse;
 
 		unsigned char mCurrentKeyboardState[256];
 		unsigned char mPreviousKeyboardState[256];
 		
-		DIMOUSESTATE m_mouseState;
+		DIMOUSESTATE mMouseCurrentState, mMousePreviouseState;
 
 		int m_screenWidth, m_screenHeight;
-		int m_mouseX, m_mouseY;
+		int mMouseX, mMouseY;
+		float mMouseDeltaX, mMouseDeltaY;
 
 		// Press/Unpress flags
 		bool isWireframeModeOn, isAllowToBBRender, isAllowToCameraDisplayRender;
