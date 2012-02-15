@@ -138,7 +138,7 @@ void MiniMap::Shutdown()
 }
 
 
-bool MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX orthoMatrix, TextureShader* textureShader)
+bool MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX orthoMatrix, TextureShader* textureShader, float cameraRotY)
 {
 	bool result;
 	// Put the border bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
@@ -166,6 +166,10 @@ bool MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix,
 	minimapTextureArray.push_back(m_MiniMapBitmap->GetTexture());
 	textureShader->SetTextureArray(deviceContext, minimapTextureArray);
 	textureShader->RenderOrdinary(deviceContext, m_MiniMapBitmap->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
+
+	// Roatate the player view bitmap
+	// D3DXMatrixTranslation(&worldMatrix, m_pointLocationX - mPlayerViewImageWidth / 2, m_pointLocationY - mPlayerViewImageHeight, 0.0f);
+	// D3DXMatrixRotationZ(&worldMatrix, cameraRotY);
 
 	// Put the point bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	result = mPlayerView->Render(deviceContext, m_pointLocationX - mPlayerViewImageWidth / 2, m_pointLocationY - mPlayerViewImageHeight);

@@ -69,10 +69,6 @@ void CameraClass::Render()
 	lookAt.x = 0.0f;
 	lookAt.y = 0.0f;
 	lookAt.z = 1.0f;
-	
-	// Log::GetInstance()->WriteToLogFile((DWORD)mRotationX, "CameraClass::Render mRotationX: ");
-	Log::GetInstance()->WriteToLogFile((DWORD)mRotationY, "CameraClass::Render mRotationY: ");
-	// Log::GetInstance()->WriteToLogFile((DWORD)mRotationZ, "CameraClass::Render mRotationZ: ");
 
 	// Set the yaw (Y axis), pitch (X axis), and roll (Z axis) rotations in radians.
 	pitch = mRotationX * 0.0174532925f;

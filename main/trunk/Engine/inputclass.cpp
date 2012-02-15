@@ -30,11 +30,11 @@ HRESULT InputClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidth, 
 	// Store the screen size which will be used for positioning the mouse cursor.
 	mScreenWidth = screenWidth;
 	mScreenHeight = screenHeight;
-	mMouseDeltaX = 0.0f;
-	mMouseDeltaY = 0.0f;
+	mMouseDeltaX = 0;
+	mMouseDeltaY = 0;
 
-	mLeftRightRot = 0.0f;// D3DX_PI / 2; // MathHelper.PiOver2;
-	mUpDownRot = 0.0f;// - D3DX_PI / 10; // - MathHelper.Pi / 10.0f;
+	// mLeftRightRot = 0.0f;// D3DX_PI / 2; // MathHelper.PiOver2;
+	// mUpDownRot = 0.0f;// - D3DX_PI / 10; // - MathHelper.Pi / 10.0f;
 
 	// Initialize the main direct input interface.
 	result = DirectInput8Create(hinstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_directInput, NULL);
@@ -136,6 +136,9 @@ bool InputClass::Frame()
 {
 	bool result;
 
+	float startTime = Timer::GetInstance()->GetStartTime();
+	float timePassed = (float) timeGetTime() - startTime;
+	float timeDifference = timePassed / 1000.0f;
 
 	// Read the current state of the keyboard.
 	result = ReadKeyboard();
@@ -144,19 +147,12 @@ bool InputClass::Frame()
 		return false;
 	}
 
-	float startTime = Timer::GetInstance()->GetStartTime();
-	float timePassed = (float) timeGetTime() - startTime;
-	float timeDifference = timePassed / 1000.0f;
-
 	// Read the current state of the mouse.
 	result = ReadMouse(timeDifference);
 	if(!result)
 	{
 		return false;
 	}
-
-	// Process the changes in the mouse and keyboard.
-	ProcessInput();
 
 	return true;
 }
@@ -213,8 +209,6 @@ bool InputClass::ReadMouse(float amount)
 	{
 		mMouseDeltaX = (mMouseCurrentState.lX - mMousePreviouseState.lX);
 		mMouseDeltaY = (mMouseCurrentState.lY - mMousePreviouseState.lY);
-		Log::GetInstance()->WriteToLogFile((float)mMouseDeltaX, "GraphicsClass::ReadMouse mMouseDeltaX: ");
-		mMousePreviouseState = mMouseCurrentState;
 	}
 	
 	CenterMouseLocation();
@@ -222,56 +216,31 @@ bool InputClass::ReadMouse(float amount)
 	return true;
 }
 
-/*
-	if((mMouseCurrentState.lX != mMousePreviouseState.lX) || (mMouseCurrentState.lY != mMousePreviouseState.lY))
-	{
-		// mMouseDeltaX += mMousePreviouseState.lX * 0.001f;
-		// mMouseDeltaY += mMouseCurrentState.lY * 0.001f;
-		mMouseDeltaX = (mMouseCurrentState.lX - mMousePreviouseState.lX);
-		mMouseDeltaY = (mMouseCurrentState.lY - mMousePreviouseState.lY);
-		Log::GetInstance()->WriteToLogFile((float)mMouseDeltaX, "GraphicsClass::ReadMouse mMouseDeltaX: ");
-		Log::GetInstance()->WriteToLogFile((float)mMouseDeltaY, "GraphicsClass::ReadMouse mMouseDeltaY: ");
-
-		if (abs(mMouseDeltaX) > 0.0f && abs(mMouseDeltaX) < 300.0f)
-		{
-			mLeftRightRot += rotationSpeed * mMouseDeltaX * amount;
-		}
-
-		if (abs(mMouseDeltaY) > 0.0f && abs(mMouseDeltaY) < 300.0f)
-		{
-			mUpDownRot += rotationSpeed * mMouseDeltaY * amount;
-		}
-
-		mMousePreviouseState = mMouseCurrentState;
-	}
-	*/
-	/*
-	{
-		mLeftRightRot = 0.0f;
-		mUpDownRot = 0.0f;
-	}
-	*/
-
-void InputClass::CenterMouseLocation()
+HRESULT InputClass::CenterMouseLocation()
 {
+	HRESULT result = S_OK;
 	mMouseX = mScreenWidth / 2;
 	mMouseY = mScreenHeight / 2;
-	if (abs(mMouseDeltaX) < 1000)
+	mMouse->GetDeviceState(sizeof(DIMOUSESTATE), (LPVOID)&mMousePreviouseState);
+	if(FAILED(result))
 	{
-		Log::GetInstance()->WriteToLogFile((float)mMouseDeltaX, "GraphicsClass::ReadMouse mMouseDeltaX: ");
+		// If the mouse lost focus or was not acquired then try to get control back.
+		if((result == DIERR_INPUTLOST) || (result == DIERR_NOTACQUIRED))
+		{
+			mMouse->Acquire();
+		}
+		else
+		{
+			return result;
+		}
 	}
-	//mMousePreviouseState.lX = mMouseX;
-	//mMousePreviouseState.lY = mMouseY;
+	return result;
 }
 
 void InputClass::GetMouseLocation(int& mouseX, int& mouseY)
 {
 	mouseX = mMouseX;
 	mouseY = mMouseY;
-	if (abs(mMouseDeltaX) < 1000)
-	{
-		Log::GetInstance()->WriteToLogFile((float)mMouseDeltaX, "GraphicsClass::GetMouseLocation mMouseDeltaX: ");
-	}
 	return;
 }
 
@@ -279,32 +248,12 @@ void InputClass::GetMouseDelta(int& mouseDeltaX, int& mouseDeltaY)
 {
 	mouseDeltaX = mMouseDeltaX;
 	mouseDeltaY = mMouseDeltaY;
-	if (abs(mMouseDeltaX) < 1000)
-	{
-		Log::GetInstance()->WriteToLogFile((float)mMouseDeltaX, "GraphicsClass::GetMouseDelta mMouseDeltaX: ");
-	}
 }
 
 void InputClass::GetMouseRotations(float& leftRight, float& upDown)
 {
 	leftRight = mLeftRightRot;
 	upDown = mUpDownRot;
-}
-
-void InputClass::ProcessInput()
-{
-	// Update the location of the mouse cursor based on the change of the mouse location during the frame.
-	mMouseX += mMouseCurrentState.lX;
-	mMouseY += mMouseCurrentState.lY;
-
-	// Ensure the mouse location doesn't exceed the screen width or height.
-	if(mMouseX < 0)  { mMouseX = 0; }
-	if(mMouseY < 0)  { mMouseY = 0; }
-
-	if(mMouseX > mScreenWidth)  { mMouseX = mScreenWidth; }
-	if(mMouseY > mScreenHeight) { mMouseY = mScreenHeight; }
-
-	return;
 }
 
 bool InputClass::IsWireframeModeOn()

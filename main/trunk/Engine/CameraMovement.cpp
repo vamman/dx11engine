@@ -345,21 +345,13 @@ void CameraMovement::TurnRight(bool keydown)
 	return;
 }
 
-void CameraMovement::MouseMoveHorizontal(int mouseDeltaX, float amount)
+void CameraMovement::MouseMoveHorizontal(int mouseDeltaX)
 {
 	float rotationSpeed = 0.03f;
 	if(abs(mouseDeltaX) > 0 && abs(mouseDeltaX) < 300)
 	{
-		m_rotationY += rotationSpeed * mouseDeltaX * amount;
-		Log::GetInstance()->WriteToLogFile((float)m_rotationX, "CameraMovement::MouseMoveVertical m_rotationY: ");
+		m_rotationY += rotationSpeed * mouseDeltaX * m_frameTime;
 	}
-	else
-	{
-		return;
-	}
-
-	// Update the rotation.
-	// m_rotationY += rotationY;
 
 	// Keep the rotation in the 0 to 360 range.
 	if(m_rotationY < 0.0f)
@@ -372,28 +364,22 @@ void CameraMovement::MouseMoveHorizontal(int mouseDeltaX, float amount)
 	}
 }
 
-void CameraMovement::MouseMoveVertical(int mouseDeltaY, float amount)
+void CameraMovement::MouseMoveVertical(int mouseDeltaY)
 {
 	float rotationSpeed = 0.03f;
-	// float rotationY = 0.0f;
-	if(mouseDeltaY > 0 && mouseDeltaY < 300)
+	if(abs(mouseDeltaY) > 0 && abs(mouseDeltaY) < 300)
 	{
-		// rotationY += rotationSpeed * mouseDeltaX * amount;
-		m_rotationX += rotationSpeed * mouseDeltaY * amount;
-		Log::GetInstance()->WriteToLogFile((float)m_rotationX, "CameraMovement::MouseMoveVertical m_rotationX: ");
+		m_rotationX += rotationSpeed * mouseDeltaY * m_frameTime;
 	}
-
-	// Update the rotation.
-	// m_rotationX += mouseDeltaY;
 
 	// Keep the rotation in the 0 to 360 range.
-	if(m_rotationX < 90.0f)
+	if(m_rotationX > 90.0f)
 	{
-		m_rotationX -= 90.0f;
+		m_rotationX += 360.0f;
 	}
-	else if(m_rotationX > -90.0f)
+	else if(m_rotationX < -90.0f)
 	{
-		m_rotationX += 90.0f;
+		m_rotationX -= 360.0f;
 	}
 }
 
