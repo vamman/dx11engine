@@ -107,23 +107,29 @@ class GraphicsClass
 
 		LightClass* mDirSpecLight;
 		LightClass* mDirAmbLight;
-		BitmapClass* m_Bitmap;
+		BitmapClass* mBitmap, *mCursor;
 		RenderTextureClass* m_RenderTexture;
 
 		TextClass* m_Text;
 
+		// Shaders
 		BasicShader* mBasicShader;
+
 		TextureShader* mTextureShaderMiniMap;
 		TextureShader* mTextureShaderCamDisplay;
+		FontShader* mCursorShader;
+
 		LightShader* mDirSpecLightShader;
 		LightShader* mPointLightShader;
 		LightShader* mDirAmbLightShader;
+
 		TerrainShader* mTerrainShader;
 		MultitextureShader* m_MultiTextureShader;
 		NormalMapShader* m_BumpMapShader;
 		SpecMapShader* m_SpecMapShader;
 		SpecMapShader* m_SpecMapShaderNonInstanced;
 		FogShader* m_FogShader;
+		
 
 		int mNumObjectsRendered;
 
@@ -142,6 +148,12 @@ class GraphicsClass
 		// Input flags
 		bool mIsAllowToCameraDisplayRender;
 		bool mIsAllowToBBRender;
+
+		int mCursorWidth;
+		int mCursorHeight;
+
+		int mScreenWidth;
+		int mScreenHeight;
 };
 
 #endif

@@ -24,6 +24,7 @@
 #include <d3d11.h>
 #include <d3dx10math.h>
 #include "timerclass.h"
+#include "Log.h"
 
 class InputClass
 {
@@ -37,7 +38,7 @@ class InputClass
 
 		void CenterMouseLocation();
 
-		void GetMouseDelta(float&, float&);
+		void GetMouseDelta(int&, int&);
 
 		bool IsWPressed();
 		bool IsSPressed();
@@ -78,7 +79,7 @@ class InputClass
 
 		int mScreenWidth, mScreenHeight;
 		int mMouseX, mMouseY;
-		float mMouseDeltaX, mMouseDeltaY;
+		int mMouseDeltaX, mMouseDeltaY;
 		float mLeftRightRot, mUpDownRot;
 
 		// Press/Unpress flags

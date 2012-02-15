@@ -34,7 +34,7 @@ SamplerState SampleType;
 ////////////////////////////////////////////////////////////////////////////////
 // Vertex Shader
 ////////////////////////////////////////////////////////////////////////////////
-PixelInputType FontVertexShader(VertexInputType input)
+PixelInputType CursorVertexShader(VertexInputType input)
 {
     PixelInputType output;
     
@@ -55,7 +55,7 @@ PixelInputType FontVertexShader(VertexInputType input)
 ////////////////////////////////////////////////////////////////////////////////
 // Pixel Shader
 ////////////////////////////////////////////////////////////////////////////////
-float4 FontPixelShader(PixelInputType input) : SV_TARGET
+float4 CursorPixelShader(PixelInputType input) : SV_TARGET
 {
     float4 color;
 	
@@ -64,6 +64,8 @@ float4 FontPixelShader(PixelInputType input) : SV_TARGET
     color = shaderTexture.Sample(SampleType, input.tex);
 	
     // If the color is black on the texture then treat this pixel as transparent.
+    // if( (color.r > 0.78f && color.r < 0.79f) && (color.g > 0.78f && color.g < 0.79f) && (color.b > 0.78f && color.b < 0.79f) )
+    // if( (color.r > 0.78f) && (color.g > 0.78f) && (color.b > 0.78f) )
     if(color.r == 0.0f && color.g == 0.0f && color.b == 0.0f)
     {
         color.a = 0.0f;

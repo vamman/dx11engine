@@ -30,9 +30,11 @@ HRESULT InputClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidth, 
 	// Store the screen size which will be used for positioning the mouse cursor.
 	mScreenWidth = screenWidth;
 	mScreenHeight = screenHeight;
+	mMouseDeltaX = 0.0f;
+	mMouseDeltaY = 0.0f;
 
-	mLeftRightRot = D3DX_PI / 2; // MathHelper.PiOver2;
-	mUpDownRot = - D3DX_PI / 10; // - MathHelper.Pi / 10.0f;
+	mLeftRightRot = 0.0f;// D3DX_PI / 2; // MathHelper.PiOver2;
+	mUpDownRot = 0.0f;// - D3DX_PI / 10; // - MathHelper.Pi / 10.0f;
 
 	// Initialize the main direct input interface.
 	result = DirectInput8Create(hinstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_directInput, NULL);
@@ -186,11 +188,11 @@ bool InputClass::ReadKeyboard()
 
 bool InputClass::ReadMouse(float amount)
 {
-
 	HRESULT result;
-	float rotationSpeed = 0.3f;
+	float rotationSpeed = 0.03f;
+	mMouseDeltaX = 0;
+	mMouseDeltaY = 0;
 	//float amount = 1.0f;
-
 
 	// Read the mouse device.
 	result = mMouse->GetDeviceState(sizeof(DIMOUSESTATE), (LPVOID)&mMouseCurrentState);
@@ -209,20 +211,78 @@ bool InputClass::ReadMouse(float amount)
 	
 	if((mMouseCurrentState.lX != mMousePreviouseState.lX) || (mMouseCurrentState.lY != mMousePreviouseState.lY))
 	{
+		mMouseDeltaX = (mMouseCurrentState.lX - mMousePreviouseState.lX);
+		mMouseDeltaY = (mMouseCurrentState.lY - mMousePreviouseState.lY);
+		Log::GetInstance()->WriteToLogFile((float)mMouseDeltaX, "GraphicsClass::ReadMouse mMouseDeltaX: ");
+		mMousePreviouseState = mMouseCurrentState;
+	}
+	
+	CenterMouseLocation();
+
+	return true;
+}
+
+/*
+	if((mMouseCurrentState.lX != mMousePreviouseState.lX) || (mMouseCurrentState.lY != mMousePreviouseState.lY))
+	{
 		// mMouseDeltaX += mMousePreviouseState.lX * 0.001f;
 		// mMouseDeltaY += mMouseCurrentState.lY * 0.001f;
 		mMouseDeltaX = (mMouseCurrentState.lX - mMousePreviouseState.lX);
 		mMouseDeltaY = (mMouseCurrentState.lY - mMousePreviouseState.lY);
+		Log::GetInstance()->WriteToLogFile((float)mMouseDeltaX, "GraphicsClass::ReadMouse mMouseDeltaX: ");
+		Log::GetInstance()->WriteToLogFile((float)mMouseDeltaY, "GraphicsClass::ReadMouse mMouseDeltaY: ");
 
-		mLeftRightRot -= rotationSpeed * mMouseDeltaX * amount;
-		mUpDownRot -= rotationSpeed * mMouseDeltaY * amount;
+		if (abs(mMouseDeltaX) > 0.0f && abs(mMouseDeltaX) < 300.0f)
+		{
+			mLeftRightRot += rotationSpeed * mMouseDeltaX * amount;
+		}
+
+		if (abs(mMouseDeltaY) > 0.0f && abs(mMouseDeltaY) < 300.0f)
+		{
+			mUpDownRot += rotationSpeed * mMouseDeltaY * amount;
+		}
 
 		mMousePreviouseState = mMouseCurrentState;
 	}
+	*/
+	/*
+	{
+		mLeftRightRot = 0.0f;
+		mUpDownRot = 0.0f;
+	}
+	*/
 
-	CenterMouseLocation();
+void InputClass::CenterMouseLocation()
+{
+	mMouseX = mScreenWidth / 2;
+	mMouseY = mScreenHeight / 2;
+	if (abs(mMouseDeltaX) < 1000)
+	{
+		Log::GetInstance()->WriteToLogFile((float)mMouseDeltaX, "GraphicsClass::ReadMouse mMouseDeltaX: ");
+	}
+	//mMousePreviouseState.lX = mMouseX;
+	//mMousePreviouseState.lY = mMouseY;
+}
 
-	return true;
+void InputClass::GetMouseLocation(int& mouseX, int& mouseY)
+{
+	mouseX = mMouseX;
+	mouseY = mMouseY;
+	if (abs(mMouseDeltaX) < 1000)
+	{
+		Log::GetInstance()->WriteToLogFile((float)mMouseDeltaX, "GraphicsClass::GetMouseLocation mMouseDeltaX: ");
+	}
+	return;
+}
+
+void InputClass::GetMouseDelta(int& mouseDeltaX, int& mouseDeltaY)
+{
+	mouseDeltaX = mMouseDeltaX;
+	mouseDeltaY = mMouseDeltaY;
+	if (abs(mMouseDeltaX) < 1000)
+	{
+		Log::GetInstance()->WriteToLogFile((float)mMouseDeltaX, "GraphicsClass::GetMouseDelta mMouseDeltaX: ");
+	}
 }
 
 void InputClass::GetMouseRotations(float& leftRight, float& upDown)
@@ -245,12 +305,6 @@ void InputClass::ProcessInput()
 	if(mMouseY > mScreenHeight) { mMouseY = mScreenHeight; }
 
 	return;
-}
-
-void InputClass::CenterMouseLocation()
-{
-	mMouseX = mScreenWidth / 2;
-	mMouseY = mScreenHeight / 2;
 }
 
 bool InputClass::IsWireframeModeOn()
@@ -279,20 +333,6 @@ bool InputClass::IsEscapePressed()
 	}
 	return false;
 }
-
-void InputClass::GetMouseLocation(int& mouseX, int& mouseY)
-{
-	mouseX = mMouseX;
-	mouseY = mMouseY;
-	return;
-}
-
-void InputClass::GetMouseDelta(float& mouseDeltaX, float& mouseDeltaY)
-{
-	mouseDeltaX = mMouseDeltaX;
-	mouseDeltaY = mMouseDeltaY;
-}
-
 
 bool InputClass::IsWPressed()
 {
@@ -367,3 +407,4 @@ bool InputClass::IsBtnPressed(byte keyKode)
 	}
 	return false;
 }
+

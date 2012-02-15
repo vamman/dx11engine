@@ -387,8 +387,11 @@ bool TextClass::RenderSentence(ID3D11DeviceContext* deviceContext, SentenceType*
 	pixelColor = D3DXVECTOR4(sentence->red, sentence->green, sentence->blue, 1.0f);
 
 	// Render the text using the font shader.
-	result = m_FontShader->Render(deviceContext, sentence->indexCount, worldMatrix, m_baseViewMatrix, orthoMatrix, m_Font->GetTexture(), 
-		pixelColor);
+	vector<ID3D11ShaderResourceView*> textureArray;
+	textureArray.push_back(m_Font->GetTexture());
+	m_FontShader->SetTextureArray(deviceContext, textureArray);
+	m_FontShader->SetPixelBufferColor(deviceContext, pixelColor);
+	result = m_FontShader->RenderOrdinary(deviceContext, sentence->indexCount, worldMatrix, m_baseViewMatrix, orthoMatrix);
 	if(!result)
 	{
 		false;

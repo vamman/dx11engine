@@ -9,6 +9,7 @@
 ///////////////////////
 #include "bitmapclass.h"
 #include "shaders/textureshader.h"
+#include "shaders/FontShader.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -24,14 +25,14 @@ class MiniMap
 		HRESULT Initialize(ID3D11Device*, HWND, int, int, D3DXMATRIX, float, float);
 		void Shutdown();
 		bool Render(ID3D11DeviceContext*, D3DXMATRIX, D3DXMATRIX, TextureShader*);
-	
 		void PositionUpdate(float, float);
 
 	private:
-		int m_mapLocationX, m_mapLocationY, m_pointLocationX, m_pointLocationY;
+		int m_mapLocationX, m_mapLocationY, m_pointLocationX, m_pointLocationY, mPlayerViewImageWidth, mPlayerViewImageHeight;
 		float m_mapSizeX, m_mapSizeY, m_terrainWidth, m_terrainHeight;
 		D3DXMATRIX m_viewMatrix;
-		BitmapClass *m_MiniMapBitmap, *m_Border, *m_Point;
+		BitmapClass *m_MiniMapBitmap, *m_Border, *mPlayerView;
+		FontShader *mPlayerViewShader;
 };
 
 #endif
