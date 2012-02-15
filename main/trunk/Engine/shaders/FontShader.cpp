@@ -71,22 +71,25 @@ HRESULT FontShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXf
 }
 
 bool FontShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, 
-	D3DXMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, D3DXVECTOR4 pixelColor)
+	D3DXMATRIX projectionMatrix)
+{
+	HRESULT result;
+	result = TextureShader::SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, false);
+	return result;
+}
+
+HRESULT FontShader::SetPixelBufferColor(ID3D11DeviceContext* deviceContext, D3DXVECTOR4 pixelColor)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	PixelBufferType* dataPtr2;
 	unsigned int bufferNumber;
 
-	vector<ID3D11ShaderResourceView*> textureArray;
-	textureArray.push_back(texture);
-	TextureShader::SetTextureArray(deviceContext, textureArray);
-	TextureShader::SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, false);
 	// Lock the pixel constant buffer so it can be written to.
 	result = deviceContext->Map(m_pixelBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	// Get a pointer to the data in the pixel constant buffer.
@@ -104,29 +107,29 @@ bool FontShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMAT
 	// Now set the pixel constant buffer in the pixel shader with the updated value.
 	deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_pixelBuffer);
 
-	return true;
+	return result;
 }
 
-bool FontShader::Render(ID3D11DeviceContext* deviceContext,
+void FontShader::SetTextureArray(ID3D11DeviceContext* deviceContext, vector<ID3D11ShaderResourceView*>& textureArray)
+{
+	TextureShader::SetTextureArray(deviceContext, textureArray);
+}
+
+bool FontShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
 						int indexCount,
 						D3DXMATRIX worldMatrix,
 						D3DXMATRIX viewMatrix, 
-						D3DXMATRIX projectionMatrix,
-						ID3D11ShaderResourceView* texture,
-						D3DXVECTOR4 pixelColor)
+						D3DXMATRIX projectionMatrix)
 {
 	bool result;
 
 	// Set the shader parameters that it will use for rendering.
-	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, pixelColor);
+	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix/*, texture, pixelColor*/);
 	if(!result)
 	{
 		return false;
 	}
 
-	vector<ID3D11ShaderResourceView*> textureArray;
-	textureArray.push_back(texture);
-	TextureShader::SetTextureArray(deviceContext, textureArray);
 	result = TextureShader::RenderOrdinary(deviceContext, 
 						  indexCount,
 						  worldMatrix,

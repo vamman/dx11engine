@@ -12,6 +12,23 @@ GraphicsClass::GraphicsClass() : mIsAllowToBBRender(true), mIsAllowToCameraDispl
 	mD3D = 0;
 	mCamera = 0;
 	mCameraMovement = 0;
+
+	mBitmap = 0;
+	mCursor = 0;
+	m_RenderTexture = 0;
+
+	m_Text = 0;
+
+	m_Frustum = 0;
+
+	// Shaders
+	m_MultiTextureShader = 0;
+	m_BumpMapShader = 0;
+	m_SpecMapShader = 0;
+	m_SpecMapShaderNonInstanced = 0;
+	m_FogShader = 0;
+	m_ReflectionShader = 0;
+	mCursorShader = 0;
 	mBasicShader = 0;
 	mTextureShaderMiniMap = 0;
 	mTextureShaderCamDisplay = 0;
@@ -20,19 +37,6 @@ GraphicsClass::GraphicsClass() : mIsAllowToBBRender(true), mIsAllowToCameraDispl
 	mPointLightShader = 0;
 	mDirSpecLight = 0;
 	mTerrainShader = 0;
-
-	m_Bitmap = 0;
-	m_RenderTexture = 0;
-
-	m_Text = 0;
-
-	m_Frustum = 0;
-	m_MultiTextureShader = 0;
-	m_BumpMapShader = 0;
-	m_SpecMapShader = 0;
-	m_SpecMapShaderNonInstanced = 0;
-	m_FogShader = 0;
-	m_ReflectionShader = 0;
 
 	for (int i = 0; i < 4; ++i)
 	{
@@ -63,6 +67,9 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 //	int videoMemory;
 	int terrainWidth, terrainHeight;
 
+	mScreenWidth = screenWidth;
+	mScreenHeight = screenHeight;
+
 	InputClass::GetInstance()->CenterMouseLocation();
 
 	mTimer = Timer::GetInstance();
@@ -77,7 +84,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the Direct3D object.
-	result = mD3D->Initialize(screenWidth, screenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR);
+	result = mD3D->Initialize(mScreenWidth, mScreenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR);
 	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize Direct3D", L"Error", MB_OK);
@@ -152,7 +159,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the text object.
-	result = m_Text->Initialize(mD3D->GetDevice(), mD3D->GetDeviceContext(), hwnd, screenWidth, screenHeight, mBaseViewMatrix);
+	result = m_Text->Initialize(mD3D->GetDevice(), mD3D->GetDeviceContext(), hwnd, mScreenWidth, mScreenHeight, mBaseViewMatrix);
 	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the text object.", L"Error", MB_OK);
@@ -221,24 +228,41 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the render to texture object.
-	result = m_RenderTexture->Initialize(mD3D->GetDevice(), screenWidth, screenHeight);
+	result = m_RenderTexture->Initialize(mD3D->GetDevice(), mScreenWidth, mScreenHeight);
 	if(FAILED(result))
 	{
 		return result;
 	}
 	
 	// Create the bitmap object.
-	m_Bitmap = new BitmapClass;
-	if(!m_Bitmap)
+	mBitmap = new BitmapClass;
+	if(!mBitmap)
 	{
 		return result;
 	}
 
 	// Initialize the bitmap object.
-	result = m_Bitmap->Initialize(mD3D->GetDevice(), screenWidth, screenHeight, L"Engine/data/textures/texture2.dds", 300, 225);
+	result = mBitmap->Initialize(mD3D->GetDevice(), mScreenWidth, mScreenHeight, L"Engine/data/textures/texture2.dds", 300, 225);
 	if(!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the bitmap object.", L"Error", MB_OK);
+		return result;
+	}
+
+	// Create cursor bitmap
+	mCursorWidth = 32 * 2;
+	mCursorHeight = 32 * 2;
+	mCursor = new BitmapClass;
+	if(!mCursor)
+	{
+		return result;
+	}
+
+	// Initialize the bitmap object.
+	result = mCursor->Initialize(mD3D->GetDevice(), mScreenWidth, mScreenHeight, L"Engine/data/textures/SC2Cursor1.bmp", mCursorWidth / 2, mCursorHeight / 2);
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialize cursor object.", L"Error", MB_OK);
 		return result;
 	}
 
@@ -593,6 +617,22 @@ HRESULT GraphicsClass::InitializeShaders(HWND hwnd)
 		return result;
 	}
 
+	// Create cursor shader object
+	mCursorShader = new FontShader;
+	if(!mCursorShader)
+	{
+		return result;
+	}
+
+	// Initialize the cursor shader object.
+	result = mCursorShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/CursorShader.fx", 
+		"CursorVertexShader", "CursorPixelShader");
+	if(FAILED(result))
+	{
+		MessageBox(hwnd, L"Could not initialize the cursor shader object.", L"Error", MB_OK);
+		return result;
+	}
+
 	Timer::GetInstance()->SetTimeB();
 	funcTime = Timer::GetInstance()->GetDeltaTime();
 
@@ -691,11 +731,19 @@ void GraphicsClass::Shutdown()
 	}
 
 	// Release the bitmap object.
-	if(m_Bitmap)
+	if(mBitmap)
 	{
-		m_Bitmap->Shutdown();
-		delete m_Bitmap;
-		m_Bitmap = 0;
+		mBitmap->Shutdown();
+		delete mBitmap;
+		mBitmap = 0;
+	}
+
+	// Release cursor object.
+	if(mCursor)
+	{
+		mCursor->Shutdown();
+		delete mCursor;
+		mCursor = 0;
 	}
 
 	// Release the mini map object.
@@ -872,6 +920,14 @@ void GraphicsClass::ShutdownShaders()
 		delete m_SpecMapShader;
 		m_SpecMapShader = 0;
 	}
+
+	// Release the cursor shader object.
+	if(mCursorShader)
+	{
+		mCursorShader->Shutdown();
+		delete mCursorShader;
+		mCursorShader = 0;
+	}
 }
 
 
@@ -916,6 +972,10 @@ bool GraphicsClass::HandleInput(float frameTime)
 	float posX, posY, posZ, rotX, rotY, rotZ;
 	D3DXVECTOR3 normalCameraDirectionVector, normalCameraRightVector;
 
+	float startTime = Timer::GetInstance()->GetStartTime();
+	float timePassed = (float) timeGetTime() - startTime;
+	float timeDifference = timePassed / 1000.0f;
+
 	if (InputClass::GetInstance()->IsWireframeModeOn())
 	{
 		SetFillMode(D3D11_FILL_WIREFRAME);
@@ -932,11 +992,6 @@ bool GraphicsClass::HandleInput(float frameTime)
 	mCameraMovement->SetFrameTime(frameTime);
 
 	// Handle the input.
-	keyDown = InputClass::GetInstance()->IsQPressed();
-	mCameraMovement->TurnLeft(keyDown);
-	keyDown = InputClass::GetInstance()->IsEPressed();
-	mCameraMovement->TurnRight(keyDown);
-
 	keyDown = InputClass::GetInstance()->IsWPressed();
 	mCameraMovement->MoveForward(keyDown, normalCameraDirectionVector);
 	keyDown = InputClass::GetInstance()->IsSPressed();
@@ -961,9 +1016,21 @@ bool GraphicsClass::HandleInput(float frameTime)
 	keyDown = InputClass::GetInstance()->IsPgDownPressed();
 	mCameraMovement->LookDownward(keyDown);
 
+/*	
+	keyDown = InputClass::GetInstance()->IsQPressed();
+	mCameraMovement->TurnLeft(keyDown);
+	keyDown = InputClass::GetInstance()->IsEPressed();
+	mCameraMovement->TurnRight(keyDown);
+*/
 	// Get the view point position/rotation.
 	mCameraMovement->GetPosition(posX, posY, posZ);
 	mCameraMovement->GetRotation(rotX, rotY, rotZ);
+
+	/*
+	Log::GetInstance()->WriteToLogFile((DWORD)rotX, "GraphicsClass::HandleInput rotX: ");
+	Log::GetInstance()->WriteToLogFile((DWORD)rotY, "GraphicsClass::HandleInput rotY: ");
+	Log::GetInstance()->WriteToLogFile((DWORD)rotZ, "GraphicsClass::HandleInput rotZ: ");
+	*/
 
 	// Set the position of the camera.
 	/*
@@ -971,19 +1038,39 @@ bool GraphicsClass::HandleInput(float frameTime)
 	mCamera->SetRotation(rotX, rotY, rotZ);
 	*/
 
-	// Rotate camera due to mouse movement
+	// Get mouse delta and center mouse location
+	int mouseDeltaX = 0;
+	int mouseDeltaY = 0;
+	InputClass::GetInstance()->GetMouseDelta(mouseDeltaX, mouseDeltaY);
+	mCameraMovement->MouseMoveHorizontal(mouseDeltaX, timeDifference);
+	// mCameraMovement->MouseMoveVertical(mouseDeltaY, timeDifference);
+	mCameraMovement->GetRotation(rotX, rotY, rotZ);
+
+	/*
 	float rotLeftRight = 0.0f;
 	float rotUpDown = 0.0f;
 	InputClass::GetInstance()->GetMouseRotations(rotLeftRight, rotUpDown);
-	mCamera->SetPosition(posX, posY, posZ);
-	mCamera->SetRotation(rotUpDown, rotLeftRight, rotZ);
+	if ( (rotUpDown > -200.0f && rotUpDown < 200.0f) && (rotLeftRight > -200.0f && rotLeftRight < 200.0f) )
+	{
+		//Log::GetInstance()->WriteToLogFile((DWORD)rotUpDown, "GraphicsClass::HandleInput rotUpDown: ");
+		Log::GetInstance()->WriteToLogFile((DWORD)rotLeftRight, "GraphicsClass::HandleInput rotLeftRight: ");
+		//Log::GetInstance()->WriteToLogFile((DWORD)rotZ, "GraphicsClass::HandleInput rotZ: ");
+	}
 
-	/*
-	InputClass::GetInstance()->GetMouseDelta(rotX, rotY);
-
-	//mCamera->SetPosition(posX, posY, posZ);
-	mCamera->SetRotation(rotX, rotY, rotZ);
+	// Update camera rotation accordinn to mouse delta
+	mCameraMovement->MouseMoveHorizontal(rotLeftRight);
+	//mCameraMovement->MouseMoveVertical(rotUpDown);
+	mCameraMovement->GetRotation(rotX, rotY, rotZ);
 	*/
+
+	// Set the position of the camera.
+	mCamera->SetPosition(posX, posY, posZ);
+	mCamera->SetRotation(rotX, rotY, rotZ);
+
+	mCameraMovement->GetRotation(rotX, rotY, rotZ);
+	//Log::GetInstance()->WriteToLogFile((DWORD)rotY, "GraphicsClass::HandleInput rotY: ");
+	
+
 	// Update the location of the camera on the mini map.
 	m_MiniMap->PositionUpdate(posX, posZ);
 
@@ -1172,6 +1259,7 @@ bool GraphicsClass::Render2D()
 {
 	D3DXMATRIX viewMatrix, projectionMatrix, worldMatrix, orthoMatrix;
 	bool result;
+	ID3D11DeviceContext* deviceContext = mD3D->GetDeviceContext();
 
 	// Generate the view matrix based on the camera's position.
 	mCamera->Render();
@@ -1191,7 +1279,7 @@ bool GraphicsClass::Render2D()
 	if (mIsAllowToCameraDisplayRender)
 	{
 		// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
-		result = m_Bitmap->Render(mD3D->GetDeviceContext(), 0, 0);
+		result = mBitmap->Render(deviceContext, 0, 0);
 		if(!result)
 		{
 			return false;
@@ -1201,9 +1289,9 @@ bool GraphicsClass::Render2D()
 		textureArray.push_back(m_RenderTexture->GetShaderResourceView());
 
 		// Render the bitmap with the texture shader.
-		mTextureShaderCamDisplay->SetTextureArray(mD3D->GetDeviceContext(), textureArray);
-		result = mTextureShaderCamDisplay->RenderOrdinary(mD3D->GetDeviceContext(),
-			m_Bitmap->GetIndexCount(),
+		mTextureShaderCamDisplay->SetTextureArray(deviceContext, textureArray);
+		result = mTextureShaderCamDisplay->RenderOrdinary(deviceContext,
+			mBitmap->GetIndexCount(),
 			worldMatrix,
 			mBaseViewMatrix, 
 			orthoMatrix);
@@ -1212,16 +1300,46 @@ bool GraphicsClass::Render2D()
 			return false;
 		}
 	}
+
+	// Turn on the alpha blending before rendering the text.
+	mD3D->TurnOnAlphaBlending();
+
 	// Render the mini map.
-	result = m_MiniMap->Render(mD3D->GetDeviceContext(), worldMatrix, orthoMatrix, mTextureShaderMiniMap);
+	result = m_MiniMap->Render(deviceContext, worldMatrix, orthoMatrix, mTextureShaderMiniMap);
 	if(!result)
 	{
 		return false;
 	}
 
 	// Turn on the alpha blending before rendering the text.
-	mD3D->TurnOnAlphaBlending();
+	// mD3D->TurnOnAlphaBlending();
 
+	// Render cursor object
+	// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	result = mCursor->Render(deviceContext, mScreenWidth / 2 - mCursorWidth / 2, mScreenHeight / 2 - mCursorHeight / 2);
+	if(!result)
+	{
+		return false;
+	}
+
+	D3DXVECTOR4 pixelColor = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
+	vector<ID3D11ShaderResourceView*> textureArray;
+	textureArray.push_back(mCursor->GetTexture());
+
+	// Render the bitmap with the texture shader.
+	mCursorShader->SetTextureArray(mD3D->GetDeviceContext(), textureArray);
+	mCursorShader->SetPixelBufferColor(deviceContext, pixelColor);
+	result = mCursorShader->RenderOrdinary(deviceContext,
+		mCursor->GetIndexCount(),
+		worldMatrix,
+		mBaseViewMatrix, 
+		orthoMatrix);
+	if(!result)
+	{
+		return false;
+	}
+
+	// Render debug text
 	RenderText();
 
 	// Turn off alpha blending after rendering the text.

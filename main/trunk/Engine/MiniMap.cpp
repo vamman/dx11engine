@@ -5,7 +5,8 @@ MiniMap::MiniMap(void)
 {
 	m_MiniMapBitmap = 0;
 	m_Border = 0;
-	m_Point = 0;
+	mPlayerView = 0;
+	mPlayerViewShader = 0;
 }
 
 
@@ -24,6 +25,9 @@ HRESULT MiniMap::Initialize(ID3D11Device* device, HWND hwnd, int screenWidth, in
 	// Set the size of the mini-map.
 	m_mapSizeX = 150.0f;
 	m_mapSizeY = 150.0f;
+
+	mPlayerViewImageWidth = 50;
+	mPlayerViewImageHeight = 50;
 
 	// Store the base view matrix.
 	m_viewMatrix = viewMatrix;
@@ -63,17 +67,33 @@ HRESULT MiniMap::Initialize(ID3D11Device* device, HWND hwnd, int screenWidth, in
 	}
 
 	// Create the point bitmap object.
-	m_Point = new BitmapClass;
-	if(!m_Point)
+	mPlayerView = new BitmapClass;
+	if(!mPlayerView)
 	{
 		return result;
 	}
 
 	// Initialize the point bitmap object.
-	result = m_Point->Initialize(device, screenWidth, screenHeight, L"Engine/data/textures/point01.dds", 3, 3);
+	result = mPlayerView->Initialize(device, screenWidth, screenHeight, L"Engine/data/textures/PlayerView.bmp", mPlayerViewImageWidth, mPlayerViewImageHeight);
 	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the point object.", L"Error", MB_OK);
+		return result;
+	}
+
+	// Create cursor shader object
+	mPlayerViewShader = new FontShader;
+	if(!mPlayerViewShader)
+	{
+		return result;
+	}
+
+	// Initialize the cursor shader object.
+	result = mPlayerViewShader->Initialize(device, hwnd, L"Engine/data/shaders/CursorShader.fx", 
+		"CursorVertexShader", "CursorPixelShader");
+	if(FAILED(result))
+	{
+		MessageBox(hwnd, L"Could not initialize the player view shader object.", L"Error", MB_OK);
 		return result;
 	}
 
@@ -83,11 +103,11 @@ HRESULT MiniMap::Initialize(ID3D11Device* device, HWND hwnd, int screenWidth, in
 void MiniMap::Shutdown()
 {
 	// Release the point bitmap object.
-	if(m_Point)
+	if(mPlayerView)
 	{
-		m_Point->Shutdown();
-		delete m_Point;
-		m_Point = 0;
+		mPlayerView->Shutdown();
+		delete mPlayerView;
+		mPlayerView = 0;
 	}
 
 	// Release the border bitmap object.
@@ -104,6 +124,14 @@ void MiniMap::Shutdown()
 		m_MiniMapBitmap->Shutdown();
 		delete m_MiniMapBitmap;
 		m_MiniMapBitmap = 0;
+	}
+
+	// Release the player view shader object.
+	if(mPlayerViewShader)
+	{
+		mPlayerViewShader->Shutdown();
+		delete mPlayerViewShader;
+		mPlayerViewShader = 0;
 	}
 
 	return;
@@ -132,6 +160,7 @@ bool MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix,
 	{
 		return false;
 	}
+
 	// Render the mini-map bitmap using the texture shader.
 	vector<ID3D11ShaderResourceView*> minimapTextureArray;
 	minimapTextureArray.push_back(m_MiniMapBitmap->GetTexture());
@@ -139,17 +168,20 @@ bool MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix,
 	textureShader->RenderOrdinary(deviceContext, m_MiniMapBitmap->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
 
 	// Put the point bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
-	result = m_Point->Render(deviceContext, m_pointLocationX, m_pointLocationY);
+	result = mPlayerView->Render(deviceContext, m_pointLocationX - mPlayerViewImageWidth / 2, m_pointLocationY - mPlayerViewImageHeight);
 	if(!result)
 	{
 		return false;
 	}
+
 	// Render the point bitmap using the texture shader.
+	D3DXVECTOR4 pixelColor = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
 	vector<ID3D11ShaderResourceView*> pointTextureArray;
-	pointTextureArray.push_back(m_Point->GetTexture());
-	textureShader->SetTextureArray(deviceContext, pointTextureArray);
-	textureShader->RenderOrdinary(deviceContext, m_Point->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
-	
+	pointTextureArray.push_back(mPlayerView->GetTexture());
+	mPlayerViewShader->SetTextureArray(deviceContext, pointTextureArray);
+	mPlayerViewShader->SetPixelBufferColor(deviceContext, pixelColor);
+	mPlayerViewShader->RenderOrdinary(deviceContext, mPlayerView->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
+
 	return true;
 }
 

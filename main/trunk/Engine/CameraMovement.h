@@ -9,6 +9,7 @@
 //////////////
 #include <d3dx10math.h>
 #include <math.h>
+#include "Log.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: CameraMovement
@@ -38,6 +39,10 @@ public:
 
 	void TurnLeft(bool);
 	void TurnRight(bool);
+
+	void MouseMoveHorizontal(int mouseDeltaX, float amount);
+	void MouseMoveVertical(int mouseDeltaY, float amount);
+
 	void LookUpward(bool);
 	void LookDownward(bool);
 
