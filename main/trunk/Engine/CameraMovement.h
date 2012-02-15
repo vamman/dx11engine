@@ -40,8 +40,8 @@ public:
 	void TurnLeft(bool);
 	void TurnRight(bool);
 
-	void MouseMoveHorizontal(int mouseDeltaX, float amount);
-	void MouseMoveVertical(int mouseDeltaY, float amount);
+	void MouseMoveHorizontal(int mouseDeltaX);
+	void MouseMoveVertical(int mouseDeltaY);
 
 	void LookUpward(bool);
 	void LookDownward(bool);

@@ -15,7 +15,7 @@ void Log::WriteToLogFile(DWORD deltaTime, char* functionName)
 {
 	ofstream fout;
 	char tempString[10];
-	char funcName[50];
+	char funcName[100];
 
 	strcpy_s(funcName, functionName);
 

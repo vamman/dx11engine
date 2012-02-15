@@ -24,7 +24,7 @@ class MiniMap
 
 		HRESULT Initialize(ID3D11Device*, HWND, int, int, D3DXMATRIX, float, float);
 		void Shutdown();
-		bool Render(ID3D11DeviceContext*, D3DXMATRIX, D3DXMATRIX, TextureShader*);
+		bool Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX orthoMatrix, TextureShader* textureShader, float cameraRotY);
 		void PositionUpdate(float, float);
 
 	private:

@@ -36,7 +36,7 @@ class InputClass
 		bool IsEscapePressed();
 		void GetMouseLocation(int&, int&);
 
-		void CenterMouseLocation();
+		HRESULT CenterMouseLocation();
 
 		void GetMouseDelta(int&, int&);
 
@@ -63,7 +63,6 @@ class InputClass
 		InputClass();
 		bool ReadKeyboard();
 		bool ReadMouse(float amount);
-		void ProcessInput();
 		bool IsBtnPressed(byte keyKode);
 		bool IsBtnPressedAndUnpressed(byte keyKode, bool& boolValue);
 
