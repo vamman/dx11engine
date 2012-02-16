@@ -58,10 +58,13 @@ PixelInputType CursorVertexShader(VertexInputType input)
 float4 CursorPixelShader(PixelInputType input) : SV_TARGET
 {
     float4 color;
-	
+	float4 alphaValue;
 	
     // Sample the texture pixel at this location.
     color = shaderTexture.Sample(SampleType, input.tex);
+
+	// Get the alpha value from the map texture.
+    alphaValue = 1 - shaderTexture.Sample(SampleType, input.tex);
 	
     // If the color is black on the texture then treat this pixel as transparent.
     // if( (color.r > 0.78f && color.r < 0.79f) && (color.g > 0.78f && color.g < 0.79f) && (color.b > 0.78f && color.b < 0.79f) )
@@ -70,12 +73,11 @@ float4 CursorPixelShader(PixelInputType input) : SV_TARGET
     {
         color.a = 0.0f;
     }
-	
     // If the color is other than black on the texture then this is a pixel in the font so draw it using the font pixel color.
     else
     {
-        color.a = 1.0f;
-        color = color * pixelColor;
+      //  color.a = alphaValue; //1.0f;
+        color = color * alphaValue; // pixelColor;
     }
 
     return color;
