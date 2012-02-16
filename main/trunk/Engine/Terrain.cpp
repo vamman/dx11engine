@@ -71,6 +71,7 @@ bool Terrain::Initialize(ID3D11Device* device, char* heightMapFileName, WCHAR* t
 	if (funcTime != -1)
 	{
 		Log::GetInstance()->WriteToLogFile(funcTime, "	Terrain::Initialize time: ");
+		Log::GetInstance()->WriteToOutput(funcTime, "	Terrain::Initialize time: ");
 	}
 
 	return true;
