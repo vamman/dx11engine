@@ -167,22 +167,22 @@ bool MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix,
 	textureShader->SetTextureArray(deviceContext, minimapTextureArray);
 	textureShader->RenderOrdinary(deviceContext, m_MiniMapBitmap->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
 
-	// Roatate the player view bitmap
 	
-	// D3DXMatrixTranslation(&worldMatrix, m_pointLocationX - mPlayerViewImageWidth / 2, m_pointLocationY - mPlayerViewImageHeight, 0.0f);
-	// m_pointLocationX = 512;
-	// m_pointLocationY = 384;
-	// D3DXMatrixRotationZ(&worldMatrix, cameraRotY / 100);
-
 	// Put the point bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
-	result = mPlayerView->Render(deviceContext, /*512 - mPlayerViewImageWidth / 2*/ m_pointLocationX - mPlayerViewImageWidth / 2 , /* 384 - mPlayerViewImageHeight */ m_pointLocationY - mPlayerViewImageHeight );
+	int offsetX = 512 - mPlayerViewImageWidth / 2;
+	int offsetY = 384 - mPlayerViewImageHeight;
+	result = mPlayerView->Render(deviceContext, offsetX /* m_pointLocationX - mPlayerViewImageWidth / 2 */,  offsetY /* m_pointLocationY - mPlayerViewImageHeight*/ );
 	if(!result)
 	{
 		return false;
 	}
 
-	//D3DXMatrixTranslation(&worldMatrix,(float) m_pointLocationX - mPlayerViewImageWidth / 2, (float) m_pointLocationY - mPlayerViewImageHeight, 0.0f);
-	//D3DXMatrixRotationZ(&worldMatrix, cameraRotY / 100);
+	// Roatate the player view bitmap
+	D3DXMATRIX rotationMatrix;
+	D3DXMatrixRotationZ(&rotationMatrix, cameraRotY / 100);
+	D3DXMatrixTranslation(&worldMatrix, (m_pointLocationX + mPlayerViewImageWidth / 2), (m_pointLocationY - mPlayerViewImageHeight), 0.0f);
+
+	D3DXMatrixMultiply(&worldMatrix, &rotationMatrix, &worldMatrix);
 
 	// Render the point bitmap using the texture shader.
 	D3DXVECTOR4 pixelColor = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
