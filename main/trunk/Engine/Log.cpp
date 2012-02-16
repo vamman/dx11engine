@@ -14,18 +14,29 @@ Log* Log::GetInstance()
 void Log::WriteToLogFile(DWORD deltaTime, char* functionName)
 {
 	ofstream fout;
-	char tempString[10];
-	char funcName[100];
-
-	strcpy_s(funcName, functionName);
+	char resultStr[100];
+	strcpy_s(resultStr, sizeof(resultStr), GenerateString(deltaTime, functionName));
 
 	// Open a file to write the message to.
 	fout.open("log.txt", ios::app);
-	_itoa_s(deltaTime, tempString, 10);
-	strcat_s(funcName, tempString);
-	fout << funcName << "\n";
-
+	fout << resultStr << "\n";
 	fout.close();
+}
 
+void Log::WriteToOutput(DWORD deltaTime, char* functionName)
+{
+	char resultStr[100];
+	strcpy_s(resultStr, sizeof(resultStr), GenerateString(deltaTime, functionName));
+	OutputDebugStringA((LPCSTR)resultStr);
+	OutputDebugStringA("\n");
+}
 
+char* Log::GenerateString(DWORD deltaTime, char* functionName)
+{
+	char tempString[10];
+	char resultStr[100];
+	strcpy_s(resultStr, functionName);
+	_itoa_s(deltaTime, tempString, 10);
+	strcat_s(resultStr, tempString);
+	return resultStr;
 }

@@ -62,6 +62,7 @@ bool QuadTree::Initialize(Terrain* terrain, ID3D11Device* device)
 	if (funcTime != -1)
 	{
 		Log::GetInstance()->WriteToLogFile(funcTime, "	QuadTree::Initialize time: ");
+		Log::GetInstance()->WriteToOutput(funcTime, "	QuadTree::Initialize time: ");
 	}
 
 	return true;

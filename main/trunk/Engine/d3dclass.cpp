@@ -415,6 +415,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	if (funcTime != -1)
 	{
 		Log::GetInstance()->WriteToLogFile(funcTime, "	D3DClass::Initialize time: ");
+		Log::GetInstance()->WriteToOutput(funcTime, "	D3DClass::Initialize time: ");
 	}
 
 	return true;

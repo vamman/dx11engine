@@ -8,7 +8,7 @@
 //////////////
 // INCLUDES //
 //////////////
-//#include <windows.h>
+#include <windows.h>
 
 ///////////////////////
 // MY CLASS INCLUDES //

@@ -291,6 +291,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	if (funcTime != -1)
 	{
 		Log::GetInstance()->WriteToLogFile(funcTime, "GraphicsClass::Initialize time: ");
+		Log::GetInstance()->WriteToOutput(funcTime, "GraphicsClass::Initialize time: ");
 	}
 
 	return result;
@@ -355,6 +356,7 @@ bool GraphicsClass::InitMaterials()
 	if (funcTime != -1)
 	{
 		Log::GetInstance()->WriteToLogFile(funcTime, "	GraphicsClass::InitMaterials time: ");
+		Log::GetInstance()->WriteToOutput(funcTime, "	GraphicsClass::InitMaterials time: ");
 	}
 
 	return true;
@@ -400,6 +402,7 @@ bool GraphicsClass::InitLights()
 	if (funcTime != -1)
 	{
 		Log::GetInstance()->WriteToLogFile(funcTime, "	GraphicsClass::InitLights time: ");
+		Log::GetInstance()->WriteToOutput(funcTime, "	GraphicsClass::InitLights time: ");
 	}
 
 	return true;
@@ -639,6 +642,7 @@ HRESULT GraphicsClass::InitializeShaders(HWND hwnd)
 	if (funcTime != -1)
 	{
 		Log::GetInstance()->WriteToLogFile(funcTime, "	GraphicsClass::InitializeShaders time: ");
+		Log::GetInstance()->WriteToOutput(funcTime, "	GraphicsClass::InitializeShaders time: ");
 	}
 
 	return result;
@@ -707,6 +711,7 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 	if (funcTime != -1)
 	{
 		Log::GetInstance()->WriteToLogFile(funcTime, "	GraphicsClass::InitObjects time: ");
+		Log::GetInstance()->WriteToOutput(funcTime, "	GraphicsClass::InitObjects time: ");
 	}
 	return true;
 }
@@ -1269,7 +1274,7 @@ bool GraphicsClass::Render2D()
 
 	// Render cursor object
 	// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
-	result = mCursor->Render(deviceContext, mScreenWidth / 2 - mCursorWidth / 2, mScreenHeight / 2 - mCursorHeight / 2);
+	result = mCursor->Render(deviceContext, mScreenWidth / 2 - mCursorWidth / 4, mScreenHeight / 2 - mCursorHeight / 4 );
 	if(!result)
 	{
 		return false;
