@@ -4,15 +4,8 @@
 #ifndef _GRAPHICSCLASS_H_
 #define _GRAPHICSCLASS_H_
 
-
-//////////////
-// INCLUDES //
-//////////////
 #include <windows.h>
-
-///////////////////////
-// MY CLASS INCLUDES //
-///////////////////////
+#include <string>
 
 #include "d3dclass.h"
 #include "cameraclass.h"
@@ -43,7 +36,8 @@
 #include "frustumclass.h"
 #include "fpsclass.h"
 #include "cpuclass.h"
-#include <string>
+
+#include "SkyDome.h"
 
 
 /////////////
@@ -154,6 +148,8 @@ class GraphicsClass
 
 		int mScreenWidth;
 		int mScreenHeight;
+
+		SkyDome* mSkyDome;
 };
 
 #endif
