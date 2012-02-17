@@ -1269,9 +1269,6 @@ bool GraphicsClass::Render2D()
 		return false;
 	}
 
-	// Turn on the alpha blending before rendering the text.
-	// mD3D->TurnOnAlphaBlending();
-
 	// Render cursor object
 	// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	result = mCursor->Render(deviceContext, mScreenWidth / 2 - mCursorWidth / 4, mScreenHeight / 2 - mCursorHeight / 4 );
@@ -1596,6 +1593,8 @@ bool GraphicsClass::RenderText()
 	char drawTimeString[25];
 	bool result;
 
+	int sentenceNumber = 0;
+
 	SetFillMode(D3D11_FILL_SOLID);
 
 	// Generate the view matrix based on the camera's position.
@@ -1612,7 +1611,8 @@ bool GraphicsClass::RenderText()
 	strcpy_s(fpsString, "Fps: ");
 	strcat_s(fpsString, tempString);
 
-	result = m_Text->AddSentence(mD3D, fpsString, 800, 100, 0.0f, 0.0f, 1.0f, 0);
+	result = m_Text->AddSentence(mD3D, fpsString, 800, 100, 0.0f, 0.0f, 1.0f, sentenceNumber);
+	++sentenceNumber;
 
 	// Convert the cpu integer to string format.
 	_itoa_s(CpuClass::GetInstance()->GetCpuPercentage(), tempString, 10);
@@ -1622,7 +1622,8 @@ bool GraphicsClass::RenderText()
 	strcat_s(cpuString, tempString);
 	strcat_s(cpuString, "%");
 
-	result = m_Text->AddSentence(mD3D, cpuString, 800, 100 + 20, 1.0f, 0.0f, 1.0f, 1);
+	result = m_Text->AddSentence(mD3D, cpuString, 800, 100 + 20, 1.0f, 0.0f, 1.0f, sentenceNumber);
+	++sentenceNumber;
 
 	// Convert the count integer to string format.
 	_itoa_s(mNumObjectsRendered, tempString, 10);
@@ -1631,12 +1632,13 @@ bool GraphicsClass::RenderText()
 	strcpy_s(countString, "Render Count: ");
 	strcat_s(countString, tempString);
 
-	result = m_Text->AddSentence(mD3D, countString, 800, 100 + 20 * 5, 1.0f, 0.0f, 0.0f, 2);
+	result = m_Text->AddSentence(mD3D, countString, 800, 100 + 20 * 5, 1.0f, 0.0f, 0.0f, sentenceNumber);
+	++sentenceNumber;
 	if(!result)
 	{
 		return false;
 	}
-
+	/*
 	// Convert the mouseX integer to string format.
 	InputClass::GetInstance()->GetMouseLocation(mouseX, mouseY);
 	_itoa_s(mouseX, tempString, 10);
@@ -1646,7 +1648,8 @@ bool GraphicsClass::RenderText()
 	strcat_s(mouseString, tempString);
 
 	// Update the sentence vertex buffer with the new string information.
-	result = m_Text->AddSentence(mD3D, mouseString, mouseX, mouseY, 1.0f, 0.0f, 0.0f, 3);
+	result = m_Text->AddSentence(mD3D, mouseString, mouseX, mouseY, 1.0f, 0.0f, 0.0f, sentenceNumber);
+	++sentenceNumber;
 	if(!result)
 	{
 		return false;
@@ -1659,12 +1662,13 @@ bool GraphicsClass::RenderText()
 	strcpy_s(mouseString, "Mouse Y: ");
 	strcat_s(mouseString, tempString);
 
-	result = m_Text->AddSentence(mD3D, mouseString, mouseX, mouseY + 20, 1.0f, 0.0f, 0.0f, 4);
+	result = m_Text->AddSentence(mD3D, mouseString, mouseX, mouseY + 20, 1.0f, 0.0f, 0.0f, sentenceNumber);
+	++sentenceNumber;
 	if(!result)
 	{
 		return false;
 	}
-
+	*/
 	char dataString[16];
 
 	float posX, posY, posZ, rotX, rotY, rotZ;
@@ -1688,7 +1692,8 @@ bool GraphicsClass::RenderText()
 	strcpy_s(dataString, "X: ");
 	strcat_s(dataString, tempString);
 
-	result = m_Text->AddSentence(mD3D, dataString, 800, 240, 1.0f, 0.0f, 1.0f, 5);
+	result = m_Text->AddSentence(mD3D, dataString, 800, 240, 1.0f, 0.0f, 1.0f, sentenceNumber);
+	++sentenceNumber;
 	if(!result)
 	{
 		return false;
@@ -1699,7 +1704,8 @@ bool GraphicsClass::RenderText()
 	strcpy_s(dataString, "Y: ");
 	strcat_s(dataString, tempString);
 
-	result = m_Text->AddSentence(mD3D, dataString, 800, 260, 1.0f, 0.0f, 1.0f, 6);
+	result = m_Text->AddSentence(mD3D, dataString, 800, 260, 1.0f, 0.0f, 1.0f, sentenceNumber);
+	++sentenceNumber;
 	if(!result)
 	{
 		return false;
@@ -1710,7 +1716,8 @@ bool GraphicsClass::RenderText()
 	strcpy_s(dataString, "Z: ");
 	strcat_s(dataString, tempString);
 
-	result = m_Text->AddSentence(mD3D, dataString, 800, 280, 1.0f, 0.0f, 1.0f, 7);
+	result = m_Text->AddSentence(mD3D, dataString, 800, 280, 1.0f, 0.0f, 1.0f, sentenceNumber);
+	++sentenceNumber;
 	if(!result)
 	{
 		return false;
@@ -1722,7 +1729,8 @@ bool GraphicsClass::RenderText()
 	strcpy_s(dataString, "rX: ");
 	strcat_s(dataString, tempString);
 
-	result = m_Text->AddSentence(mD3D, dataString, 800, 320, 0.0f, 1.0f, 1.0f, 8);
+	result = m_Text->AddSentence(mD3D, dataString, 800, 320, 0.0f, 1.0f, 1.0f, sentenceNumber);
+	++sentenceNumber;
 	if(!result)
 	{
 		return false;
@@ -1732,7 +1740,8 @@ bool GraphicsClass::RenderText()
 	strcpy_s(dataString, "rY: ");
 	strcat_s(dataString, tempString);
 
-	result = m_Text->AddSentence(mD3D, dataString, 800, 340, 0.0f, 1.0f, 1.0f, 9);
+	result = m_Text->AddSentence(mD3D, dataString, 800, 340, 0.0f, 1.0f, 1.0f, sentenceNumber);
+	++sentenceNumber;
 	if(!result)
 	{
 		return false;
@@ -1742,7 +1751,7 @@ bool GraphicsClass::RenderText()
 	strcpy_s(dataString, "rZ: ");
 	strcat_s(dataString, tempString);
 
-	result = m_Text->AddSentence(mD3D, dataString, 800, 360, 0.0f, 1.0f, 1.0f, 10);
+	result = m_Text->AddSentence(mD3D, dataString, 800, 360, 0.0f, 1.0f, 1.0f, sentenceNumber);
 	if(!result)
 	{
 		return false;
@@ -1752,7 +1761,8 @@ bool GraphicsClass::RenderText()
 	strcpy_s(darwCountString, "terrain draw count: ");
 	strcat_s(darwCountString, tempString);
 
-	result = m_Text->AddSentence(mD3D, darwCountString, 800, 400, 0.0f, 1.0f, 1.0f, 11);
+	result = m_Text->AddSentence(mD3D, darwCountString, 800, 400, 0.0f, 1.0f, 1.0f, sentenceNumber);
+	++sentenceNumber;
 	if(!result)
 	{
 		return false;
@@ -1765,7 +1775,8 @@ bool GraphicsClass::RenderText()
 		strcpy_s(drawTimeString, "draw time: ");
 		strcat_s(drawTimeString, tempString);
 
-		result = m_Text->AddSentence(mD3D, drawTimeString, 800, 440, 0.0f, 1.0f, 1.0f, 12);
+		result = m_Text->AddSentence(mD3D, drawTimeString, 800, 440, 0.0f, 1.0f, 1.0f, sentenceNumber);
+		++sentenceNumber;
 		if(!result)
 		{
 			return false;

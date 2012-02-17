@@ -169,18 +169,21 @@ bool MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix,
 
 	
 	// Put the point bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
-	int offsetX = 512 - mPlayerViewImageWidth / 2;
-	int offsetY = 384 - mPlayerViewImageHeight;
-	result = mPlayerView->Render(deviceContext, offsetX /* m_pointLocationX - mPlayerViewImageWidth / 2 */,  offsetY /* m_pointLocationY - mPlayerViewImageHeight*/ );
+	int screenWidth = 1024;
+	int screenHeight = 768;
+	int offsetX = screenWidth / 2 - mPlayerViewImageWidth / 2;
+	int offsetY = screenHeight / 2 - mPlayerViewImageHeight;
+	result = mPlayerView->Render(deviceContext, offsetX,  offsetY);
 	if(!result)
 	{
 		return false;
 	}
 
 	// Roatate the player view bitmap
+	cameraRotY = cameraRotY * 0.0174532925f;
 	D3DXMATRIX rotationMatrix;
-	D3DXMatrixRotationZ(&rotationMatrix, cameraRotY / 100);
-	D3DXMatrixTranslation(&worldMatrix, (m_pointLocationX + mPlayerViewImageWidth / 2), (m_pointLocationY - mPlayerViewImageHeight), 0.0f);
+	D3DXMatrixRotationZ(&rotationMatrix, -cameraRotY);
+	D3DXMatrixTranslation(&worldMatrix, (float) - (screenWidth / 2 - m_pointLocationX), (float) screenHeight / 2 - m_pointLocationY, 0.0f);
 
 	D3DXMatrixMultiply(&worldMatrix, &rotationMatrix, &worldMatrix);
 
