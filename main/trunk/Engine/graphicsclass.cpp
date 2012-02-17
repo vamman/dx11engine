@@ -38,6 +38,9 @@ GraphicsClass::GraphicsClass() : mIsAllowToBBRender(true), mIsAllowToCameraDispl
 	mDirSpecLight = 0;
 	mTerrainShader = 0;
 
+	mSkyDome = 0;
+
+
 	for (int i = 0; i < 4; ++i)
 	{
 		mPointLights[i] = 0;
@@ -292,6 +295,21 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	{
 		Log::GetInstance()->WriteToLogFile(funcTime, "GraphicsClass::Initialize time: ");
 		Log::GetInstance()->WriteToOutput(funcTime, "GraphicsClass::Initialize time: ");
+	}
+
+	mSkyDome = new SkyDome;
+	result = mSkyDome->CreateSphere(mD3D->GetDevice(), 10, 10);
+	if(FAILED(result))
+	{
+		MessageBox(hwnd, L"Could not initialize sky dome sphere.", L"Error", MB_OK);
+		return result;
+	}
+
+	result = mSkyDome->InitializeSkyDome(mD3D->GetDevice());
+	if(FAILED(result))
+	{
+		MessageBox(hwnd, L"Could not initialize sky dome object.", L"Error", MB_OK);
+		return result;
 	}
 
 	return result;
@@ -1030,6 +1048,8 @@ bool GraphicsClass::HandleInput(float frameTime)
 	// Update the location of the camera on the mini map.
 	m_MiniMap->PositionUpdate(posX, posZ);
 
+	//mSkyDome->UpdateSkyDome(D3DXVECTOR3(posX, posY, posZ));
+
 	return true;
 }
 
@@ -1175,10 +1195,15 @@ bool GraphicsClass::RenderScene()
 		pointDiffuseColors[i]  = mPointLights[i]->GetDiffuseColor();
 		pointLightPositions[i] = mPointLights[i]->GetPosition();
 	}
-	
+
 	RenderTerrain(worldMatrix, viewMatrix, projectionMatrix);
 	RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
 	
+
+	SetFillMode(D3D11_FILL_WIREFRAME);
+	mSkyDome->RenderSkyDome(deviceContext, viewMatrix, projectionMatrix);
+	SetFillMode(D3D11_FILL_SOLID);
+
 	ModelObject* modelObj = mObjectFactory->GetObjectByName("floor");
 
 	float height;
@@ -1208,6 +1233,7 @@ bool GraphicsClass::RenderScene()
 	{
 		return false;
 	}
+
 	return true;
 }
 
@@ -1582,13 +1608,13 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 bool GraphicsClass::RenderText()
 {
 	D3DXMATRIX orthoMatrix, worldMatrix, staticWorldMatrix;
-	int mouseX, mouseY;
+//	int mouseX, mouseY;
 	int MAX_STRING_LENGTH = 30;
 	char tempString[10];
 	char fpsString[10];
 	char countString[20];
 	char cpuString[20];
-	char mouseString[20];
+//	char mouseString[20];
 	char darwCountString[35];
 	char drawTimeString[25];
 	bool result;

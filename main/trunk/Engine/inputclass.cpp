@@ -6,8 +6,7 @@
 
 InputClass* InputClass::instance = 0;
 
-InputClass::InputClass() : isWireframeModeOn(true), isAllowToBBRender(true), isAllowToCameraDisplayRender(true),
-						 mMouseX(0), mMouseY(0), mMouseDeltaX(0.0f), mMouseDeltaY(0.0f) 
+InputClass::InputClass() : isWireframeModeOn(true), isAllowToBBRender(true), isAllowToCameraDisplayRender(true), mMouseX(0), mMouseY(0), mMouseDeltaX(0), mMouseDeltaY(0) 
 {
 	m_directInput = 0;
 	mKeyboard = 0;
