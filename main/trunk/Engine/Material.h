@@ -2,7 +2,6 @@
 
 #include <vector>
 #include "textureclass.h"
-#include "texturearrayclass.h"
 #include "Shaders/BasicShader.h"
 
 using namespace std;
@@ -23,7 +22,8 @@ class Material
 	private:
 		bool LoadTexture(ID3D11Device* device, WCHAR* filename);
 		char mMaterialName[20];
-		TextureArrayClass* mTextureVector;
 		BasicShader* mShader;
+
+		vector<ID3D11ShaderResourceView*> mTextureVector;
 };
 

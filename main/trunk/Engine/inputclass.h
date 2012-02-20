@@ -53,7 +53,7 @@ class InputClass
 		bool IsPgDownPressed();
 
 		// Press/Unpress functions
-		bool IsWireframeModeOn();
+		bool IsWireframeModeOn(bool& isWireFrameModeOn);
 		bool IsAllowToBBRender();
 		bool IsAllowToCameraDisplayRender();
 

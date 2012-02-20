@@ -255,10 +255,10 @@ void InputClass::GetMouseRotations(float& leftRight, float& upDown)
 	upDown = mUpDownRot;
 }
 
-bool InputClass::IsWireframeModeOn()
+bool InputClass::IsWireframeModeOn(bool& isWireFrameModeOn)
 {
-	IsBtnPressedAndUnpressed(DIK_TAB, isWireframeModeOn);
-	return isWireframeModeOn;
+	IsBtnPressedAndUnpressed(DIK_TAB, /* isWireframeModeOn */ isWireFrameModeOn);
+	return /*isWireframeModeOn*/ isWireFrameModeOn;
 }
 
 bool InputClass::IsAllowToBBRender()
@@ -336,14 +336,16 @@ bool InputClass::IsBtnPressedAndUnpressed(byte keyKode, bool& boolValue)
 	bool prevState = mPreviousKeyboardState[keyKode] & 0x80;
 	bool currState = mCurrentKeyboardState[keyKode] & 0x80;
 
-	if ((prevState && !currState ) && boolValue == false)
+	if ((prevState && !currState ) && boolValue == true) // false
 	{
-		boolValue = true;
+		boolValue = !boolValue; // true;
 	}
-	else if ((prevState && !currState ) && boolValue == true)
+	
+	else if ((prevState && !currState ) && boolValue == false) // true
 	{
-		boolValue = false;
+		boolValue = !boolValue; // false;
 	}
+	
 	return boolValue;
 }
 

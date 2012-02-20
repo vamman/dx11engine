@@ -3,13 +3,11 @@
 
 Material::Material()
 {
-	mTextureVector = new TextureArrayClass();
 	mShader = 0;
 }
 
 Material::Material(char* materialName)
 {
-	mTextureVector = new TextureArrayClass();
 	strcpy_s(mMaterialName, materialName);
 }
 
@@ -58,14 +56,14 @@ bool Material::LoadTexture(ID3D11Device* device, WCHAR* filename)
 		return false;
 	}
 
-	result = mTextureVector->AddTexture(texture->GetTexture());
+	mTextureVector.push_back(texture->GetTexture());
 
 	return true;
 }
 
 vector<ID3D11ShaderResourceView*>& Material::GetTextureVector()
 {
-	return mTextureVector->GetTextureArray();
+	return mTextureVector;
 }
 
 char* Material::GetMaterialName()
@@ -75,5 +73,5 @@ char* Material::GetMaterialName()
 
 void Material::Shutdown()
 {
-	mTextureVector->Shutdown();
+	mTextureVector.clear();
 }

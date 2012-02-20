@@ -18,7 +18,6 @@ using namespace std;
 // MY CLASS INCLUDES //
 ///////////////////////
 #include "textureclass.h"
-#include "texturearrayclass.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,8 +99,6 @@ class ModelClass
 		int GetVertexCount() const;
 		int GetInstanceCount() const;
 		char* GetModelFileName() const;
-		vector<ID3D11ShaderResourceView*>& GetTextureVector() const;
-		TextureArrayClass* GetTextureArray() const;
 
 		ModelType* GetModelTypeData() const;
 		ID3D11Buffer* GetVertexBuffer() const;

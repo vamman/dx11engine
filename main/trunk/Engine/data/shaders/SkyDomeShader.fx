@@ -1,15 +1,3 @@
-struct Light
-{
-	float3 dir;
-	float4 ambient;
-	float4 diffuse;
-};
-
-cbuffer cbPerFrame
-{
-	Light light;
-};
-
 cbuffer cbPerObject
 {
 	float4x4 WVP;
@@ -19,13 +7,6 @@ cbuffer cbPerObject
 Texture2D ObjTexture;
 SamplerState ObjSamplerState;
 TextureCube SkyMap;
-
-struct VS_OUTPUT
-{
-	float4 Pos : SV_POSITION;
-	float2 TexCoord : TEXCOORD;
-	float3 normal : NORMAL;
-};
 
 struct SKYMAP_VS_OUTPUT	//output structure for skymap vertex shader
 {
@@ -39,6 +20,12 @@ SKYMAP_VS_OUTPUT SKYMAP_VS(float3 inPos : POSITION, float2 inTexCoord : TEXCOORD
 
 	//Set Pos to xyww instead of xyzw, so that z will always be 1 (furthest from camera)
 	output.Pos = mul(float4(inPos, 1.0f), WVP).xyww;
+
+	/////////
+
+	// output.Pos = mul(inPos, WVP);
+
+	/////////
 
 	output.texCoord = inPos;
 

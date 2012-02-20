@@ -48,6 +48,30 @@ const bool VSYNC_ENABLED = false;
 const float SCREEN_DEPTH = 1000.0f;
 const float SCREEN_NEAR = 0.1f;
 
+#define V_RETURN(statement, messageHeader, messageBody)			\
+{																\
+	HRESULT hr = (statement);									\
+	if( FAILED(hr) )											\
+	{															\
+		MessageBox(hwnd, messageBody, messageHeader, MB_OK);	\
+		return hr;												\
+	}															\
+}
+
+#define  CREATE_ORDINARY_OBJ_WITH_MAT(obj, objectNmae, objectFilePath, materialToAssign)					\
+{																											\
+	obj = mObjectFactory->CreateOrdinaryModel(mD3D->GetDevice(), hwnd, objectNmae, objectFilePath);			\
+	obj->SetMaterial(mMaterialFactory->GetMaterialByName(materialToAssign));								\
+}
+
+#define  CREATE_INSTANCED_OBJ_WITH_MAT(objectNmae, objectFilePath, materialToAssign, numberOfObjects)						\
+{																															\
+	ModelObject* object = new ModelObject();																				\
+	object = mObjectFactory->CreateInstancedModel(mD3D->GetDevice(), hwnd, objectNmae, objectFilePath, numberOfObjects);	\
+	object->SetMaterial(mMaterialFactory->GetMaterialByName(materialToAssign));												\
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: GraphicsClass
 ////////////////////////////////////////////////////////////////////////////////
@@ -150,6 +174,8 @@ class GraphicsClass
 		int mScreenHeight;
 
 		SkyDome* mSkyDome;
+
+		bool mIsWireFrameModeOn;
 };
 
 #endif
