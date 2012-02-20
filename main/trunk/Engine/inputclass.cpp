@@ -257,8 +257,8 @@ void InputClass::GetMouseRotations(float& leftRight, float& upDown)
 
 bool InputClass::IsWireframeModeOn(bool& isWireFrameModeOn)
 {
-	IsBtnPressedAndUnpressed(DIK_TAB, /* isWireframeModeOn */ isWireFrameModeOn);
-	return /*isWireframeModeOn*/ isWireFrameModeOn;
+	IsBtnPressedAndUnpressed(DIK_TAB, isWireFrameModeOn);
+	return isWireFrameModeOn;
 }
 
 bool InputClass::IsAllowToBBRender()
@@ -328,6 +328,16 @@ bool InputClass::IsPgUpPressed()
 bool InputClass::IsPgDownPressed()
 {
 	return IsBtnPressed(DIK_PGDN);
+}
+
+bool InputClass::Is1Pressed()
+{
+	return IsBtnPressed(DIK_1);
+}
+
+bool InputClass::Is2Pressed()
+{
+	return IsBtnPressed(DIK_2);
 }
 
 bool InputClass::IsBtnPressedAndUnpressed(byte keyKode, bool& boolValue)

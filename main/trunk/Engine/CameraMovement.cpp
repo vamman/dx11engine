@@ -77,7 +77,6 @@ void CameraMovement::SetFrameTime(float time)
 
 void CameraMovement::MoveForward(bool keydown, D3DXVECTOR3 normalCameraDirection)
 {
-	float radians;
 	// Update the forward speed movement based on the frame time and whether the user is holding the key down or not.
 	if(keydown)
 	{
@@ -103,21 +102,11 @@ void CameraMovement::MoveForward(bool keydown, D3DXVECTOR3 normalCameraDirection
 		m_positionX += normalCameraDirection.x * mForwardSpeed;
 		m_positionZ += normalCameraDirection.z * mForwardSpeed;
 	}
-
-	// Convert degrees to radians.
-	/*
-	radians = m_rotationY * 0.0174532925f;
-
-	// Update the position.
-	m_positionX += sinf(radians) * mForwardSpeed;
-	m_positionZ += cosf(radians) * mForwardSpeed;
-	*/
 	return;
 }
 
 void CameraMovement::MoveBackward(bool keydown, D3DXVECTOR3 normalCameraDirection)
 {
-	float radians;
 	// Update the backward speed movement based on the frame time and whether the user is holding the key down or not.
 	if(keydown)
 	{
@@ -143,21 +132,11 @@ void CameraMovement::MoveBackward(bool keydown, D3DXVECTOR3 normalCameraDirectio
 		m_positionX -= normalCameraDirection.x * mBackwardSpeed;
 		m_positionZ -= normalCameraDirection.z * mBackwardSpeed;
 	}
-
-	// Convert degrees to radians.
-	/*
-	radians = m_rotationY * 0.0174532925f;
-
-	// Update the position.
-	m_positionX -= sinf(radians) * mBackwardSpeed;
-	m_positionZ -= cosf(radians) * mBackwardSpeed;
-	*/
 	return;
 }
 
 void CameraMovement::StrafeLeft(bool keydown, D3DXVECTOR3 normalCameraRightVector)
 {
-	float radians;
 	// Update the forward speed movement based on the frame time and whether the user is holding the key down or not.
 	if(keydown)
 	{
@@ -189,7 +168,6 @@ void CameraMovement::StrafeLeft(bool keydown, D3DXVECTOR3 normalCameraRightVecto
 
 void CameraMovement::StrafeRight(bool keydown, D3DXVECTOR3 normalCameraRightVector)
 {
-	float radians;
 	// Update the forward speed movement based on the frame time and whether the user is holding the key down or not.
 	if(keydown)
 	{
@@ -214,132 +192,6 @@ void CameraMovement::StrafeRight(bool keydown, D3DXVECTOR3 normalCameraRightVect
 	{
 		m_positionX -= normalCameraRightVector.x * mStrafeRightSpeed;
 		m_positionZ -= normalCameraRightVector.z * mStrafeRightSpeed;
-	}
-
-	return;
-}
-
-/*
-void CameraMovement::MoveUpward(bool keydown)
-{
-	// Update the upward speed movement based on the frame time and whether the user is holding the key down or not.
-	if(keydown)
-	{
-		m_upwardSpeed += m_frameTime * 0.003f;
-
-		if(m_upwardSpeed > (m_frameTime * 0.03f))
-		{
-			m_upwardSpeed = m_frameTime * 0.03f;
-		}
-	}
-	else
-	{
-		m_upwardSpeed -= m_frameTime * 0.002f;
-
-		if(m_upwardSpeed < 0.0f)
-		{
-			m_upwardSpeed = 0.0f;
-		}
-	}
-
-	// Update the height position.
-	m_positionY += m_upwardSpeed;
-
-	return;
-}
-
-void CameraMovement::MoveDownward(bool keydown)
-{
-	// Update the downward speed movement based on the frame time and whether the user is holding the key down or not.
-	if(keydown)
-	{
-		m_downwardSpeed += m_frameTime * 0.003f;
-
-		if(m_downwardSpeed > (m_frameTime * 0.03f))
-		{
-			m_downwardSpeed = m_frameTime * 0.03f;
-		}
-	}
-	else
-	{
-		m_downwardSpeed -= m_frameTime * 0.002f;
-
-		if(m_downwardSpeed < 0.0f)
-		{
-			m_downwardSpeed = 0.0f;
-		}
-	}
-
-	// Update the height position.
-	m_positionY -= m_downwardSpeed;
-
-	return;
-}
-*/
-
-void CameraMovement::TurnLeft(bool keydown)
-{
-	// Update the left turn speed movement based on the frame time and whether the user is holding the key down or not.
-	if(keydown)
-	{
-		m_leftTurnSpeed += m_frameTime * 0.01f;
-
-		if(m_leftTurnSpeed > (m_frameTime * 0.15f))
-		{
-			m_leftTurnSpeed = m_frameTime * 0.15f;
-		}
-	}
-	else
-	{
-		m_leftTurnSpeed -= m_frameTime* 0.005f;
-
-		if(m_leftTurnSpeed < 0.0f)
-		{
-			m_leftTurnSpeed = 0.0f;
-		}
-	}
-
-	// Update the rotation.
-	m_rotationY -= m_leftTurnSpeed;
-
-	// Keep the rotation in the 0 to 360 range.
-	if(m_rotationY < 0.0f)
-	{
-		m_rotationY += 360.0f;
-	}
-
-	return;
-}
-
-void CameraMovement::TurnRight(bool keydown)
-{
-	// Update the right turn speed movement based on the frame time and whether the user is holding the key down or not.
-	if(keydown)
-	{
-		m_rightTurnSpeed += m_frameTime * 0.01f;
-
-		if(m_rightTurnSpeed > (m_frameTime * 0.15f))
-		{
-			m_rightTurnSpeed = m_frameTime * 0.15f;
-		}
-	}
-	else
-	{
-		m_rightTurnSpeed -= m_frameTime* 0.005f;
-
-		if(m_rightTurnSpeed < 0.0f)
-		{
-			m_rightTurnSpeed = 0.0f;
-		}
-	}
-
-	// Update the rotation.
-	m_rotationY += m_rightTurnSpeed;
-
-	// Keep the rotation in the 0 to 360 range.
-	if(m_rotationY > 360.0f)
-	{
-		m_rotationY -= 360.0f;
 	}
 
 	return;

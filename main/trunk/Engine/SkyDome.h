@@ -3,16 +3,19 @@
 #include <d3d11.h>
 #include <d3dx10math.h>
 #include <d3dx11async.h>
+#include "d3dclass.h"
 
 class SkyDome
 {
 	public:
 		SkyDome(void);
 		~SkyDome(void);
+		HRESULT CreateCube(ID3D11Device* device);
 		HRESULT CreateSphere(ID3D11Device* device, int LatLines, int LongLines);
-		HRESULT InitializeSkyDome(ID3D11Device* device);
+		HRESULT InitializeSkyDome(D3DClass* d3d);
 		void UpdateSkyDome(D3DXVECTOR3 cameraPosition);
-		void RenderSkyDome(ID3D11DeviceContext* deviceContext, D3DXMATRIX view, D3DXMATRIX projection);
+		HRESULT SetFillMode(ID3D11Device* device, D3D11_FILL_MODE fillMode);
+		void RenderSkyDome(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX view, D3DXMATRIX projection, int shapeType);
 
 	private:
 		struct Vertex	//Overloaded Vertex Structure
@@ -31,14 +34,15 @@ class SkyDome
 		//Create effects constant buffer's structure//
 		struct cbPerObject
 		{
-			D3DXMATRIX  WVP;
-			D3DXMATRIX World;
+			// D3DXMATRIX  WVP;
+			D3DXMATRIX worldMatrix;
+			D3DXMATRIX viewMatrix;
+			D3DXMATRIX projectionMatix;
 		};
 
 		cbPerObject cbPerObj;
 
-		ID3D11Buffer* sphereIndexBuffer;
-		ID3D11Buffer* sphereVertBuffer;
+		ID3D11Buffer *sphereVertBuffer, *sphereIndexBuffer, *cubeVertBuffer, *cubeIndexBuffer;
 
 		ID3D11VertexShader* SKYMAP_VS;
 		ID3D11PixelShader* SKYMAP_PS;
@@ -63,5 +67,6 @@ class SkyDome
 
 		ID3D11Buffer* cbPerObjectBuffer;
 		ID3D11SamplerState* CubesTexSamplerState;
+		ID3D11InputLayout* vertLayout;
 		//ID3D11VertexShader* VS;
 };

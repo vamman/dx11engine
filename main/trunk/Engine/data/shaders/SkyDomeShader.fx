@@ -1,7 +1,10 @@
 cbuffer cbPerObject
 {
-	float4x4 WVP;
-	float4x4 World;
+	//float4x4 WVP;
+	matrix worldMatrix;
+    matrix viewMatrix;
+    matrix projectionMatrix;
+	
 };
 
 Texture2D ObjTexture;
@@ -10,29 +13,36 @@ TextureCube SkyMap;
 
 struct SKYMAP_VS_OUTPUT	//output structure for skymap vertex shader
 {
-	float4 Pos : SV_POSITION;
-	float3 texCoord : TEXCOORD;
+	float4 position : SV_POSITION;
+	float3 tex : TEXCOORD;
+	// float2 tex : TEXCOORD;
 };
 
 SKYMAP_VS_OUTPUT SKYMAP_VS(float3 inPos : POSITION, float2 inTexCoord : TEXCOORD, float3 normal : NORMAL)
 {
 	SKYMAP_VS_OUTPUT output = (SKYMAP_VS_OUTPUT)0;
 
-	//Set Pos to xyww instead of xyzw, so that z will always be 1 (furthest from camera)
-	output.Pos = mul(float4(inPos, 1.0f), WVP).xyww;
+	//Set position to xyww instead of xyzw, so that z will always be 1 (furthest from camera)
+	//output.position = mul(float4(inPos, 1.0f), WVP).xyww;
+	
+	// Calculate the position of the vertex against the world, view, and projection matrices.
+	//output.position = mul(float4(inPos, 1.0f), worldMatrix); //.xyww
+	//output.position = mul(float4(inPos, 1.0f), viewMatrix); // .xyww
+	//output.position = mul(float4(inPos, 1.0f), projectionMatrix).xyww; // .xyww
+	
+	// Calculate the position of the vertex against the world, view, and projection matrices.
+    //output.position = mul(inPos, worldMatrix);
+    //output.position = mul(inPos, viewMatrix);
+	output.position = mul(inPos, projectionMatrix);
+	
 
-	/////////
-
-	// output.Pos = mul(inPos, WVP);
-
-	/////////
-
-	output.texCoord = inPos;
-
+	output.tex = inPos;
+	//output.tex = inTexCoord;
+	
 	return output;
 }
 
-float4 SKYMAP_PS(SKYMAP_VS_OUTPUT input) : SV_Target
+float4 SKYMAP_PS(SKYMAP_VS_OUTPUT input) : SV_TARGET
 {
-	return SkyMap.Sample(ObjSamplerState, input.texCoord);
+	return SkyMap.Sample(ObjSamplerState, input.tex);
 }

@@ -107,6 +107,12 @@ class GraphicsClass
 
 	private:
 
+		enum SkyShape
+		{
+			SKY_SPHERE = 0,
+			SKY_CUBE
+		};
+
 		struct PointLightInfo 
 		{
 			D3DXVECTOR4 color;
@@ -176,6 +182,7 @@ class GraphicsClass
 		SkyDome* mSkyDome;
 
 		bool mIsWireFrameModeOn;
+		SkyShape mSkyShape;
 };
 
 #endif
