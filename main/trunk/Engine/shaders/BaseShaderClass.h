@@ -12,6 +12,8 @@
 #include "../lightclass.h"
 using namespace std;
 
+#define PATH_SHADERS L"Engine/data/shaders/"
+
 class BaseShaderClass
 {
 	public:
