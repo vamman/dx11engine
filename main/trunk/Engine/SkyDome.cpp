@@ -2,13 +2,116 @@
 
 SkyDome::SkyDome(void) : NumSphereVertices(0), NumSphereFaces(0)
 {
-	sphereIndexBuffer = 0;
 	sphereVertBuffer = 0;
+	sphereIndexBuffer = 0;
+	cubeVertBuffer = 0;
+	cubeIndexBuffer = 0;
 	smrv = 0;
 }
 
 SkyDome::~SkyDome(void)
 {
+}
+
+HRESULT SkyDome::CreateCube(ID3D11Device* device)
+{
+	HRESULT result = S_OK;
+	NumSphereVertices = 8;
+	Vertex* vertices;
+	vertices = new Vertex[NumSphereVertices];
+
+	vertices[0].pos.x = -0.5f;
+	vertices[0].pos.y = -0.5f;
+	vertices[0].pos.z = -0.5f;
+
+	vertices[1].pos.x = -0.5f;
+	vertices[1].pos.y = 0.5f;
+	vertices[1].pos.z = -0.5f;
+
+	vertices[2].pos.x = 0.5f;
+	vertices[2].pos.y = 0.5f;
+	vertices[2].pos.z = -0.5f;
+
+	vertices[3].pos.x = 0.5f;
+	vertices[3].pos.y = -0.5f;
+	vertices[3].pos.z = -0.5f;
+
+	vertices[4].pos.x = -0.5f;
+	vertices[4].pos.y = -0.5f;
+	vertices[4].pos.z = 0.5f;
+
+	vertices[5].pos.x = -0.5f;
+	vertices[5].pos.y = 0.5f;
+	vertices[5].pos.z = 0.5f;
+
+	vertices[6].pos.x = 0.5f;
+	vertices[6].pos.y = 0.5f;
+	vertices[6].pos.z = 0.5f;
+
+	vertices[7].pos.x = 0.5f;
+	vertices[7].pos.y = -0.5f;
+	vertices[7].pos.z = 0.5f;
+
+	D3D11_BUFFER_DESC vertexBufferDesc;
+	ZeroMemory( &vertexBufferDesc, sizeof(vertexBufferDesc) );
+
+	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexBufferDesc.ByteWidth = sizeof( Vertex ) * NumSphereVertices;
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufferDesc.CPUAccessFlags = 0;
+	vertexBufferDesc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA vertexBufferData; 
+
+	ZeroMemory( &vertexBufferData, sizeof(vertexBufferData) );
+	vertexBufferData.pSysMem = vertices;
+	result = device->CreateBuffer( &vertexBufferDesc, &vertexBufferData, &cubeVertBuffer);
+	if (FAILED(result))
+	{
+		return result;
+	}
+	
+	unsigned long indices[] = {
+		// front face
+		0, 1, 2,
+		0, 2, 3,
+		// back face
+		4, 6, 5,
+		4, 7, 6,
+		// left face
+		4, 5, 1,
+		4, 1, 0,
+		// right face
+		3, 2, 6,
+		3, 6, 7,
+		// top face
+		1, 5, 6,
+		1, 6, 2,
+		// bottom face
+		4, 0, 3, 
+		4, 3, 7
+	};
+
+	D3D11_BUFFER_DESC indexBufferDesc;
+	ZeroMemory( &indexBufferDesc, sizeof(indexBufferDesc) );
+
+	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	indexBufferDesc.ByteWidth = sizeof(unsigned long) * 36;
+	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	indexBufferDesc.CPUAccessFlags = 0;
+	indexBufferDesc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA iinitData;
+
+	iinitData.pSysMem = indices;
+
+	result = device->CreateBuffer(&indexBufferDesc, &iinitData, &cubeIndexBuffer); 
+	if (FAILED(result))
+	{
+		return result;
+	}
+
+	return result;
 }
 
 HRESULT SkyDome::CreateSphere(ID3D11Device* device, int LatLines, int LongLines)
@@ -17,50 +120,10 @@ HRESULT SkyDome::CreateSphere(ID3D11Device* device, int LatLines, int LongLines)
 	NumSphereVertices = ((LatLines-2) * LongLines) + 2;
 	NumSphereFaces  = ((LatLines-3)*(LongLines)*2) + (LongLines*2);
 
-
-	NumSphereVertices = 8;
 	float sphereYaw = 0.0f;
 	float spherePitch = 0.0f;
 
-	//std::vector<Vertex> vertices(NumSphereVertices);
-	Vertex* vertices;
-	vertices = new Vertex[NumSphereVertices];
-
-	// Front face
-	vertices[0].pos.x = -0.5f;
-	vertices[0].pos.y = 0.5f;
-	vertices[0].pos.z = -0.5f;
-
-	vertices[1].pos.x = 0.5f;
-	vertices[1].pos.y = 0.5f;
-	vertices[1].pos.z = -0.5f;
-
-	vertices[2].pos.x = -0.5f;
-	vertices[2].pos.y = -0.5f;
-	vertices[2].pos.z = -0.5f;
-
-	vertices[3].pos.x = 0.5f;
-	vertices[3].pos.y = -0.5f;
-	vertices[3].pos.z = -0.5f;
-
-	// Back face
-	vertices[4].pos.x = -0.5f;
-	vertices[4].pos.y = 0.5f;
-	vertices[4].pos.z = 0.5f;
-
-	vertices[5].pos.x = 0.5f;
-	vertices[5].pos.y = 0.5f;
-	vertices[5].pos.z = 0.5f;
-
-	vertices[6].pos.x = -0.5f;
-	vertices[6].pos.y = -0.5f;
-	vertices[6].pos.z = 0.5f;
-
-	vertices[7].pos.x = 0.5f;
-	vertices[7].pos.y = -0.5f;
-	vertices[7].pos.z = 0.5f;
-
-	/*
+	std::vector<Vertex> vertices(NumSphereVertices);	
 	D3DXVECTOR3 currVertPos = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
 
 	vertices[0].pos.x = 0.0f;
@@ -96,7 +159,7 @@ HRESULT SkyDome::CreateSphere(ID3D11Device* device, int LatLines, int LongLines)
 	vertices[NumSphereVertices-1].pos.x =  0.0f;
 	vertices[NumSphereVertices-1].pos.y =  0.0f;
 	vertices[NumSphereVertices-1].pos.z = -1.0f;
-	*/
+	
 
 	D3D11_BUFFER_DESC vertexBufferDesc;
 	ZeroMemory( &vertexBufferDesc, sizeof(vertexBufferDesc) );
@@ -110,14 +173,14 @@ HRESULT SkyDome::CreateSphere(ID3D11Device* device, int LatLines, int LongLines)
 	D3D11_SUBRESOURCE_DATA vertexBufferData; 
 
 	ZeroMemory( &vertexBufferData, sizeof(vertexBufferData) );
-	vertexBufferData.pSysMem = vertices;// &vertices[0];
+	vertexBufferData.pSysMem = &vertices[0]; // vertices
 	result = device->CreateBuffer( &vertexBufferDesc, &vertexBufferData, &sphereVertBuffer);
 	if (FAILED(result))
 	{
 		return result;
 	}
 
-	/*
+	
 	std::vector<DWORD> indices(NumSphereFaces * 3);
 	int k = 0;
 	for(int l = 0; l < LongLines-1; ++l)
@@ -170,38 +233,19 @@ HRESULT SkyDome::CreateSphere(ID3D11Device* device, int LatLines, int LongLines)
 	indices[k] = NumSphereVertices-1;
 	indices[k+1] = (NumSphereVertices-1)-LongLines;
 	indices[k+2] = NumSphereVertices-2;
-	*/
-	unsigned long indices[] = {
-		// front
-		0, 1,
-		0, 2,
-		1, 3,
-		2, 3,
-		// left
-		0, 4,
-		2, 6,
-		4, 6,
-		// far
-		4, 5,
-		5, 7,
-		6, 7,
-		// right
-		5, 1,
-		7, 3
-	};
 	
 	D3D11_BUFFER_DESC indexBufferDesc;
 	ZeroMemory( &indexBufferDesc, sizeof(indexBufferDesc) );
 
 	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexBufferDesc.ByteWidth = sizeof(unsigned long) * 24;// sizeof(DWORD) * NumSphereFaces * 3;
+	indexBufferDesc.ByteWidth = sizeof(DWORD) * NumSphereFaces * 3;
 	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	indexBufferDesc.CPUAccessFlags = 0;
 	indexBufferDesc.MiscFlags = 0;
 
 	D3D11_SUBRESOURCE_DATA iinitData;
 
-	iinitData.pSysMem = indices/*&indices[0]*/;
+	iinitData.pSysMem = &indices[0];
 
 	result = device->CreateBuffer(&indexBufferDesc, &iinitData, &sphereIndexBuffer);
 	if (FAILED(result))
@@ -212,7 +256,7 @@ HRESULT SkyDome::CreateSphere(ID3D11Device* device, int LatLines, int LongLines)
 	return result;
 }
 
-HRESULT SkyDome::InitializeSkyDome(ID3D11Device* device)
+HRESULT SkyDome::InitializeSkyDome(D3DClass* d3d)
 {
 	HRESULT result = S_OK;
 
@@ -225,6 +269,8 @@ HRESULT SkyDome::InitializeSkyDome(ID3D11Device* device)
 	cbbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	cbbd.CPUAccessFlags = 0;
 	cbbd.MiscFlags = 0;
+	ID3D11Device* device = d3d->GetDevice();
+	ID3D11DeviceContext* deviceContext = d3d->GetDeviceContext();
 
 	result = device->CreateBuffer(&cbbd, NULL, &cbPerObjectBuffer);
 
@@ -249,6 +295,42 @@ HRESULT SkyDome::InitializeSkyDome(ID3D11Device* device)
 	{
 		return result;
 	}
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	D3D11_INPUT_ELEMENT_DESC layout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },  
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
+
+	UINT numElements = ARRAYSIZE(layout);
+
+	//Create the Input Layout
+	result = device->CreateInputLayout( layout, numElements, SKYMAP_VS_Buffer->GetBufferPointer(), 
+		SKYMAP_VS_Buffer->GetBufferSize(), &vertLayout );
+
+	//Set the Input Layout
+	deviceContext->IASetInputLayout( vertLayout );
+
+	//Set Primitive Topology
+	deviceContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+
+	//Create the Viewport
+	/*
+	D3D11_VIEWPORT viewport;
+	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
+
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = 1024;
+	viewport.Height = 768;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+
+	//Set the Viewport
+	device->RSSetViewports(1, &viewport);
+	*/
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//Tell D3D we will be loading a cube texture
 	D3DX11_IMAGE_LOAD_INFO loadSMInfo;
@@ -294,36 +376,7 @@ HRESULT SkyDome::InitializeSkyDome(ID3D11Device* device)
 		return result;
 	}
 
-	D3D11_RASTERIZER_DESC cmdesc;
-	
-	ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
-	cmdesc.FillMode = D3D11_FILL_SOLID;
-	cmdesc.CullMode = D3D11_CULL_BACK;
-	cmdesc.FrontCounterClockwise = true;
-	result = device->CreateRasterizerState(&cmdesc, &CCWcullMode);
-	if (FAILED(result))
-	{
-		return result;
-	}
-
-	cmdesc.FrontCounterClockwise = false;
-
-	result = device->CreateRasterizerState(&cmdesc, &CWcullMode);
-	if (FAILED(result))
-	{
-		return result;
-	}
-	
-
-	//cmdesc.FrontCounterClockwise = false;
-
-	cmdesc.CullMode = D3D11_CULL_NONE;
-	cmdesc.FillMode = D3D11_FILL_SOLID; // D3D11_FILL_WIREFRAME
-	result = device->CreateRasterizerState(&cmdesc, &RSCullNone);
-	if (FAILED(result))
-	{
-		return result;
-	}
+	SetFillMode(device, D3D11_FILL_SOLID);
 
 	D3D11_DEPTH_STENCIL_DESC dssDesc;
 	ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
@@ -336,52 +389,79 @@ HRESULT SkyDome::InitializeSkyDome(ID3D11Device* device)
 	return result;
 }
 
+HRESULT SkyDome::SetFillMode(ID3D11Device* device, D3D11_FILL_MODE fillMode)
+{
+	D3D11_RASTERIZER_DESC cmdesc;
+	HRESULT result = S_OK;
+	
+	ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
+	cmdesc.FillMode = D3D11_FILL_SOLID;
+	cmdesc.CullMode = D3D11_CULL_BACK;
+	cmdesc.FrontCounterClockwise = false;
+	cmdesc.CullMode = D3D11_CULL_NONE;
+	cmdesc.FillMode = fillMode;
+
+	result = device->CreateRasterizerState(&cmdesc, &RSCullNone);
+	if (FAILED(result))
+	{
+		return result;
+	}
+	return result;
+}
+
 void SkyDome::UpdateSkyDome(D3DXVECTOR3 cameraPosition)
 {
 	D3DXMATRIX scale, translation;
 
 	//Reset sphereWorld
 		// sphereWorld = XMMatrixIdentity();
-	D3DXMatrixIdentity(&sphereWorld);
+	//D3DXMatrixIdentity(&sphereWorld);
 
 	//Define sphereWorld's world space matrix
 		// Scale = XMMatrixScaling( 5.0f, 5.0f, 5.0f );
-	D3DXMatrixScaling(&scale, 5.0f, 5.0f, 5.0f);
+	//D3DXMatrixScaling(&scale, 5.0f, 5.0f, 5.0f);
 	
 
 	//Make sure the sphere is always centered around camera
 		// Translation = XMMatrixTranslation( XMVectorGetX(camPosition), XMVectorGetY(camPosition), XMVectorGetZ(camPosition) );
-	D3DXMatrixTranslation(&translation, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+	//D3DXMatrixTranslation(&translation, cameraPosition.x, cameraPosition.y, cameraPosition.z);
 
 	//Set sphereWorld's world space using the transformations
-	D3DXMatrixMultiply(&sphereWorld, &scale, &translation);
+	//D3DXMatrixMultiply(&sphereWorld, &scale, &translation);
 	//sphereWorld = scale * translation;
 }
 
-void SkyDome::RenderSkyDome(ID3D11DeviceContext* deviceContext, D3DXMATRIX view, D3DXMATRIX projection)
+void SkyDome::RenderSkyDome(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX view, D3DXMATRIX projection, int shapeType)
 {
 	UINT stride = sizeof( Vertex );
 	UINT offset = 0;
 
-	D3DXMATRIX WVP, viewProj;
-	deviceContext->IASetIndexBuffer( sphereIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-	deviceContext->IASetVertexBuffers( 0, 1, &sphereVertBuffer, &stride, &offset );
+	//D3DXMATRIX WVP, viewProj;
+
+	// Set primitive topology
+	//deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP); // D3D11_PRIMITIVE_TOPOLOGY_LINELIST
+
+	if (shapeType == 0)
+	{
+		deviceContext->IASetVertexBuffers( 0, 1, &sphereVertBuffer, &stride, &offset );
+		deviceContext->IASetIndexBuffer( sphereIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	}
+	else
+	{
+		deviceContext->IASetVertexBuffers( 0, 1, &cubeVertBuffer, &stride, &offset );
+		deviceContext->IASetIndexBuffer( cubeIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	}
+	
 
 	//WVP = sphereWorld * view * projection;
+	// cbPerObj.WVP = XMMatrixTranspose(WVP);
+	// cbPerObj.World = XMMatrixTranspose(sphereWorld);
 
-	D3DXMatrixMultiply(&viewProj, &view, &projection);
-	D3DXMatrixMultiply(&WVP, &sphereWorld, &viewProj);
+	D3DXMatrixTranspose(&projection, &projection);
 
-		// cbPerObj.WVP = XMMatrixTranspose(WVP);
-	D3DXMatrixTranspose(&cbPerObj.WVP, &WVP);
-	// D3DXMATRIX transposedWVP, transposedSphereWorld;
-	// D3DXMatrixTranspose(&transposedWVP, &WVP);
-	// cbPerObj.WVP = transposedWVP;
-
-		// cbPerObj.World = XMMatrixTranspose(sphereWorld);
-	D3DXMatrixTranspose(&cbPerObj.World, &sphereWorld);
-	// D3DXMatrixTranspose(&transposedSphereWorld, &sphereWorld);
-	// cbPerObj.World = transposedSphereWorld;
+	cbPerObj.worldMatrix = sphereWorld;
+	cbPerObj.viewMatrix = view;
+	cbPerObj.projectionMatix = projection;
 
 	deviceContext->UpdateSubresource( cbPerObjectBuffer, 0, NULL, &cbPerObj, 0, 0 );
 	deviceContext->VSSetConstantBuffers( 0, 1, &cbPerObjectBuffer );
@@ -392,8 +472,16 @@ void SkyDome::RenderSkyDome(ID3D11DeviceContext* deviceContext, D3DXMATRIX view,
 	deviceContext->PSSetShader(SKYMAP_PS, 0, 0);
 	deviceContext->OMSetDepthStencilState(DSLessEqual, 0);
 	deviceContext->RSSetState(RSCullNone);
-	deviceContext->DrawIndexed(/*NumSphereFaces * 3 */ 24, 0, 0 );
 
+
+	if (shapeType == 0)
+	{
+		deviceContext->DrawIndexed(NumSphereFaces * 3, 0, 0 ); // Sphere
+	}
+	else
+	{
+		deviceContext->DrawIndexed(36, 0, 0 ); // Cube
+	}
 	deviceContext->OMSetDepthStencilState(NULL, 0);
 }
 

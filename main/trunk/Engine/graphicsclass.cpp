@@ -1,7 +1,7 @@
 #include "graphicsclass.h"
 
 
-GraphicsClass::GraphicsClass() : mIsAllowToBBRender(true), mIsAllowToCameraDisplayRender(true), mDirUp(true), mDirDown(false), mIsWireFrameModeOn(true)
+GraphicsClass::GraphicsClass() : mIsAllowToBBRender(true), mIsAllowToCameraDisplayRender(true), mDirUp(true), mDirDown(false), mIsWireFrameModeOn(true), mSkyShape((SkyShape)0)
 {
 	mObjectFactory = 0;
 	mMaterialFactory = 0;
@@ -278,7 +278,8 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	mSkyDome = new SkyDome;
 	V_RETURN(mSkyDome->CreateSphere(mD3D->GetDevice(), 10, 10),	L"Error", L"Could not create sky dome sphere.");
-	V_RETURN(mSkyDome->InitializeSkyDome(mD3D->GetDevice()),	L"Error", L"Could not initialize sky dome object.");
+	V_RETURN(mSkyDome->CreateCube(mD3D->GetDevice()),	L"Error", L"Could not create sky dome cube.");
+	V_RETURN(mSkyDome->InitializeSkyDome(mD3D),	L"Error", L"Could not initialize sky dome object.");
 
 	return result;
 }
@@ -824,10 +825,12 @@ bool GraphicsClass::HandleInput(float frameTime)
 	if (InputClass::GetInstance()->IsWireframeModeOn(mIsWireFrameModeOn))
 	{
 		SetFillMode(D3D11_FILL_WIREFRAME);
+		mSkyDome->SetFillMode(mD3D->GetDevice(), D3D11_FILL_WIREFRAME);
 	}
 	else
 	{
 		SetFillMode(D3D11_FILL_SOLID);
+		mSkyDome->SetFillMode(mD3D->GetDevice(), D3D11_FILL_SOLID);
 	}
 
 	normalCameraDirectionVector = mCamera->GetNormalDirectionVector();
@@ -873,7 +876,16 @@ bool GraphicsClass::HandleInput(float frameTime)
 	// Update the location of the camera on the mini map.
 	m_MiniMap->PositionUpdate(posX, posZ);
 
-	//mSkyDome->UpdateSkyDome(D3DXVECTOR3(posX, posY, posZ));
+	mSkyDome->UpdateSkyDome(D3DXVECTOR3(posX, posY, posZ));
+	
+	if (InputClass::GetInstance()->Is1Pressed() && mSkyShape != SKY_SPHERE)
+	{
+		mSkyShape = SKY_SPHERE;
+	}
+	else if (InputClass::GetInstance()->Is2Pressed() && mSkyShape != SKY_CUBE)
+	{
+		mSkyShape = SKY_CUBE;
+	}
 
 	return true;
 }
@@ -1021,7 +1033,7 @@ bool GraphicsClass::RenderScene()
 		pointLightPositions[i] = mPointLights[i]->GetPosition();
 	}
 
-	mSkyDome->RenderSkyDome(deviceContext, viewMatrix, projectionMatrix);
+	
 	
 	if (mIsWireFrameModeOn)
 	{
@@ -1032,14 +1044,9 @@ bool GraphicsClass::RenderScene()
 		SetFillMode(D3D11_FILL_SOLID);
 	}
 	
+	mSkyDome->RenderSkyDome(deviceContext, worldMatrix, viewMatrix, projectionMatrix, mSkyShape); // 0 - Sphere; 1 - Cube
 	RenderTerrain(worldMatrix, viewMatrix, projectionMatrix);
 	RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
-	
-	// SetFillMode(D3D11_FILL_WIREFRAME);
-	// mCamera->GetViewMatrix(viewMatrix);
-	// mSkyDome->RenderSkyDome(deviceContext, viewMatrix, projectionMatrix);
-	// SetFillMode(D3D11_FILL_SOLID);
-
 	
 	ModelObject* modelObj = mObjectFactory->GetObjectByName("floor");
 

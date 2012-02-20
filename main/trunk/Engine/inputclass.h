@@ -52,6 +52,9 @@ class InputClass
 		bool IsPgUpPressed();
 		bool IsPgDownPressed();
 
+		bool Is1Pressed();
+		bool Is2Pressed();
+
 		// Press/Unpress functions
 		bool IsWireframeModeOn(bool& isWireFrameModeOn);
 		bool IsAllowToBBRender();

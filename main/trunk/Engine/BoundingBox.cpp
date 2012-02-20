@@ -92,10 +92,8 @@ void BoundingBox::RenderBBBuffers(ID3D11DeviceContext* deviceContext)
 	offset = 0;
 
 	// Set buffers for line
-	/*
 	deviceContext->IASetVertexBuffers(0, 1, &mVertexBuffer, &stride, &offset);
 	deviceContext->IASetIndexBuffer(mIndexBuffer, DXGI_FORMAT_R32_UINT, offset);
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 	deviceContext->DrawIndexed(24, 0, 0);
-	*/
 }
