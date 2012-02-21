@@ -39,8 +39,12 @@ SamplerState SampleType;
 
 cbuffer LightBuffer
 {
+    // float4 diffuseColor;
+    // float3 lightDirection;
+	float4 ambientColor;
     float4 diffuseColor;
     float3 lightDirection;
+    float padding;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,11 +97,10 @@ float4 BumpMapPixelShader(PixelInputType input) : SV_TARGET
     float3 lightDir;
     float lightIntensity;
     float4 color;
-
-
+	
     // Sample the texture pixel at this location.
     textureColor = shaderTextures[0].Sample(SampleType, input.tex);
-	
+		
     // Sample the pixel in the bump map.
     bumpMap = shaderTextures[1].Sample(SampleType, input.tex);
 
@@ -115,9 +118,12 @@ float4 BumpMapPixelShader(PixelInputType input) : SV_TARGET
 
     // Calculate the amount of light on this pixel based on the bump map normal value.
     lightIntensity = saturate(dot(bumpNormal, lightDir));
+	
+	// Set the default output color to the ambient light value for all pixels.
+    color = ambientColor / 2;
 
     // Determine the final diffuse color based on the diffuse color and the amount of light intensity.
-    color = saturate(diffuseColor * lightIntensity);
+    color += saturate(diffuseColor * lightIntensity);
 
     // Combine the final bump light color with the texture color.
     color = color * textureColor;

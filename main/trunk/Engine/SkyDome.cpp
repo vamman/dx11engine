@@ -296,7 +296,6 @@ HRESULT SkyDome::InitializeSkyDome(D3DClass* d3d)
 		return result;
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },  
@@ -314,23 +313,6 @@ HRESULT SkyDome::InitializeSkyDome(D3DClass* d3d)
 
 	//Set Primitive Topology
 	deviceContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
-
-	//Create the Viewport
-	/*
-	D3D11_VIEWPORT viewport;
-	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
-
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
-	viewport.Width = 1024;
-	viewport.Height = 768;
-	viewport.MinDepth = 0.0f;
-	viewport.MaxDepth = 1.0f;
-
-	//Set the Viewport
-	device->RSSetViewports(1, &viewport);
-	*/
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//Tell D3D we will be loading a cube texture
 	D3DX11_IMAGE_LOAD_INFO loadSMInfo;
@@ -409,22 +391,32 @@ HRESULT SkyDome::SetFillMode(ID3D11Device* device, D3D11_FILL_MODE fillMode)
 	return result;
 }
 
-void SkyDome::UpdateSkyDome(D3DXVECTOR3 cameraPosition)
+void SkyDome::UpdateSkyDome(D3DXVECTOR3 cameraPosition, float rotationX, float rotationY, float rotationZ)
 {
-	D3DXMATRIX scale, translation;
+	D3DXMATRIX scale, translation, rotationMatrix;
+	float yaw, pitch, roll;
 
 	//Reset sphereWorld
 		// sphereWorld = XMMatrixIdentity();
-	//D3DXMatrixIdentity(&sphereWorld);
+	D3DXMatrixIdentity(&sphereWorld);
 
 	//Define sphereWorld's world space matrix
 		// Scale = XMMatrixScaling( 5.0f, 5.0f, 5.0f );
-	//D3DXMatrixScaling(&scale, 5.0f, 5.0f, 5.0f);
-	
+	D3DXMatrixScaling(&scale, 5.0f, 5.0f, 5.0f);
+
+	// Set the yaw (Y axis), pitch (X axis), and roll (Z axis) rotations in radians.
+	pitch = rotationX * 0.0174532925f;
+	yaw   = rotationY * 0.0174532925f;
+	roll  = rotationZ * 0.0174532925f;
+
+	// Create the rotation matrix from the yaw, pitch, and roll values.
+	D3DXMatrixRotationYawPitchRoll(&rotationMatrix, yaw, pitch, roll);
 
 	//Make sure the sphere is always centered around camera
 		// Translation = XMMatrixTranslation( XMVectorGetX(camPosition), XMVectorGetY(camPosition), XMVectorGetZ(camPosition) );
-	//D3DXMatrixTranslation(&translation, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+	D3DXMatrixTranslation(&translation, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+
+	D3DXMatrixMultiply(&sphereWorld, &sphereWorld, &rotationMatrix);
 
 	//Set sphereWorld's world space using the transformations
 	//D3DXMatrixMultiply(&sphereWorld, &scale, &translation);
@@ -436,7 +428,7 @@ void SkyDome::RenderSkyDome(ID3D11DeviceContext* deviceContext, D3DXMATRIX world
 	UINT stride = sizeof( Vertex );
 	UINT offset = 0;
 
-	//D3DXMATRIX WVP, viewProj;
+	D3DXMATRIX WVP;
 
 	// Set primitive topology
 	//deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP); // D3D11_PRIMITIVE_TOPOLOGY_LINELIST
@@ -454,12 +446,20 @@ void SkyDome::RenderSkyDome(ID3D11DeviceContext* deviceContext, D3DXMATRIX world
 	
 
 	//WVP = sphereWorld * view * projection;
+	//D3DXMatrixMultiply(&view, &view, &projection);
+	//D3DXMatrixMultiply(&WVP, &sphereWorld, &view);
+
 	// cbPerObj.WVP = XMMatrixTranspose(WVP);
 	// cbPerObj.World = XMMatrixTranspose(sphereWorld);
 
+	//D3DXMatrixTranspose(&WVP, &WVP);
+	// D3DXMatrixTranspose(&view, &view);
+
+	// D3DXMatrixTranspose(&sphereWorld, &sphereWorld);
 	D3DXMatrixTranspose(&projection, &projection);
 
-	cbPerObj.worldMatrix = sphereWorld;
+	//cbPerObj.WVP = WVP;
+	cbPerObj.worldMatrix = worldMatrix; // sphereWorld
 	cbPerObj.viewMatrix = view;
 	cbPerObj.projectionMatix = projection;
 

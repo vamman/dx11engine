@@ -284,71 +284,6 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	return result;
 }
 
-bool GraphicsClass::InitMaterials()
-{
-	Material* material = new Material("defaultMaterial");
-	bool result = true;
-	DWORD funcTime = -1;
-
-	Timer::GetInstance()->SetTimeA();
-
-	// Create material "NormalWithSpec"
-	mMaterialFactory = new MaterialFactory();
-	material = mMaterialFactory->CreateMaterial("NormalWithSpec");
-	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone02.dds");
-	if(!result)
-	{
-		return false;
-	}
-
-	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/bump02.dds");
-	if(!result)
-	{
-		return false;
-	}
-
-	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/spec02.dds");
-	if(!result)
-	{
-		return false;
-	}
-
-	material->SetMaterialShader(m_SpecMapShader);
-
-	// Create material "BlueFloor"
-
-	material = mMaterialFactory->CreateMaterial("BlueFloor");
-	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/blue01.dds");
-	if(!result)
-	{
-		return false;
-	}
-
-	material->SetMaterialShader(mDirSpecLightShader);
-
-	// Create material "TexturedFloor"
-
-	material = mMaterialFactory->CreateMaterial("TexturedFloor");
-	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone02.dds");
-	if(!result)
-	{
-		return false;
-	}
-
-	material->SetMaterialShader(mDirAmbLightShader);
-
-	Timer::GetInstance()->SetTimeB();
-	funcTime = Timer::GetInstance()->GetDeltaTime();
-
-	if (funcTime != -1)
-	{
-		Log::GetInstance()->WriteToLogFile(funcTime, "	GraphicsClass::InitMaterials time: ");
-		Log::GetInstance()->WriteToOutput(funcTime, "	GraphicsClass::InitMaterials time: ");
-	}
-
-	return true;
-}
-
 bool GraphicsClass::InitLights()
 {
 	DWORD funcTime = -1;
@@ -379,7 +314,7 @@ bool GraphicsClass::InitLights()
 
 	mDirAmbLight->SetLightType(LightClass::DIRECTIONAL_AMBIENT_LIGHT);
 	// Initialize the light object.
-	mDirAmbLight->SetAmbientColor(0.3f, 0.3f, 0.3f, 1.0f);
+	mDirAmbLight->SetAmbientColor(0.5f, 0.5f, 0.5f, 1.0f); // 0.5f, 0.5f, 0.5f, 1.0f
 	mDirAmbLight->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
 	mDirAmbLight->SetDirection(0.0f, 0.0f, 0.75f); //  -0.5f, -1.0f, 0.0f
 
@@ -455,7 +390,7 @@ HRESULT GraphicsClass::InitializeShaders(HWND hwnd)
 	// Create the bump map shader object.
 	m_BumpMapShader = new NormalMapShader;
 	if(!m_BumpMapShader) { return result; }
-	V_RETURN(m_BumpMapShader->Initialize(mDirSpecLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/NormalMapShader.fx", "BumpMapVertexShader", "BumpMapPixelShader"),
+	V_RETURN(m_BumpMapShader->Initialize(mDirAmbLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/NormalMapShader.fx", "BumpMapVertexShader", "BumpMapPixelShader"),
 		L"Error", L"Could not initialize the bump map shader object.");
 
 	// Create the specular map shader object.
@@ -498,6 +433,90 @@ HRESULT GraphicsClass::InitializeShaders(HWND hwnd)
 	}
 
 	return result;
+}
+
+bool GraphicsClass::InitMaterials()
+{
+	Material* material = new Material("defaultMaterial");
+	bool result = true;
+	DWORD funcTime = -1;
+
+	Timer::GetInstance()->SetTimeA();
+
+	// Create material "NormalWithSpec"
+	mMaterialFactory = new MaterialFactory();
+	material = mMaterialFactory->CreateMaterial("NormalWithSpec");
+	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone02.dds");
+	if(!result)
+	{
+		return false;
+	}
+
+	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/bump02.dds");
+	if(!result)
+	{
+		return false;
+	}
+
+	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/spec02.dds");
+	if(!result)
+	{
+		return false;
+	}
+
+	material->SetMaterialShader(m_SpecMapShader);
+
+	// Create material "BlueFloor"
+
+	material = mMaterialFactory->CreateMaterial("BlueFloor");
+	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/blue01.dds");
+	if(!result)
+	{
+		return false;
+	}
+
+	material->SetMaterialShader(mDirSpecLightShader);
+
+	// Create material "TexturedFloor"
+
+	material = mMaterialFactory->CreateMaterial("TexturedFloor");
+	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone02.dds");
+	if(!result)
+	{
+		return false;
+	}
+
+	material->SetMaterialShader(mDirAmbLightShader);
+
+
+
+	// Create normal map material for space compound
+	material = mMaterialFactory->CreateMaterial("spaceCompoundMaterial");
+	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone01.dds");
+	if(!result)
+	{
+		return false;
+	}
+
+	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/bump01.dds");
+	if(!result)
+	{
+		return false;
+	}
+
+	material->SetMaterialShader(m_BumpMapShader);
+	/////////////////////////////////////////////////
+
+	Timer::GetInstance()->SetTimeB();
+	funcTime = Timer::GetInstance()->GetDeltaTime();
+
+	if (funcTime != -1)
+	{
+		Log::GetInstance()->WriteToLogFile(funcTime, "	GraphicsClass::InitMaterials time: ");
+		Log::GetInstance()->WriteToOutput(funcTime, "	GraphicsClass::InitMaterials time: ");
+	}
+
+	return true;
 }
 
 bool GraphicsClass::InitObjects(HWND hwnd)
@@ -548,6 +567,11 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 	// Create cube
 	CREATE_ORDINARY_OBJ_WITH_MAT(object, "cube", "Engine/data/models/cube.txt", "NormalWithSpec");
 	object->SetPosition(D3DXVECTOR3(130.0f, 1.0f, 130.0f)); // 130.0f, 1.0f, 130.0f
+	
+
+	// Create space compound
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, "spaceCompound", "Engine/data/models/spaceCompound.txt", "spaceCompoundMaterial"); // spaceCompoundMaterial // NormalWithSpec
+	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 132.0f)); 
 
 	Timer::GetInstance()->SetTimeB();
 	funcTime = Timer::GetInstance()->GetDeltaTime();
@@ -876,7 +900,7 @@ bool GraphicsClass::HandleInput(float frameTime)
 	// Update the location of the camera on the mini map.
 	m_MiniMap->PositionUpdate(posX, posZ);
 
-	mSkyDome->UpdateSkyDome(D3DXVECTOR3(posX, posY, posZ));
+	// mSkyDome->UpdateSkyDome(D3DXVECTOR3(posX, posY, posZ), rotX, rotY, rotZ);
 	
 	if (InputClass::GetInstance()->Is1Pressed() && mSkyShape != SKY_SPHERE)
 	{
@@ -991,10 +1015,8 @@ bool GraphicsClass::RenderScene()
 	int modelCount;
 	float fogColor, fogStart, fogEnd;
 	D3DXVECTOR4 color;
-	bool result;
 	static float rotation = 0.0f;
 	ID3D11DeviceContext* deviceContext = mD3D->GetDeviceContext();
-	Material* material;
 
 	// Set the color of the fog to grey.
 	fogColor = 0.5f;
@@ -1044,7 +1066,7 @@ bool GraphicsClass::RenderScene()
 		SetFillMode(D3D11_FILL_SOLID);
 	}
 	
-	mSkyDome->RenderSkyDome(deviceContext, worldMatrix, viewMatrix, projectionMatrix, mSkyShape); // 0 - Sphere; 1 - Cube
+	mSkyDome->RenderSkyDome(deviceContext, worldMatrix, viewMatrix, projectionMatrix, mSkyShape); // 0 - Sphere; 1 - Cube // mBaseViewMatrix
 	RenderTerrain(worldMatrix, viewMatrix, projectionMatrix);
 	RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
 	
@@ -1060,24 +1082,7 @@ bool GraphicsClass::RenderScene()
 		modelObj->SetPosition(newPosition);
 	}
 
-	modelObj->GetModel()->RenderOrdinary(deviceContext);
-	worldMatrix = modelObj->GetWorldMatrix();
-
-	material = modelObj->GetMaterial();
-	material->GetMaterialShader()->SetTextureArray(deviceContext, material->GetTextureVector());
-	material->GetMaterialShader()->SetCameraPosition(deviceContext, mCamera->GetPosition(), LightClass::DIRECTIONAL_AMBIENT_LIGHT);
-	material->GetMaterialShader()->SetLightSource(deviceContext, mDirAmbLight);
-	result = material->GetMaterialShader()->RenderOrdinary(deviceContext,
-		modelObj->GetModel()->GetIndexCount(),
-		worldMatrix,
-		viewMatrix, 
-		projectionMatrix);
-
-	if(!result)
-	{
-		return false;
-	}
-	
+	RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirAmbLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
 
 	return true;
 }
@@ -1259,7 +1264,7 @@ bool GraphicsClass::RenderTerrain(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
 
 bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, float fogStart, float fogEnd)
 {
-	bool result, renderModel;
+	bool renderModel;
 	D3DXMATRIX reflectionMatrix, rotationMatrix;
 	reflectionMatrix = mCamera->GetReflectionViewMatrix();
 	static float rotation = 0.0f;
@@ -1296,6 +1301,7 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 	}
 	
 	mDirSpecLight->SetDirection(0.0f, dirDelta, 1.0f);
+	mDirAmbLight->SetDirection(0.0f, dirDelta, 1.0f);
 
 	for (modelIt = listOfModels.begin(); modelIt != listOfModels.end(); ++modelIt)
 	{
@@ -1317,28 +1323,11 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 				D3DXVECTOR3 newPosition = D3DXVECTOR3(modelObj->GetPosition().x, height + 1, modelObj->GetPosition().z);
 				modelObj->SetPosition(newPosition);
 			}
-
-			model->RenderInstanced(deviceContext);
-			worldMatrix = modelObj->GetWorldMatrix();
-			//  m_SpecMapShader // material->GetMaterialShader()
-			material->GetMaterialShader()->SetTextureArray(deviceContext, textureVector);
-			material->GetMaterialShader()->SetCameraPosition(deviceContext, mCamera->GetPosition(), LightClass::DIRECTIONAL_SPECULAR_LIGHT);
-			material->GetMaterialShader()->SetLightSource(deviceContext, mDirSpecLight);
-			result = material->GetMaterialShader()->RenderInstanced(deviceContext,
-				model->GetVertexCount(),
-				model->GetInstanceCount(),
-				worldMatrix,
-				viewMatrix, 
-				projectionMatrix);
-
-			if(!result)
-			{
-				return false;
-			}
+			RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_SPECULAR_LIGHT, true);
 		}
 		// Render non-instanced objects
 		else if (!modelObj->IsInstanced())
-		{			
+		{		
 			if (strcmp(modelObj->GetModelName(), "cube") == 0)
 			{
 				// Update the rotation variable each frame.
@@ -1359,23 +1348,12 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 					D3DXVECTOR3 newPosition = D3DXVECTOR3(modelObj->GetPosition().x, height + 1, modelObj->GetPosition().z);
 					modelObj->SetPosition(newPosition);
 				}
-
-				model->RenderOrdinary(deviceContext);
-				worldMatrix = modelObj->GetWorldMatrix();
-
-				// material->GetMaterialShader() // m_SpecMapShaderNonInstanced
-				material->GetMaterialShader()->SetTextureArray(deviceContext, textureVector);
-				material->GetMaterialShader()->SetCameraPosition(deviceContext, mCamera->GetPosition(), LightClass::DIRECTIONAL_AMBIENT_LIGHT);
-				material->GetMaterialShader()->SetLightSource(deviceContext, mDirSpecLight); // mDirAmbLight
-				result = material->GetMaterialShader()->RenderOrdinary(deviceContext,
-					model->GetIndexCount(),
-					worldMatrix,
-					viewMatrix,
-					projectionMatrix);
-				if(!result)
-				{
-					return false;
-				}
+				RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
+			}
+			// Draw spaceCompound
+			else if (strcmp(modelObj->GetModelName(), "spaceCompound") == 0)
+			{
+				RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirAmbLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
 			}
 			else if (strcmp(modelObj->GetModelName(), "floor") != 0) // ordinary created spheras
 			{
@@ -1405,40 +1383,12 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 							D3DXVECTOR3 newPosition = D3DXVECTOR3(modelObj->GetPosition().x, height + 1, modelObj->GetPosition().z);
 							modelObj->SetPosition(newPosition);
 						}
-						worldMatrix = modelObj->GetWorldMatrix();
-						
-						model->RenderOrdinary(mD3D->GetDeviceContext());
-						// material->GetMaterialShader() // m_SpecMapShaderNonInstanced
-						material->GetMaterialShader()->SetTextureArray(deviceContext, textureVector);
-						material->GetMaterialShader()->SetCameraPosition(deviceContext, mCamera->GetPosition(), LightClass::DIRECTIONAL_SPECULAR_LIGHT);
-						material->GetMaterialShader()->SetLightSource(deviceContext, mDirSpecLight);
-						result = material->GetMaterialShader()->RenderOrdinary(
-																				deviceContext,
-																				model->GetIndexCount(),
-																				worldMatrix,
-																				viewMatrix, 
-																				projectionMatrix);
-						if(!result)
-						{
-							return false;
-						}
+						RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_SPECULAR_LIGHT, false);
 					}
 					else if (strcmp(lightObjPrefix.c_str(), "light_") == 0)
 					{
 						modelObj->SetScale(D3DXVECTOR3(0.2f, 0.2f, 0.2f));
-						worldMatrix = modelObj->GetWorldMatrix();
-						model->RenderOrdinary(mD3D->GetDeviceContext());
-
-						// material->GetMaterialShader() // mDirSpecLightShader
-						material->GetMaterialShader()->SetTextureArray(deviceContext, textureVector);
-						material->GetMaterialShader()->SetCameraPosition(deviceContext, mCamera->GetPosition(), LightClass::DIRECTIONAL_SPECULAR_LIGHT);
-						material->GetMaterialShader()->SetLightSource(deviceContext, mDirSpecLight);
-						result = material->GetMaterialShader()->RenderOrdinary(
-																	deviceContext,
-																	model->GetIndexCount(),
-																	worldMatrix,
-																	viewMatrix, 
-																	projectionMatrix);
+						RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_SPECULAR_LIGHT, false);
 					}
 
 					// Since this model was rendered then increase the count for this frame.
@@ -1448,6 +1398,49 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 		}
 	}
 	return true;
+}
+
+bool GraphicsClass::RenderObject(ModelObject* modelObj, ID3D11DeviceContext* deviceContext, D3DXMATRIX viewMatrix,
+								 D3DXMATRIX projectionMatrix, LightClass* lightSource, LightClass::LightTypes lightType, bool isInstanced)
+{
+	bool result;
+	D3DXMATRIX worldMatrix;
+	ModelClass* model = modelObj->GetModel();
+	Material* material = modelObj->GetMaterial();
+	vector<ID3D11ShaderResourceView*> textureVector = material->GetTextureVector();
+
+
+	worldMatrix = modelObj->GetWorldMatrix();
+
+	material->GetMaterialShader()->SetTextureArray(deviceContext, textureVector);
+	material->GetMaterialShader()->SetCameraPosition(deviceContext, mCamera->GetPosition(), lightType);
+	material->GetMaterialShader()->SetLightSource(deviceContext, lightSource);
+
+	if (!isInstanced)
+	{
+		model->RenderOrdinary(deviceContext);
+		result = material->GetMaterialShader()->RenderOrdinary(deviceContext,
+			model->GetIndexCount(),
+			worldMatrix,
+			viewMatrix,
+			projectionMatrix);
+	}
+	else
+	{
+		model->RenderInstanced(deviceContext);
+		result = material->GetMaterialShader()->RenderInstanced(deviceContext,
+			model->GetVertexCount(),
+			model->GetInstanceCount(),
+			worldMatrix,
+			viewMatrix, 
+			projectionMatrix);
+	}
+	
+	if(!result)
+	{
+		return false;
+	}
+	return result;
 }
 
 bool GraphicsClass::RenderText()

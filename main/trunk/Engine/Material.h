@@ -21,7 +21,7 @@ class Material
 
 	private:
 		bool LoadTexture(ID3D11Device* device, WCHAR* filename);
-		char mMaterialName[20];
+		char mMaterialName[100];
 		BasicShader* mShader;
 
 		vector<ID3D11ShaderResourceView*> mTextureVector;
