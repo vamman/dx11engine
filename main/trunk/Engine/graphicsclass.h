@@ -104,6 +104,8 @@ class GraphicsClass
 		void ShutdownShaders();
 		bool Render2D();
 		bool SetFillMode(D3D11_FILL_MODE mode);
+		bool RenderObject(ModelObject* modelObj, ID3D11DeviceContext* deviceContext, D3DXMATRIX viewMatrix,
+						  D3DXMATRIX projectionMatrix, LightClass* lightSource, LightClass::LightTypes lightType, bool isInstanced);
 
 	private:
 

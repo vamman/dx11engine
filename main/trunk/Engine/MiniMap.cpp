@@ -169,8 +169,8 @@ bool MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix,
 
 	
 	// Put the point bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
-	int screenWidth = 1024;
-	int screenHeight = 768;
+	int screenWidth = 1280;
+	int screenHeight = 960;
 	int offsetX = screenWidth / 2 - mPlayerViewImageWidth / 2;
 	int offsetY = screenHeight / 2 - mPlayerViewImageHeight;
 	result = mPlayerView->Render(deviceContext, offsetX,  offsetY);

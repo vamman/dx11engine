@@ -13,7 +13,7 @@ class SkyDome
 		HRESULT CreateCube(ID3D11Device* device);
 		HRESULT CreateSphere(ID3D11Device* device, int LatLines, int LongLines);
 		HRESULT InitializeSkyDome(D3DClass* d3d);
-		void UpdateSkyDome(D3DXVECTOR3 cameraPosition);
+		void UpdateSkyDome(D3DXVECTOR3 cameraPosition, float rotationX, float rotationY, float rotationZ);
 		HRESULT SetFillMode(ID3D11Device* device, D3D11_FILL_MODE fillMode);
 		void RenderSkyDome(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX view, D3DXMATRIX projection, int shapeType);
 
@@ -21,14 +21,10 @@ class SkyDome
 		struct Vertex	//Overloaded Vertex Structure
 		{
 			Vertex(){}
-			Vertex(float x, float y, float z,
-				float u, float v,
-				float nx, float ny, float nz)
-				: pos(x,y,z), texCoord(u, v), normal(nx, ny, nz){}
-
+			Vertex(float x, float y, float z) : pos(x,y,z)
+			{
+			}
 			D3DXVECTOR3 pos;
-			D3DXVECTOR2 texCoord;
-			D3DXVECTOR3 normal;
 		};
 
 		//Create effects constant buffer's structure//
