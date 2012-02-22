@@ -614,44 +614,15 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 void GraphicsClass::Shutdown()
 {
 	// Release the text object.
-	if(m_Text)
-	{
-		m_Text->Shutdown();
-		delete m_Text;
-		m_Text = 0;
-	}
-
+	SHUTDOWN_OBJ(m_Text);
 	// Release the render to texture object.
-	if(m_RenderTexture)
-	{
-		m_RenderTexture->Shutdown();
-		delete m_RenderTexture;
-		m_RenderTexture = 0;
-	}
-
+	SHUTDOWN_OBJ(m_RenderTexture);
 	// Release the bitmap object.
-	if(mBitmap)
-	{
-		mBitmap->Shutdown();
-		delete mBitmap;
-		mBitmap = 0;
-	}
-
+	SHUTDOWN_OBJ(mBitmap);
 	// Release cursor object.
-	if(mCursor)
-	{
-		mCursor->Shutdown();
-		delete mCursor;
-		mCursor = 0;
-	}
-
+	SHUTDOWN_OBJ(mCursor);
 	// Release the mini map object.
-	if(m_MiniMap)
-	{
-		m_MiniMap->Shutdown();
-		delete m_MiniMap;
-		m_MiniMap = 0;
-	}
+	SHUTDOWN_OBJ(m_MiniMap);
 
 	// Release the light object.
 	if(mDirSpecLight)
@@ -675,36 +646,12 @@ void GraphicsClass::Shutdown()
 		m_Frustum = 0;
 	}
 
-	// Release the model list object.
-	if(mObjectFactory)
-	{
-		mObjectFactory->Shutdown();
-		delete mObjectFactory;
-		mObjectFactory = 0;
-	}
-
-	if(mMaterialFactory)
-	{
-		mMaterialFactory->Shutdown();
-		delete mMaterialFactory;
-		mMaterialFactory = 0;
-	}
-
+	SHUTDOWN_OBJ(mObjectFactory);
+	SHUTDOWN_OBJ(mMaterialFactory);
 	// Release the quad tree object.
-	if(mQuadTree)
-	{
-		mQuadTree->Shutdown();
-		delete mQuadTree;
-		mQuadTree = 0;
-	}
-
+	SHUTDOWN_OBJ(mQuadTree);
 	// Release the terrain object.
-	if(mTerrain)
-	{
-		mTerrain->Shutdown();
-		delete mTerrain;
-		mTerrain = 0;
-	}
+	SHUTDOWN_OBJ(mTerrain);
 
 	// Release the camera object.
 	if(mCamera)
@@ -719,130 +666,41 @@ void GraphicsClass::Shutdown()
 		delete mCameraMovement;
 		mCameraMovement = 0;
 	}
-
-	// Release the sky dome shader object.
-	if(mSkyDomeShader)
-	{
-		mSkyDomeShader->Shutdown();
-		delete mSkyDomeShader;
-		mSkyDomeShader = 0;
-	}
-
 	// Release the sky dome object.
-	if(mSkyDome)
-	{
-		mSkyDome->Shutdown();
-		delete mSkyDome;
-		mSkyDome = 0;
-	}
+	SHUTDOWN_OBJ(mSkyDome);
 
-	if(mD3D)
-	{
-		mD3D->Shutdown();
-		delete mD3D;
-		mD3D = 0;
-	}
+	SHUTDOWN_OBJ(mD3D);
 	return;
 }
 
 void GraphicsClass::ShutdownShaders()
 {
 	// Release the reflection shader object.
-	if(m_ReflectionShader)
-	{
-		m_ReflectionShader->Shutdown();
-		delete m_ReflectionShader;
-		m_ReflectionShader = 0;
-	}
-
+	SHUTDOWN_OBJ(m_ReflectionShader);
 	// Release the fog shader object.
-	if(m_FogShader)
-	{
-		m_FogShader->Shutdown();
-		delete m_FogShader;
-		m_FogShader = 0;
-	}
-
+	SHUTDOWN_OBJ(m_FogShader);
 	// Release the terrain shader object.
-	if(mTerrainShader)
-	{
-		mTerrainShader->Shutdown();
-		delete mTerrainShader;
-		mTerrainShader = 0;
-	}
-
+	SHUTDOWN_OBJ(mTerrainShader);
 	// Release the multitexture shader object.
-	if(m_MultiTextureShader)
-	{
-		m_MultiTextureShader->Shutdown();
-		delete m_MultiTextureShader;
-		m_MultiTextureShader = 0;
-	}
-
+	SHUTDOWN_OBJ(m_MultiTextureShader);
 	// Release the light shader object.
-	if(mDirSpecLightShader)
-	{
-		mDirSpecLightShader->Shutdown();
-		delete mDirSpecLightShader;
-		mDirSpecLightShader = 0;
-	}
+	SHUTDOWN_OBJ(mDirSpecLightShader);
 
-	if(mDirAmbLightShader)
-	{
-		mDirAmbLightShader->Shutdown();
-		delete mDirAmbLightShader;
-		mDirAmbLightShader = 0;
-	}
-	
+	SHUTDOWN_OBJ(mDirAmbLightShader);	
 	// Release the texture shader object for mini map.
-	if(mTextureShaderMiniMap)
-	{
-		mTextureShaderMiniMap->Shutdown();
-		delete mTextureShaderMiniMap;
-		mTextureShaderMiniMap = 0;
-	}
-
+	SHUTDOWN_OBJ(mTextureShaderMiniMap);
 	// Release the texture shader object for camera display.
-	if(mTextureShaderCamDisplay)
-	{
-		mTextureShaderCamDisplay->Shutdown();
-		delete mTextureShaderCamDisplay;
-		mTextureShaderCamDisplay = 0;
-	}
-
-	
-
+	SHUTDOWN_OBJ(mTextureShaderCamDisplay);
 	// Release the color shader object.
-	if(mBasicShader)
-	{
-		mBasicShader->Shutdown();
-		delete mBasicShader;
-		mBasicShader = 0;
-	}
-
+	SHUTDOWN_OBJ(mBasicShader);
 	// Release the bump map shader object.
-	if(m_BumpMapShader)
-	{
-		m_BumpMapShader->Shutdown();
-		delete m_BumpMapShader;
-		m_BumpMapShader = 0;
-	}
-
+	SHUTDOWN_OBJ(m_BumpMapShader);
 	// Release the specular map shader object.
-	if(m_SpecMapShader)
-	{
-		m_SpecMapShader->Shutdown();
-		delete m_SpecMapShader;
-		m_SpecMapShader = 0;
-	}
-
+	SHUTDOWN_OBJ(m_SpecMapShader);
 	// Release the cursor shader object.
-	if(mCursorShader)
-	{
-		mCursorShader->Shutdown();
-		delete mCursorShader;
-		mCursorShader = 0;
-	}
+	SHUTDOWN_OBJ(mCursorShader);
+	// Release the sky dome shader object.
+	SHUTDOWN_OBJ(mSkyDomeShader);
 }
 
 
@@ -1438,7 +1296,7 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 					rotation -= 360.0f;
 				}
 
-				// modelObj->SetRotation(rotation);
+				//modelObj->SetRotation(rotation);
 
 				float height;
 				// Set psition above terrain
@@ -1449,6 +1307,8 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 					D3DXVECTOR3 newPosition = D3DXVECTOR3(modelObj->GetPosition().x, height + 1, modelObj->GetPosition().z);
 					modelObj->SetPosition(newPosition);
 				}
+				modelObj->SetRotation(rotation);
+				// modelObj->GetWorldMatrix();
 				RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
 			}
 			// Draw spaceCompound
@@ -1526,7 +1386,8 @@ bool GraphicsClass::RenderObject(ModelObject* modelObj, ID3D11DeviceContext* dev
 		model->RenderOrdinary(deviceContext);
 		result = material->GetMaterialShader()->RenderOrdinary(deviceContext,
 			model->GetIndexCount(),
-			worldMatrix,
+			//worldMatrix,
+			modelObj->GetWorldMatrix(),
 			viewMatrix,
 			projectionMatrix);
 	}
@@ -1536,7 +1397,8 @@ bool GraphicsClass::RenderObject(ModelObject* modelObj, ID3D11DeviceContext* dev
 		result = material->GetMaterialShader()->RenderInstanced(deviceContext,
 			model->GetVertexCount(),
 			model->GetInstanceCount(),
-			worldMatrix,
+			// worldMatrix,
+			modelObj->GetWorldMatrix(),
 			viewMatrix, 
 			projectionMatrix);
 	}
