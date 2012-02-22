@@ -73,6 +73,16 @@ const float SCREEN_NEAR = 0.1f;
 	object->SetMaterial(mMaterialFactory->GetMaterialByName(materialToAssign));												\
 }
 
+#define SHUTDOWN_OBJ(obj)	\
+{							\
+	if(obj)					\
+	{						\
+		obj->Shutdown();	\
+		delete obj;			\
+		obj = 0;			\
+	}						\
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: GraphicsClass
