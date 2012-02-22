@@ -23,6 +23,7 @@
 #include "Shaders/FogShader.h"
 #include "Shaders/ReflectionShader.h"
 #include "Shaders/TerrainShader.h"
+#include "shaders/SkyDomeShader.h"
 #include "Terrain.h"
 #include "QuadTree.h"
 #include "CameraMovement.h"
@@ -37,6 +38,7 @@
 #include "fpsclass.h"
 #include "cpuclass.h"
 
+#include "SkyDomeBrayn.h"
 #include "SkyDome.h"
 
 
@@ -155,6 +157,7 @@ class GraphicsClass
 		SpecMapShader* m_SpecMapShader;
 		SpecMapShader* m_SpecMapShaderNonInstanced;
 		FogShader* m_FogShader;
+		SkyDomeShader* mSkyDomeShader;
 		
 
 		int mNumObjectsRendered;
@@ -181,6 +184,7 @@ class GraphicsClass
 		int mScreenWidth;
 		int mScreenHeight;
 
+		SkyDomeBrayn* mSkyDomeBrayn;
 		SkyDome* mSkyDome;
 
 		bool mIsWireFrameModeOn;

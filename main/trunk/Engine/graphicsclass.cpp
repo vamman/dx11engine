@@ -37,7 +37,9 @@ GraphicsClass::GraphicsClass() : mIsAllowToBBRender(true), mIsAllowToCameraDispl
 	mPointLightShader = 0;
 	mDirSpecLight = 0;
 	mTerrainShader = 0;
+	mSkyDomeShader = 0;
 
+	mSkyDomeBrayn = 0;
 	mSkyDome = 0;
 
 
@@ -276,10 +278,27 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		Log::GetInstance()->WriteToOutput(funcTime, "GraphicsClass::Initialize time: ");
 	}
 
+	mSkyDomeBrayn = new SkyDomeBrayn;
+	// V_RETURN(mSkyDomeBrayn->CreateSphere(mD3D->GetDevice(), 10, 10),	L"Error", L"Could not create sky dome sphere.");
+	// V_RETURN(mSkyDomeBrayn->CreateCube(mD3D->GetDevice()),	L"Error", L"Could not create sky dome cube.");
+	// V_RETURN(mSkyDomeBrayn->InitializeSkyDome(mD3D),	L"Error", L"Could not initialize sky dome object.");
+
+	// Create the sky dome object.
 	mSkyDome = new SkyDome;
-	V_RETURN(mSkyDome->CreateSphere(mD3D->GetDevice(), 10, 10),	L"Error", L"Could not create sky dome sphere.");
-	V_RETURN(mSkyDome->CreateCube(mD3D->GetDevice()),	L"Error", L"Could not create sky dome cube.");
-	V_RETURN(mSkyDome->InitializeSkyDome(mD3D),	L"Error", L"Could not initialize sky dome object.");
+	if(!mSkyDome)
+	{
+		return false;
+	}
+
+	// Initialize the sky dome object.
+	result = mSkyDome->Initialize(mD3D->GetDevice(), hwnd);
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the sky dome object.", L"Error", MB_OK);
+		return false;
+	}
+
+
 
 	return result;
 }
@@ -422,6 +441,13 @@ HRESULT GraphicsClass::InitializeShaders(HWND hwnd)
 	if(!mCursorShader) { return result; }
 	V_RETURN(mCursorShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/CursorShader.fx",  "CursorVertexShader", "CursorPixelShader"),
 		L"Error", L"Could not initialize the cursor shader object.");
+
+	// Create the sky dome shader object.
+	mSkyDomeShader = new SkyDomeShader;
+	if(!mSkyDomeShader) { return false; }
+	V_RETURN(mSkyDomeShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/SkyDomeShader.fx",  "SkyDomeVertexShader", "SkyDomePixelShader"),
+		L"Error", L"Could not initialize the sky dome shader object.");
+
 
 	Timer::GetInstance()->SetTimeB();
 	funcTime = Timer::GetInstance()->GetDeltaTime();
@@ -694,6 +720,22 @@ void GraphicsClass::Shutdown()
 		mCameraMovement = 0;
 	}
 
+	// Release the sky dome shader object.
+	if(mSkyDomeShader)
+	{
+		mSkyDomeShader->Shutdown();
+		delete mSkyDomeShader;
+		mSkyDomeShader = 0;
+	}
+
+	// Release the sky dome object.
+	if(mSkyDome)
+	{
+		mSkyDome->Shutdown();
+		delete mSkyDome;
+		mSkyDome = 0;
+	}
+
 	if(mD3D)
 	{
 		mD3D->Shutdown();
@@ -849,12 +891,12 @@ bool GraphicsClass::HandleInput(float frameTime)
 	if (InputClass::GetInstance()->IsWireframeModeOn(mIsWireFrameModeOn))
 	{
 		SetFillMode(D3D11_FILL_WIREFRAME);
-		mSkyDome->SetFillMode(mD3D->GetDevice(), D3D11_FILL_WIREFRAME);
+		// mSkyDomeBrayn->SetFillMode(mD3D->GetDevice(), D3D11_FILL_WIREFRAME);
 	}
 	else
 	{
 		SetFillMode(D3D11_FILL_SOLID);
-		mSkyDome->SetFillMode(mD3D->GetDevice(), D3D11_FILL_SOLID);
+		// mSkyDomeBrayn->SetFillMode(mD3D->GetDevice(), D3D11_FILL_SOLID);
 	}
 
 	normalCameraDirectionVector = mCamera->GetNormalDirectionVector();
@@ -1017,6 +1059,7 @@ bool GraphicsClass::RenderScene()
 	D3DXVECTOR4 color;
 	static float rotation = 0.0f;
 	ID3D11DeviceContext* deviceContext = mD3D->GetDeviceContext();
+	D3DXVECTOR3 cameraPosition;
 
 	// Set the color of the fog to grey.
 	fogColor = 0.5f;
@@ -1056,7 +1099,56 @@ bool GraphicsClass::RenderScene()
 	}
 
 	
-	
+	/*
+	if (mIsWireFrameModeOn)
+	{
+		SetFillMode(D3D11_FILL_WIREFRAME);
+	}
+	else
+	{
+		SetFillMode(D3D11_FILL_SOLID);
+	}
+	*/
+	//mSkyDomeBrayn->RenderSkyDome(deviceContext, worldMatrix, viewMatrix, projectionMatrix, mSkyShape); // 0 - Sphere; 1 - Cube // mBaseViewMatrix
+	// RenderTerrain(worldMatrix, viewMatrix, projectionMatrix);
+	// RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
+
+	////////////////////////////////////////////
+
+	// Get the position of the camera.
+	cameraPosition = mCamera->GetPosition();
+
+	// Translate the sky dome to be centered around the camera position.
+	D3DXMatrixTranslation(&worldMatrix, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+
+	// Turn off back face culling.
+	mD3D->TurnOffCulling();
+
+	// Turn off the Z buffer.
+	mD3D->TurnZBufferOff();
+ 
+	if (mIsWireFrameModeOn)
+	{
+		mSkyDome->SetFillMode(mD3D, D3D11_FILL_WIREFRAME);
+	}
+	else
+	{
+		mSkyDome->SetFillMode(mD3D, D3D11_FILL_SOLID);
+	}
+	// Render the sky dome using the sky dome shader.
+	mSkyDome->Render(deviceContext);
+	mSkyDomeShader->Render(deviceContext, mSkyDome->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, mSkyDome->GetApexColor(), mSkyDome->GetCenterColor());
+
+	// Turn back face culling back on.
+	mD3D->TurnOnCulling();
+
+	// Turn the Z buffer back on.
+	mD3D->TurnZBufferOn();
+
+	// Reset the world matrix.
+	mD3D->GetWorldMatrix(worldMatrix);
+
+	////////////////////////////////////////////
 	if (mIsWireFrameModeOn)
 	{
 		SetFillMode(D3D11_FILL_WIREFRAME);
@@ -1066,7 +1158,7 @@ bool GraphicsClass::RenderScene()
 		SetFillMode(D3D11_FILL_SOLID);
 	}
 	
-	mSkyDome->RenderSkyDome(deviceContext, worldMatrix, viewMatrix, projectionMatrix, mSkyShape); // 0 - Sphere; 1 - Cube // mBaseViewMatrix
+	//mSkyDomeBrayn->RenderSkyDome(deviceContext, worldMatrix, viewMatrix, projectionMatrix, mSkyShape); // 0 - Sphere; 1 - Cube // mBaseViewMatrix
 	RenderTerrain(worldMatrix, viewMatrix, projectionMatrix);
 	RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
 	
@@ -1092,6 +1184,15 @@ bool GraphicsClass::Render2D()
 	D3DXMATRIX viewMatrix, projectionMatrix, worldMatrix, orthoMatrix;
 	bool result;
 	ID3D11DeviceContext* deviceContext = mD3D->GetDeviceContext();
+
+	if (mIsWireFrameModeOn)
+	{
+		SetFillMode(D3D11_FILL_WIREFRAME);
+	}
+	else
+	{
+		SetFillMode(D3D11_FILL_SOLID);
+	}
 
 	// Generate the view matrix based on the camera's position.
 	mCamera->Render();
@@ -1353,7 +1454,11 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 			// Draw spaceCompound
 			else if (strcmp(modelObj->GetModelName(), "spaceCompound") == 0)
 			{
+				// Turn back face culling back off.
+				mD3D->TurnOffCulling();
 				RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirAmbLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
+				// Turn back face culling back on.
+				mD3D->TurnOnCulling();
 			}
 			else if (strcmp(modelObj->GetModelName(), "floor") != 0) // ordinary created spheras
 			{

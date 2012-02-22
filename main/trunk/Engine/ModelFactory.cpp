@@ -94,7 +94,7 @@ ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, 
 		result = model->InitializeOrdinary(device, fileName);
 		if(!result)
 		{
-			MessageBox(hwnd, L"Could not initialize an instanced model object.", L"Error", MB_OK);
+			MessageBox(hwnd, L"Could not initialize an ordinary model object.", L"Error", MB_OK);
 			return false;
 		}
 	}

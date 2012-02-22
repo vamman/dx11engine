@@ -1,68 +1,39 @@
 #pragma once
-#include <vector>
+
 #include <d3d11.h>
 #include <d3dx10math.h>
-#include <d3dx11async.h>
+#include <fstream>
+#include "ModelFactory.h"
 #include "d3dclass.h"
 
+using namespace std;
+
 class SkyDome
-{
+	{
+	private:
+		struct VertexType
+		{
+			D3DXVECTOR3 position;
+		};
+
 	public:
-		SkyDome(void);
-		~SkyDome(void);
-		HRESULT CreateCube(ID3D11Device* device);
-		HRESULT CreateSphere(ID3D11Device* device, int LatLines, int LongLines);
-		HRESULT InitializeSkyDome(D3DClass* d3d);
-		void UpdateSkyDome(D3DXVECTOR3 cameraPosition, float rotationX, float rotationY, float rotationZ);
-		HRESULT SetFillMode(ID3D11Device* device, D3D11_FILL_MODE fillMode);
-		void RenderSkyDome(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX view, D3DXMATRIX projection, int shapeType);
+		SkyDome();
+		SkyDome(const SkyDome&);
+		~SkyDome();
+
+		bool Initialize(ID3D11Device* device, HWND hwnd);
+		void Shutdown();
+		void Render(ID3D11DeviceContext*);
+		int GetIndexCount();
+		D3DXVECTOR4 GetApexColor();
+		D3DXVECTOR4 GetCenterColor();
+		HRESULT SetFillMode(D3DClass* d3d, D3D11_FILL_MODE fillMode);
 
 	private:
-		struct Vertex	//Overloaded Vertex Structure
-		{
-			Vertex(){}
-			Vertex(float x, float y, float z) : pos(x,y,z)
-			{
-			}
-			D3DXVECTOR3 pos;
-		};
+		void ReleaseSkyDomeModel();
 
-		//Create effects constant buffer's structure//
-		struct cbPerObject
-		{
-			// D3DXMATRIX  WVP;
-			D3DXMATRIX worldMatrix;
-			D3DXMATRIX viewMatrix;
-			D3DXMATRIX projectionMatix;
-		};
-
-		cbPerObject cbPerObj;
-
-		ID3D11Buffer *sphereVertBuffer, *sphereIndexBuffer, *cubeVertBuffer, *cubeIndexBuffer;
-
-		ID3D11VertexShader* SKYMAP_VS;
-		ID3D11PixelShader* SKYMAP_PS;
-		ID3D10Blob* SKYMAP_VS_Buffer;
-		ID3D10Blob* SKYMAP_PS_Buffer;
-
-		ID3D11ShaderResourceView* smrv;
-
-		ID3D11DepthStencilState* DSLessEqual;
-
-		ID3D11RasterizerState* CCWcullMode;
-		ID3D11RasterizerState* CWcullMode;
-		ID3D11RasterizerState* RSCullNone;
-
-		int NumSphereVertices;
-		int NumSphereFaces;
-
-		D3DXMATRIX Rotationx;
-		D3DXMATRIX Rotationy;
-		D3DXMATRIX Rotationz;
-		D3DXMATRIX sphereWorld;
-
-		ID3D11Buffer* cbPerObjectBuffer;
-		ID3D11SamplerState* CubesTexSamplerState;
-		ID3D11InputLayout* vertLayout;
-		//ID3D11VertexShader* VS;
+	private:
+		ModelFactory* mModelFactory;
+		ModelObject* mSkyDomeObject;
+		D3DXVECTOR4 m_apexColor, m_centerColor;
 };

@@ -1,40 +1,66 @@
-cbuffer cbPerObject
+cbuffer MatrixBuffer
 {
-	// matrix WVP;
-	matrix worldMatrix;
+    matrix worldMatrix;
     matrix viewMatrix;
     matrix projectionMatrix;
-	
 };
 
-Texture2D ObjTexture;
-SamplerState ObjSamplerState;
-TextureCube SkyMap;
-
-struct SKYMAP_VS_OUTPUT	//output structure for skymap vertex shader
+struct VertexInputType
 {
-	float4 position : SV_POSITION;
-	float3 tex : TEXCOORD;
+    float4 position : POSITION;
 };
 
-SKYMAP_VS_OUTPUT SKYMAP_VS(float3 inPos : POSITION, float2 inTexCoord : TEXCOORD)
+struct PixelInputType
 {
-	SKYMAP_VS_OUTPUT output = (SKYMAP_VS_OUTPUT)0;
+    float4 position : SV_POSITION;
+    float4 domePosition : TEXCOORD0;
+};
 
-	//Set position to xyww instead of xyzw, so that z will always be 1 (furthest from camera)
-	// output.position = mul(float4(inPos, 1.0f), WVP).xyww;
-	
-	// Calculate the position of the vertex against the world, view, and projection matrices.
-	output.position = mul(float4(inPos, 1.0f), worldMatrix).xyww;
-	output.position = mul(float4(inPos, 1.0f), viewMatrix).xyww;
-	output.position = mul(float4(inPos, 1.0f), projectionMatrix).xyww;
+cbuffer GradientBuffer
+{
+    float4 apexColor;
+    float4 centerColor;
+};
 
-	output.tex = inPos;
-	
-	return output;
+////////////////////////////////////////////////////////////////////////////////
+// Vertex Shader
+////////////////////////////////////////////////////////////////////////////////
+PixelInputType SkyDomeVertexShader(VertexInputType input)
+{
+    PixelInputType output;
+    
+
+    // Change the position vector to be 4 units for proper matrix calculations.
+    input.position.w = 1.0f;
+
+    // Calculate the position of the vertex against the world, view, and projection matrices.
+    output.position = mul(input.position, worldMatrix);
+    output.position = mul(output.position, viewMatrix);
+    output.position = mul(output.position, projectionMatrix);
+    
+    // Send the unmodified position through to the pixel shader.
+    output.domePosition = input.position;
+
+    return output;
 }
 
-float4 SKYMAP_PS(SKYMAP_VS_OUTPUT input) : SV_TARGET
+float4 SkyDomePixelShader(PixelInputType input) : SV_TARGET
 {
-	return SkyMap.Sample(ObjSamplerState, input.tex);
+    float height;
+    float4 outputColor;
+
+
+    // Determine the position on the sky dome where this pixel is located.
+    height = input.domePosition.y;
+
+    // The value ranges from -1.0f to +1.0f so change it to only positive values.
+    if(height < 0.0)
+    {
+        height = 0.0f;
+    }
+
+    // Determine the gradient color by interpolating between the apex and center based on the height of the pixel in the sky dome.
+    outputColor = lerp(centerColor, apexColor, height);
+
+    return outputColor;
 }
