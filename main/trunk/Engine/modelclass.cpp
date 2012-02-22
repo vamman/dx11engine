@@ -612,7 +612,7 @@ void ModelClass::RenderBuffersOrdinary(ID3D11DeviceContext* deviceContext)
 	unsigned int offset;
 
 	// Set vertex buffer stride and offset.
-	stride = sizeof(VertexTypeNormalMap); 
+	stride = sizeof(VertexTypeNormalMap); // TODO: Probably need to pass Vertex type of the model which need to be rendered
 	offset = 0;
 
 	// Set the vertex buffer to active in the input assembler so it can be rendered.

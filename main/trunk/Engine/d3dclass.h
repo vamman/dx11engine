@@ -53,6 +53,9 @@ class D3DClass
 		void TurnOnAlphaBlending();
 		void TurnOffAlphaBlending();
 
+		void TurnOnCulling();
+		void TurnOffCulling();
+
 		ID3D11DepthStencilView* GetDepthStencilView();
 		void SetBackBufferRenderTarget();
 
@@ -67,7 +70,7 @@ class D3DClass
 		ID3D11Texture2D* m_depthStencilBuffer;
 		ID3D11DepthStencilState* m_depthStencilState;
 		ID3D11DepthStencilView* m_depthStencilView;
-		ID3D11RasterizerState* m_rasterState;
+		ID3D11RasterizerState* m_rasterState, * m_rasterStateNoCulling;
 		D3DXMATRIX m_projectionMatrix;
 		D3DXMATRIX m_worldMatrix;
 		D3DXMATRIX m_orthoMatrix;
