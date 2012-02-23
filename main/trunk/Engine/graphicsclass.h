@@ -38,9 +38,7 @@
 #include "fpsclass.h"
 #include "cpuclass.h"
 
-#include "SkyDomeBrayn.h"
 #include "SkyDome.h"
-
 
 /////////////
 // GLOBALS //
