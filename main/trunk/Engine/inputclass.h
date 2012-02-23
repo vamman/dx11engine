@@ -55,6 +55,9 @@ class InputClass
 		bool Is1Pressed();
 		bool Is2Pressed();
 
+		bool IsNumPad0Pressed();
+		bool IsNumPad1Pressed();
+
 		// Press/Unpress functions
 		bool IsWireframeModeOn(bool& isWireFrameModeOn);
 		bool IsAllowToBBRender();

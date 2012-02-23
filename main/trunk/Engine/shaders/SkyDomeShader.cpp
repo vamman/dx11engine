@@ -38,7 +38,7 @@ HRESULT SkyDomeShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 
 	// Setup the description of the gradient constant buffer that is in the pixel shader.
 	gradientBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	gradientBufferDesc.ByteWidth = sizeof(GradientBufferType);
+	gradientBufferDesc.ByteWidth = sizeof(D3DXVECTOR4) + sizeof(D3DXVECTOR4) + sizeof(D3DXVECTOR4); // sizeof(GradientBufferType);
 	gradientBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	gradientBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	gradientBufferDesc.MiscFlags = 0;
@@ -81,12 +81,12 @@ void SkyDomeShader::Shutdown()
 }
 
 bool SkyDomeShader::Render(ID3D11DeviceContext* deviceContext, int indexCount, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, 
-						   D3DXMATRIX projectionMatrix, D3DXVECTOR4 apexColor, D3DXVECTOR4 centerColor)
+						   D3DXMATRIX projectionMatrix, D3DXVECTOR4 apexColor, D3DXVECTOR4 centerColor, float pixelShaderMode)
 {
 	bool result;
 
 	// Set the shader parameters that it will use for rendering.
-	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, apexColor, centerColor);
+	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, apexColor, centerColor, pixelShaderMode);
 	if(!result)
 	{
 		return false;
@@ -99,7 +99,7 @@ bool SkyDomeShader::Render(ID3D11DeviceContext* deviceContext, int indexCount, D
 }
 
 bool SkyDomeShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
-										D3DXMATRIX projectionMatrix, D3DXVECTOR4 apexColor, D3DXVECTOR4 centerColor)
+										D3DXMATRIX projectionMatrix, D3DXVECTOR4 apexColor, D3DXVECTOR4 centerColor, float pixelShaderMode)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -126,6 +126,7 @@ bool SkyDomeShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DX
 	// Copy the gradient color variables into the constant buffer.
 	dataPtr2->apexColor = apexColor;
 	dataPtr2->centerColor = centerColor;
+	dataPtr2->pixelShaderType = D3DXVECTOR4(pixelShaderMode, 0.0f, 0.0f, 0.0f);// (float)0.0f;
 
 	// Unlock the constant buffer.
 	deviceContext->Unmap(m_gradientBuffer, 0);

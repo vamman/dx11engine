@@ -3,7 +3,8 @@
 SkyDome::SkyDome(void)
 {
 	mModelFactory = 0;
-	mSkyDomeObject = 0;
+	mSkyDomeSphere = 0;
+	mSkyDomeCube = 0;
 	smrv = 0;
 }
 
@@ -15,10 +16,11 @@ SkyDome::~SkyDome(void)
 bool SkyDome::Initialize(ID3D11Device* device, HWND hwnd)
 {
 	mModelFactory = new ModelFactory;
-	mSkyDomeObject = new ModelObject;
+	mSkyDomeSphere = new ModelObject;
 
 	// Load in the sky dome model.
-	mSkyDomeObject = mModelFactory->CreateOrdinaryModel(device, hwnd, "skyDome", "Engine/data/models/sphere.txt");
+	mSkyDomeSphere = mModelFactory->CreateOrdinaryModel(device, hwnd, "skyDome", "Engine/data/models/sphere.txt");
+	mSkyDomeCube = mModelFactory->CreateOrdinaryModel(device, hwnd, "skyDome", "Engine/data/models/cube.txt");
 
 	// Set the color at the top of the sky dome.
 	m_apexColor = D3DXVECTOR4(0.15f, 0.26f, 0.78f, 1.0f); // 0.0f, 0.15f, 0.66f, 1.0f
@@ -57,6 +59,10 @@ HRESULT SkyDome::CreateCubeTexture(ID3D11Device* device)
 
 	//Create the Resource view
 	result = device->CreateShaderResourceView(SMTexture, &SMViewDesc, &smrv);
+	if (FAILED(result))
+	{
+		return result;
+	}
 
 	// Describe the Sample State
 	D3D11_SAMPLER_DESC sampDesc;
@@ -85,18 +91,26 @@ void SkyDome::Shutdown()
 	return;
 }
 
-void SkyDome::Render(ID3D11DeviceContext* deviceContext)
+void SkyDome::Render(ID3D11DeviceContext* deviceContext, int shapeType)
 {
 	// Render the sky dome.
 	deviceContext->PSSetShaderResources( 0, 1, &smrv );
 	deviceContext->PSSetSamplers( 0, 1, &CubesTexSamplerState);
-	mSkyDomeObject->GetModel()->RenderOrdinary(deviceContext);
+	if (shapeType == 0)
+	{
+		mSkyDomeSphere->GetModel()->RenderOrdinary(deviceContext);
+	}
+	else
+	{
+		mSkyDomeCube->GetModel()->RenderOrdinary(deviceContext);
+	}
 	return;
 }
 
-int SkyDome::GetIndexCount()
+int SkyDome::GetIndexCount(int shapeType)
 {
-	return mSkyDomeObject->GetModel()->GetIndexCount();
+	int indexCount = shapeType == 0 ? mSkyDomeSphere->GetModel()->GetIndexCount() : mSkyDomeCube->GetModel()->GetIndexCount();
+	return indexCount;
 }
 
 D3DXVECTOR4 SkyDome::GetApexColor()
@@ -111,7 +125,8 @@ D3DXVECTOR4 SkyDome::GetCenterColor()
 
 void SkyDome::ReleaseSkyDomeModel()
 {
-	mSkyDomeObject->GetModel()->Shutdown();
+	mSkyDomeSphere->GetModel()->Shutdown();
+	mSkyDomeCube->GetModel()->Shutdown();
 	return;
 }
 

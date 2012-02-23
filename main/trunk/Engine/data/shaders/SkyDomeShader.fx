@@ -21,6 +21,7 @@ cbuffer GradientBuffer
 {
     float4 apexColor;
     float4 centerColor;
+	float4 pixelShaderType; // 0 - use gradient; 1 - use cube texture; // 2 - use both
 };
 
 Texture2D ObjTexture;
@@ -51,22 +52,26 @@ PixelInputType SkyDomeVertexShader(VertexInputType input)
 // TODO: Modify pixel shader to support both gradient and cube map shpere mapping
 float4 SkyDomePixelShader(PixelInputType input) : SV_TARGET
 {
-    // float height;
-    // float4 outputColor;
+    float height;
+    float4 outputColor;
 
-    // Determine the position on the sky dome where this pixel is located.
-    //height = input.domePosition.y;
+	if (pixelShaderType.x == 0.0f)
+	{
+		// Determine the position on the sky dome where this pixel is located.
+		height = input.domePosition.y;
 
-    // The value ranges from -1.0f to +1.0f so change it to only positive values.
-    //if(height < 0.0)
-    //{
-    //    height = 0.0f;
-    //}
+		// The value ranges from -1.0f to +1.0f so change it to only positive values.
+		if(height < 0.0f)
+		{
+			height = 0.0f;
+		}
 
-    // Determine the gradient color by interpolating between the apex and center based on the height of the pixel in the sky dome.
-    // outputColor = lerp(centerColor, apexColor, height);
-
-    // return outputColor;
-	
-	return SkyMap.Sample(ObjSamplerState, input.tex);
+		// Determine the gradient color by interpolating between the apex and center based on the height of the pixel in the sky dome.
+		outputColor = lerp(centerColor, apexColor, height);
+	}
+	else if (pixelShaderType.x == 1.0f)
+	{
+		outputColor = SkyMap.Sample(ObjSamplerState, input.tex);
+	}
+	return outputColor;
 }

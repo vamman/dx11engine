@@ -340,6 +340,16 @@ bool InputClass::Is2Pressed()
 	return IsBtnPressed(DIK_2);
 }
 
+bool InputClass::IsNumPad0Pressed()
+{
+	return IsBtnPressed(DIK_NUMPAD0);
+}
+
+bool InputClass::IsNumPad1Pressed()
+{
+	return IsBtnPressed(DIK_NUMPAD1);
+}
+
 bool InputClass::IsBtnPressedAndUnpressed(byte keyKode, bool& boolValue)
 {
 
