@@ -86,12 +86,8 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the Direct3D object.
-	result = mD3D->Initialize(mScreenWidth, mScreenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR);
-	if(FAILED(result))
-	{
-		MessageBox(hwnd, L"Could not initialize Direct3D", L"Error", MB_OK);
-		return result;
-	}
+	V_RETURN(mD3D->Initialize(mScreenWidth, mScreenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR), L"Error",
+			 L"Could not initialize Direct3D");
 
 	ID3D11Device* device = mD3D->GetDevice();
 
@@ -117,35 +113,16 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	// Create the terrain object.
 	mTerrain = new Terrain;
-	if(!mTerrain)
-	{
-		return result;
-	}
-
-	// Initialize the terrain object.
+	if(!mTerrain) { return result; }
 	// heightmap01.bmp / heightmap513; dirt01.dds; colorm01.bmp / colorm513
-	result = mTerrain->Initialize(device, "Engine/data/textures/terrain/heightmap01.bmp",
-								  L"Engine/data/textures/terrain/dirt01.dds", "Engine/data/textures/terrain/colorm01.bmp");
-	if(FAILED(result))
-	{
-		MessageBox(hwnd, L"Could not initialize the terrain object.", L"Error", MB_OK);
-		return result;
-	}
-
+	V_RETURN(mTerrain->Initialize(device, "Engine/data/textures/terrain/heightmap01.bmp", L"Engine/data/textures/terrain/dirt01.dds", "Engine/data/textures/terrain/colorm01.bmp"),
+			 L"Error", L"Could not initialize the terrain object");
+	
 	// Create the quad tree object.
 	mQuadTree = new QuadTree;
-	if(!mQuadTree)
-	{
-		return false;
-	}
+	if(!mQuadTree) { return false; }
 
-	// Initialize the quad tree object.
-	result = mQuadTree->Initialize(mTerrain, device);
-	if(FAILED(result))
-	{
-		MessageBox(hwnd, L"Could not initialize the quad tree object.", L"Error", MB_OK);
-		return result;
-	}
+	V_RETURN(mQuadTree->Initialize(mTerrain, device), L"Error",	L"Could not initialize the quad tree object");
 
 	// Create the position object.
 	mCameraMovement = new CameraMovement;
@@ -159,19 +136,10 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	// Create the text object.
 	m_Text = new TextClass;
-	if(!m_Text)
-	{
-		return result;
-	}
+	if(!m_Text) { return result; }
 
-	// Initialize the text object.
-	result = m_Text->Initialize(mD3D->GetDevice(), mD3D->GetDeviceContext(), hwnd, mScreenWidth, mScreenHeight, mBaseViewMatrix);
-	if(FAILED(result))
-	{
-		MessageBox(hwnd, L"Could not initialize the text object.", L"Error", MB_OK);
-		return result;
-	}
-
+	V_RETURN(m_Text->Initialize(mD3D->GetDevice(), mD3D->GetDeviceContext(), hwnd, mScreenWidth, mScreenHeight, mBaseViewMatrix),
+			 L"Error",	L"Could not initialize the text object");
 
 	// Create point light object
 	PointLightInfo* pointLightInfos[4];
@@ -261,12 +229,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	// Create the mini map object.
 	m_MiniMap = new MiniMap;
-	if(!m_MiniMap)
-	{
-		return result;
-	}
-
-	// Initialize the mini map object.
+	if(!m_MiniMap) { return result; }
 	V_RETURN(m_MiniMap->Initialize(device, hwnd, screenWidth, screenHeight, mBaseViewMatrix, (float)(terrainWidth - 1), (float)(terrainHeight - 1)),
 			 L"Error", L"Could not initialize the mini map object.");
 
@@ -283,27 +246,9 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	// Create the sky dome object.
 	mSkyDome = new SkyDome;
-	if(!mSkyDome)
-	{
-		return false;
-	}
-
-	// Initialize the sky dome object.
-	result = mSkyDome->Initialize(device, hwnd);
-	if(!result)
-	{
-		MessageBox(hwnd, L"Could not initialize the sky dome object.", L"Error", MB_OK);
-		return false;
-	}
-
-	result = mSkyDome->CreateCubeTexture(device);
-	if(FAILED(result))
-	{
-		MessageBox(hwnd, L"Could not initialize the sky dome cube map object.", L"Error", MB_OK);
-		return false;
-	}
-
-
+	if(!mSkyDome) { return false; }
+	V_RETURN(mSkyDome->Initialize(device, hwnd), L"Error",	L"Could not initialize the sky dome object");
+	V_RETURN(mSkyDome->CreateCubeTexture(device), L"Error",	L"Could not initialize the sky dome cube map object");
 	return result;
 }
 
@@ -363,19 +308,19 @@ HRESULT GraphicsClass::InitializeShaders(HWND hwnd)
 	// Create basic shader
 	mBasicShader = new BasicShader;
 	if(!mBasicShader) { return result; }
-	V_RETURN(mBasicShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/BasicShader.fx" /* L"BasicShader.fx" */, "BasicVertexShader", "BasicPixelShader"),
+	V_RETURN(mBasicShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/BasicShader.fx", "BasicVertexShader", "BasicPixelShader"),
 			 L"Error", L"Could not initialize the basic shader object.");
 
 	// Create the texture shader object for mini map.
 	mTextureShaderMiniMap = new TextureShader;
 	if(!mTextureShaderMiniMap) { return result; }
-	V_RETURN(mTextureShaderMiniMap->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/TextureShaderNonInstanced.fx" /* L"TextureShaderNonInstanced.fx" */, "TextureVertexShader", "TexturePixelShader"),
+	V_RETURN(mTextureShaderMiniMap->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/TextureShaderNonInstanced.fx", "TextureVertexShader", "TexturePixelShader"),
 			 L"Error", L"Could not initialize the texture shader object.");
 
 	// Create the texture shader object for camera display.
 	mTextureShaderCamDisplay = new TextureShader;
 	if(!mTextureShaderCamDisplay) { return result; }
-	V_RETURN(mTextureShaderCamDisplay->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/TextureShaderNonInstanced.fx" /* L"TextureShaderNonInstanced.fx" */, "TextureVertexShader", "TexturePixelShader"),
+	V_RETURN(mTextureShaderCamDisplay->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/TextureShaderNonInstanced.fx", "TextureVertexShader", "TexturePixelShader"),
 		L"Error", L"Could not initialize the texture shader object.");
 
 	// Create directional specular light shader object.
@@ -477,65 +422,39 @@ bool GraphicsClass::InitMaterials()
 	mMaterialFactory = new MaterialFactory();
 	material = mMaterialFactory->CreateMaterial("NormalWithSpec");
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone02.dds");
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/bump02.dds");
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/spec02.dds");
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 
 	material->SetMaterialShader(m_SpecMapShader);
 
 	// Create material "BlueFloor"
-
 	material = mMaterialFactory->CreateMaterial("BlueFloor");
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/blue01.dds");
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 
 	material->SetMaterialShader(mDirSpecLightShader);
 
 	// Create material "TexturedFloor"
-
 	material = mMaterialFactory->CreateMaterial("TexturedFloor");
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone02.dds");
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 
 	material->SetMaterialShader(mDirAmbLightShader);
-
-
 
 	// Create normal map material for space compound
 	material = mMaterialFactory->CreateMaterial("spaceCompoundMaterial");
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone01.dds");
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/bump01.dds");
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 
 	material->SetMaterialShader(m_BumpMapShader);
-	/////////////////////////////////////////////////
 
 	Timer::GetInstance()->SetTimeB();
 	funcTime = Timer::GetInstance()->GetDeltaTime();
@@ -687,9 +606,9 @@ void GraphicsClass::ShutdownShaders()
 	SHUTDOWN_OBJ(mTerrainShader);
 	// Release the multitexture shader object.
 	SHUTDOWN_OBJ(m_MultiTextureShader);
-	// Release the light shader object.
+	// Release the directional specular light shader object.
 	SHUTDOWN_OBJ(mDirSpecLightShader);
-
+	// Release the directional ambient light shader object.
 	SHUTDOWN_OBJ(mDirAmbLightShader);	
 	// Release the texture shader object for mini map.
 	SHUTDOWN_OBJ(mTextureShaderMiniMap);
@@ -718,28 +637,16 @@ bool GraphicsClass::Frame()
 
 	// Do the frame input processing.
 	result = InputClass::GetInstance()->Frame();
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 
-	if (InputClass::GetInstance()->IsEscapePressed() == true)
-	{
-		return false;
-	}
+	if (InputClass::GetInstance()->IsEscapePressed() == true) { return false; }
 
 	result = HandleInput(mTimer->GetTime());
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 
 	// Render the graphics scene.
 	result = Render();
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 
 	return true;
 }
@@ -750,21 +657,17 @@ bool GraphicsClass::HandleInput(float frameTime)
 	float posX, posY, posZ, rotX, rotY, rotZ;
 	D3DXVECTOR3 normalCameraDirectionVector, normalCameraRightVector;
 
-	
 	if (InputClass::GetInstance()->IsWireframeModeOn(mIsWireFrameModeOn))
 	{
 		SetFillMode(D3D11_FILL_WIREFRAME);
 		mSkyDome->SetFillMode(mD3D, D3D11_FILL_WIREFRAME);
-		// mSkyDomeBrayn->SetFillMode(mD3D->GetDevice(), D3D11_FILL_WIREFRAME);
 	}
 	else
 	{
 		SetFillMode(D3D11_FILL_SOLID);
 		mSkyDome->SetFillMode(mD3D, D3D11_FILL_SOLID);
-		// mSkyDomeBrayn->SetFillMode(mD3D->GetDevice(), D3D11_FILL_SOLID);
 	}
 	
-
 	normalCameraDirectionVector = mCamera->GetNormalDirectionVector();
 	normalCameraRightVector = mCamera->GetNormalRightVector();
 
@@ -807,8 +710,6 @@ bool GraphicsClass::HandleInput(float frameTime)
 
 	// Update the location of the camera on the mini map.
 	m_MiniMap->PositionUpdate(posX, posZ);
-
-	// mSkyDome->UpdateSkyDome(D3DXVECTOR3(posX, posY, posZ), rotX, rotY, rotZ);
 	
 	if (InputClass::GetInstance()->Is1Pressed() && mSkyShape != SKY_SPHERE)
 	{
@@ -851,10 +752,7 @@ bool GraphicsClass::SetFillMode(D3D11_FILL_MODE mode)
 
 	// Create the rasterizer state from the description we just filled out.
 	result = mD3D->GetDevice()->CreateRasterizerState(&rasterDesc, &m_rasterState);
-	if(FAILED(result))
-	{
-		return false;
-	}
+	if(FAILED(result)) { return false; }
 
 	// Now set the rasterizer state.
 	mD3D->GetDeviceContext()->RSSetState(m_rasterState);
@@ -900,10 +798,7 @@ bool GraphicsClass::Render()
 	if (mIsAllowToCameraDisplayRender)
 	{
 		result = RenderToTextureFromCameraView();
-		if(!result)
-		{
-			return false;
-		}
+		if(!result) { return false; }
 	}
 
 	// Clear the buffers to begin the scene.
@@ -911,10 +806,7 @@ bool GraphicsClass::Render()
 
 	// Render the scene as normal to the back buffer.
 	result = RenderScene();
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 
 	Render2D();
 
@@ -938,11 +830,8 @@ bool GraphicsClass::RenderScene()
 
 	// Set the color of the fog to grey.
 	fogColor = 0.5f;
-
-	// Set the start and end of the fog.
 	fogStart = 0.0f;
 	fogEnd = 10.0f;
-
 
 	// Generate the view matrix based on the camera's position.
 	mCamera->Render();
@@ -953,9 +842,6 @@ bool GraphicsClass::RenderScene()
 	staticWorldMatrix = worldMatrix;
 	mD3D->GetProjectionMatrix(projectionMatrix);
 
-	//////////////////////////////////////////////////////////////////////////
-	// 3D Rendering
-	//////////////////////////////////////////////////////////////////////////
 	m_Frustum->ConstructFrustum(SCREEN_DEPTH, projectionMatrix, viewMatrix);
 
 	// Get the number of models that will be rendered.
@@ -973,7 +859,7 @@ bool GraphicsClass::RenderScene()
 		pointLightPositions[i] = mPointLights[i]->GetPosition();
 	}
 
-	////////////////////////////////////////////
+	////////////////// RENDER SKY DOME BEGIN //////////////////////////
 	// Get the position of the camera.
 	cameraPosition = mCamera->GetPosition();
 
@@ -1009,7 +895,7 @@ bool GraphicsClass::RenderScene()
 
 	// Reset the world matrix.
 	mD3D->GetWorldMatrix(worldMatrix);
-	////////////////////////////////////////////
+	////////////////// RENDER SKY DOME END //////////////////////////
 	
 	if (mIsWireFrameModeOn)
 	{
@@ -1020,7 +906,6 @@ bool GraphicsClass::RenderScene()
 		SetFillMode(D3D11_FILL_SOLID);
 	}
 	
-	//mSkyDomeBrayn->RenderSkyDome(deviceContext, worldMatrix, viewMatrix, projectionMatrix, mSkyShape); // 0 - Sphere; 1 - Cube // mBaseViewMatrix
 	RenderTerrain(worldMatrix, viewMatrix, projectionMatrix);
 	RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
 	
@@ -1065,10 +950,7 @@ bool GraphicsClass::Render2D()
 	{
 		// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
 		result = mBitmap->Render(deviceContext, 0, 0);
-		if(!result)
-		{
-			return false;
-		}
+		if(!result) { return false; }
 
 		vector<ID3D11ShaderResourceView*> textureArray;
 		textureArray.push_back(m_RenderTexture->GetShaderResourceView());
@@ -1080,10 +962,7 @@ bool GraphicsClass::Render2D()
 			worldMatrix,
 			mBaseViewMatrix, 
 			orthoMatrix);
-		if(!result)
-		{
-			return false;
-		}
+		if(!result) { return false; }
 	}
 
 	// Turn on the alpha blending before rendering the text.
@@ -1093,18 +972,12 @@ bool GraphicsClass::Render2D()
 	float cameraRotX, cameraRotY, cameraRotZ;
 	mCameraMovement->GetRotation(cameraRotX, cameraRotY, cameraRotZ);
 	result = m_MiniMap->Render(deviceContext, worldMatrix, orthoMatrix, mTextureShaderMiniMap, cameraRotY);
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 
 	// Render cursor object
 	// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	result = mCursor->Render(deviceContext, mScreenWidth / 2 - mCursorWidth / 4, mScreenHeight / 2 - mCursorHeight / 4 );
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 
 	D3DXVECTOR4 pixelColor = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
 	vector<ID3D11ShaderResourceView*> textureArray;
@@ -1118,10 +991,7 @@ bool GraphicsClass::Render2D()
 		worldMatrix,
 		mBaseViewMatrix, 
 		orthoMatrix);
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 
 	// Render debug text
 	RenderText();
@@ -1146,10 +1016,7 @@ bool GraphicsClass::RenderToTextureFromCameraView()
 
 	// Render the scene now and it will draw to the render to texture instead of the back buffer.
 	result = RenderScene();
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 
 	// Reset the render target back to the original back buffer and not the render to texture anymore.
 	mD3D->SetBackBufferRenderTarget();
@@ -1204,10 +1071,7 @@ bool GraphicsClass::RenderTerrain(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
 	mTerrainShader->SetTextureArray(deviceContext, texArr);
 	mTerrainShader->SetLightSource(deviceContext, mDirAmbLight);
 	result = mTerrainShader->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, false);
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 
 	// Render the terrain using the quad tree and terrain shader.
 	mQuadTree->Render(m_Frustum, deviceContext, mTerrainShader, mIsAllowToBBRender);
@@ -1365,59 +1229,56 @@ bool GraphicsClass::RenderObject(ModelObject* modelObj, ID3D11DeviceContext* dev
 								 D3DXMATRIX projectionMatrix, LightClass* lightSource, LightClass::LightTypes lightType, bool isInstanced)
 {
 	bool result;
-	D3DXMATRIX worldMatrix;
+	D3DXMATRIX worldMatrix = modelObj->GetWorldMatrix();
 	ModelClass* model = modelObj->GetModel();
 	Material* material = modelObj->GetMaterial();
+	BasicShader* materialShader = material->GetMaterialShader();
 	vector<ID3D11ShaderResourceView*> textureVector = material->GetTextureVector();
-
 
 	worldMatrix = modelObj->GetWorldMatrix();
 
-	material->GetMaterialShader()->SetTextureArray(deviceContext, textureVector);
-	material->GetMaterialShader()->SetCameraPosition(deviceContext, mCamera->GetPosition(), lightType);
-	material->GetMaterialShader()->SetLightSource(deviceContext, lightSource);
+	materialShader->SetTextureArray(deviceContext, textureVector);
+	materialShader->SetCameraPosition(deviceContext, mCamera->GetPosition(), lightType);
+	materialShader->SetLightSource(deviceContext, lightSource);
 
 	if (!isInstanced)
 	{
 		model->RenderOrdinary(deviceContext);
-		result = material->GetMaterialShader()->RenderOrdinary(deviceContext,
+		result = materialShader->RenderOrdinary(deviceContext,
 			model->GetIndexCount(),
-			//worldMatrix,
-			modelObj->GetWorldMatrix(),
+			worldMatrix,
 			viewMatrix,
 			projectionMatrix);
 	}
 	else
 	{
 		model->RenderInstanced(deviceContext);
-		result = material->GetMaterialShader()->RenderInstanced(deviceContext,
+		result = materialShader->RenderInstanced(deviceContext,
 			model->GetVertexCount(),
 			model->GetInstanceCount(),
-			// worldMatrix,
-			modelObj->GetWorldMatrix(),
+			worldMatrix,
 			viewMatrix, 
 			projectionMatrix);
 	}
 	
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) { return false; }
 	return result;
 }
 
 bool GraphicsClass::RenderText()
 {
 	D3DXMATRIX orthoMatrix, worldMatrix, staticWorldMatrix;
-//	int mouseX, mouseY;
 	int MAX_STRING_LENGTH = 30;
 	char tempString[10];
 	char fpsString[10];
 	char countString[20];
 	char cpuString[20];
-//	char mouseString[20];
+	char mouseString[20];
 	char darwCountString[35];
 	char drawTimeString[25];
+
+	float posX, posY, posZ, rotX, rotY, rotZ;
+	int terrinDrawCount, mouseX, mouseY;
 	bool result;
 
 	int sentenceNumber = 0;
@@ -1426,19 +1287,12 @@ bool GraphicsClass::RenderText()
 
 	// Generate the view matrix based on the camera's position.
 	mCamera->Render();
-
 	mD3D->GetOrthoMatrix(orthoMatrix);
 	mD3D->GetWorldMatrix(worldMatrix);
 	staticWorldMatrix = worldMatrix;
 
 	// Convert the fps integer to string format.
-	_itoa_s(FpsClass::GetInstance()->GetFps(), tempString, 10);
-
-	// Setup the fps string.
-	strcpy_s(fpsString, "Fps: ");
-	strcat_s(fpsString, tempString);
-
-	result = m_Text->AddSentence(mD3D, fpsString, 800, 100, 0.0f, 0.0f, 1.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, FpsClass::GetInstance()->GetFps(), "FPS: ", 800, 100, 0.0f, 0.0f, 1.0f, sentenceNumber);
 	++sentenceNumber;
 
 	// Convert the cpu integer to string format.
@@ -1453,53 +1307,17 @@ bool GraphicsClass::RenderText()
 	++sentenceNumber;
 
 	// Convert the count integer to string format.
-	_itoa_s(mNumObjectsRendered, tempString, 10);
-
-	// Setup the render count string.
-	strcpy_s(countString, "Render Count: ");
-	strcat_s(countString, tempString);
-
-	result = m_Text->AddSentence(mD3D, countString, 800, 100 + 20 * 5, 1.0f, 0.0f, 0.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, mNumObjectsRendered, "Render Count: ", 800, 100 + 20 * 5, 1.0f, 0.0f, 0.0f, sentenceNumber);
 	++sentenceNumber;
-	if(!result)
-	{
-		return false;
-	}
-	/*
+
 	// Convert the mouseX integer to string format.
 	InputClass::GetInstance()->GetMouseLocation(mouseX, mouseY);
-	_itoa_s(mouseX, tempString, 10);
-
-	// Setup the mouseX string.
-	strcpy_s(mouseString, "Mouse X: ");
-	strcat_s(mouseString, tempString);
-
-	// Update the sentence vertex buffer with the new string information.
-	result = m_Text->AddSentence(mD3D, mouseString, mouseX, mouseY, 1.0f, 0.0f, 0.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, mouseX, "Mouse X: ", mouseX, mouseY, 1.0f, 0.0f, 0.0f, sentenceNumber);
 	++sentenceNumber;
-	if(!result)
-	{
-		return false;
-	}
 
 	// Convert the mouseY integer to string format.
-	_itoa_s(mouseY, tempString, 10);
-
-	// Setup the mouseX string.
-	strcpy_s(mouseString, "Mouse Y: ");
-	strcat_s(mouseString, tempString);
-
-	result = m_Text->AddSentence(mD3D, mouseString, mouseX, mouseY + 20, 1.0f, 0.0f, 0.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, mouseY, "Mouse Y: ", mouseX, mouseY + 20, 1.0f, 0.0f, 0.0f, sentenceNumber);
 	++sentenceNumber;
-	if(!result)
-	{
-		return false;
-	}
-	*/
-	char dataString[16];
-
-	float posX, posY, posZ, rotX, rotY, rotZ;
-	int terrinDrawCount;
 
 	mCameraMovement->GetPosition(posX, posY, posZ);
 	mCameraMovement->GetRotation(rotX, rotY, rotZ);
@@ -1514,100 +1332,31 @@ bool GraphicsClass::RenderText()
 	if(posY < -9999) { posY = -9999; }
 	if(posZ < -9999) { posZ = -9999; }
 
-	// Setup the X position string.
-	_itoa_s((int)posX, tempString, 10);
-	strcpy_s(dataString, "X: ");
-	strcat_s(dataString, tempString);
-
-	result = m_Text->AddSentence(mD3D, dataString, 800, 240, 1.0f, 0.0f, 1.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, posX, "X: ", 800, 240, 1.0f, 0.0f, 1.0f, sentenceNumber);
 	++sentenceNumber;
-	if(!result)
-	{
-		return false;
-	}
 
-	// Setup the Y position string.
-	_itoa_s((int)posY, tempString, 10);
-	strcpy_s(dataString, "Y: ");
-	strcat_s(dataString, tempString);
-
-	result = m_Text->AddSentence(mD3D, dataString, 800, 260, 1.0f, 0.0f, 1.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, posY, "Y: ", 800, 260, 1.0f, 0.0f, 1.0f, sentenceNumber);
 	++sentenceNumber;
-	if(!result)
-	{
-		return false;
-	}
 
-	// Setup the Z position string.
-	_itoa_s((int)posZ, tempString, 10);
-	strcpy_s(dataString, "Z: ");
-	strcat_s(dataString, tempString);
-
-	result = m_Text->AddSentence(mD3D, dataString, 800, 280, 1.0f, 0.0f, 1.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, posZ, "Z: ", 800, 280, 1.0f, 0.0f, 1.0f, sentenceNumber);
 	++sentenceNumber;
-	if(!result)
-	{
-		return false;
-	}
 
-	// Update the rotation values in the text object.
-	// Setup the X rotation string.
-	_itoa_s((int)rotX, tempString, 10);
-	strcpy_s(dataString, "rX: ");
-	strcat_s(dataString, tempString);
-
-	result = m_Text->AddSentence(mD3D, dataString, 800, 320, 0.0f, 1.0f, 1.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, rotX, "rX: ", 800, 320, 0.0f, 1.0f, 1.0f, sentenceNumber);
 	++sentenceNumber;
-	if(!result)
-	{
-		return false;
-	}
 
-	_itoa_s((int)rotY, tempString, 10);
-	strcpy_s(dataString, "rY: ");
-	strcat_s(dataString, tempString);
-
-	result = m_Text->AddSentence(mD3D, dataString, 800, 340, 0.0f, 1.0f, 1.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, rotY, "rY: ", 800, 340, 0.0f, 1.0f, 1.0f, sentenceNumber);
 	++sentenceNumber;
-	if(!result)
-	{
-		return false;
-	}
 
-	_itoa_s((int)rotZ, tempString, 10);
-	strcpy_s(dataString, "rZ: ");
-	strcat_s(dataString, tempString);
-
-	result = m_Text->AddSentence(mD3D, dataString, 800, 360, 0.0f, 1.0f, 1.0f, sentenceNumber);
-	if(!result)
-	{
-		return false;
-	}
-	
-	_itoa_s((int)terrinDrawCount, tempString, 10);
-	strcpy_s(darwCountString, "terrain draw count: ");
-	strcat_s(darwCountString, tempString);
-
-	result = m_Text->AddSentence(mD3D, darwCountString, 800, 400, 0.0f, 1.0f, 1.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, rotZ, "rZ: ", 800, 360, 0.0f, 1.0f, 1.0f, sentenceNumber);
 	++sentenceNumber;
-	if(!result)
-	{
-		return false;
-	}
-	
+
+	WRITE_SENTENCE(mD3D, terrinDrawCount, "terrain draw count: ", 800, 400, 0.0f, 1.0f, 1.0f, sentenceNumber);
+	++sentenceNumber;
 
 	if (mDrawFuncTime != -1)
 	{
-		_itoa_s(mDrawFuncTime, tempString, 10);
-		strcpy_s(drawTimeString, "draw time: ");
-		strcat_s(drawTimeString, tempString);
-
-		result = m_Text->AddSentence(mD3D, drawTimeString, 800, 440, 0.0f, 1.0f, 1.0f, sentenceNumber);
+		WRITE_SENTENCE(mD3D, mDrawFuncTime, "draw time: ", 800, 440, 0.0f, 1.0f, 1.0f, sentenceNumber);
 		++sentenceNumber;
-		if(!result)
-		{
-			return false;
-		}
 	}
 
 	// Render the text strings.
