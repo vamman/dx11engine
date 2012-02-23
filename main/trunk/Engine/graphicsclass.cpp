@@ -1,7 +1,8 @@
 #include "graphicsclass.h"
 
 
-GraphicsClass::GraphicsClass() : mIsAllowToBBRender(true), mIsAllowToCameraDisplayRender(true), mDirUp(true), mDirDown(false), mIsWireFrameModeOn(true), mSkyShape((SkyShape)0)
+GraphicsClass::GraphicsClass() : mIsAllowToBBRender(true), mIsAllowToCameraDisplayRender(true), mDirUp(true), 
+								 mDirDown(false), mIsWireFrameModeOn(true), mSkyShape((SkyShape)0), mSkyPixelShaderType((SkyPixelShaderType)0)
 {
 	mObjectFactory = 0;
 	mMaterialFactory = 0;
@@ -39,9 +40,7 @@ GraphicsClass::GraphicsClass() : mIsAllowToBBRender(true), mIsAllowToCameraDispl
 	mTerrainShader = 0;
 	mSkyDomeShader = 0;
 
-	mSkyDomeBrayn = 0;
 	mSkyDome = 0;
-
 
 	for (int i = 0; i < 4; ++i)
 	{
@@ -282,11 +281,6 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		Log::GetInstance()->WriteToOutput(funcTime, "GraphicsClass::Initialize time: ");
 	}
 
-	mSkyDomeBrayn = new SkyDomeBrayn;
-	// V_RETURN(mSkyDomeBrayn->CreateSphere(mD3D->GetDevice(), 10, 10),	L"Error", L"Could not create sky dome sphere.");
-	// V_RETURN(mSkyDomeBrayn->CreateCube(mD3D->GetDevice()),	L"Error", L"Could not create sky dome cube.");
-	// V_RETURN(mSkyDomeBrayn->InitializeSkyDome(mD3D),	L"Error", L"Could not initialize sky dome object.");
-
 	// Create the sky dome object.
 	mSkyDome = new SkyDome;
 	if(!mSkyDome)
@@ -303,7 +297,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	result = mSkyDome->CreateCubeTexture(device);
-	if(!result)
+	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the sky dome cube map object.", L"Error", MB_OK);
 		return false;
@@ -825,6 +819,15 @@ bool GraphicsClass::HandleInput(float frameTime)
 		mSkyShape = SKY_CUBE;
 	}
 
+	if (InputClass::GetInstance()->IsNumPad0Pressed() && mSkyPixelShaderType != SKY_PIXEL_GRADIENT)
+	{
+		mSkyPixelShaderType = SKY_PIXEL_GRADIENT;
+	}
+	else if (InputClass::GetInstance()->IsNumPad1Pressed() && mSkyPixelShaderType != SKY_PIXEL_CUBE_TEXTURE)
+	{
+		mSkyPixelShaderType = SKY_PIXEL_CUBE_TEXTURE;
+	}
+
 	return true;
 }
 
@@ -994,8 +997,9 @@ bool GraphicsClass::RenderScene()
 	}
 	
 	// Render the sky dome using the sky dome shader.
-	mSkyDome->Render(deviceContext);
-	mSkyDomeShader->Render(deviceContext, mSkyDome->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, mSkyDome->GetApexColor(), mSkyDome->GetCenterColor());
+	mSkyDome->Render(deviceContext, mSkyShape);
+	mSkyDomeShader->Render(deviceContext, mSkyDome->GetIndexCount(mSkyShape), worldMatrix, viewMatrix, projectionMatrix,
+						   mSkyDome->GetApexColor(), mSkyDome->GetCenterColor(), (float) mSkyPixelShaderType);
 
 	// Turn back face culling back on.
 	mD3D->TurnOnCulling();

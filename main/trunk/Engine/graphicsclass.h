@@ -127,6 +127,13 @@ class GraphicsClass
 			SKY_CUBE
 		};
 
+		enum SkyPixelShaderType
+		{
+			SKY_PIXEL_GRADIENT = 0,
+			SKY_PIXEL_CUBE_TEXTURE,
+			SKY_PIXEL_BOTH
+		};
+
 		struct PointLightInfo 
 		{
 			D3DXVECTOR4 color;
@@ -194,11 +201,11 @@ class GraphicsClass
 		int mScreenWidth;
 		int mScreenHeight;
 
-		SkyDomeBrayn* mSkyDomeBrayn;
 		SkyDome* mSkyDome;
 
 		bool mIsWireFrameModeOn;
 		SkyShape mSkyShape;
+		SkyPixelShaderType mSkyPixelShaderType;
 };
 
 #endif
