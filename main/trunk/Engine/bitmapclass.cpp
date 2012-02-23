@@ -313,7 +313,7 @@ bool BitmapClass::LoadTexture(ID3D11Device* device, WCHAR* filename)
 	bool result;
 
 	// Create the texture object.
-	m_Texture = new TextureClass;
+	m_Texture = new Texture;
 	if(!m_Texture)
 	{
 		return false;

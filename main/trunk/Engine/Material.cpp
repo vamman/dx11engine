@@ -43,7 +43,7 @@ bool Material::LoadTexture(ID3D11Device* device, WCHAR* filename)
 	bool result;
 
 	// Create the texture object.
-	TextureClass* texture = new TextureClass;
+	Texture* texture = new Texture;
 	if(!texture)
 	{
 		return false;

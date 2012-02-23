@@ -54,7 +54,7 @@ private:
 
 private:
 	FontType* m_Font;
-	TextureClass* m_Texture;
+	Texture* m_Texture;
 };
 
 #endif

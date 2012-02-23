@@ -22,6 +22,7 @@ class SkyDome
 		~SkyDome();
 
 		bool Initialize(ID3D11Device* device, HWND hwnd);
+		HRESULT CreateCubeTexture(ID3D11Device* device);
 		void Shutdown();
 		void Render(ID3D11DeviceContext*);
 		int GetIndexCount();
@@ -36,4 +37,7 @@ class SkyDome
 		ModelFactory* mModelFactory;
 		ModelObject* mSkyDomeObject;
 		D3DXVECTOR4 m_apexColor, m_centerColor;
+
+		ID3D11ShaderResourceView* smrv;
+		ID3D11SamplerState* CubesTexSamplerState;
 };

@@ -15,12 +15,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: TextureClass
 ////////////////////////////////////////////////////////////////////////////////
-class TextureClass
+class Texture
 {
 	public:
-		TextureClass();
-		TextureClass(const TextureClass&);
-		~TextureClass();
+		Texture();
+		Texture(const Texture&);
+		~Texture();
 		bool Initialize(ID3D11Device*, WCHAR*);
 		void Shutdown();
 		ID3D11ShaderResourceView* GetTexture();

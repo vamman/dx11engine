@@ -57,7 +57,7 @@ class Terrain
 		void GetTerrainSize(int&, int&);
 
 	private:
-		bool LoadHeightMap(char* heightMapFileName);
+		bool LoadHeightMap(ID3D11Device* device, char* heightMapFileName);
 		void NormalizeHeightMap();
 		bool CalculateNormals();
 		void ShutdownHeightMap();
@@ -74,7 +74,7 @@ class Terrain
 		int m_terrainWidth, m_terrainHeight;
 		int m_vertexCount;
 		HeightMapType* m_heightMap;
-		TextureClass* m_Texture;
+		Texture* m_Texture;
 		VertexType* m_vertices;
 	};
 

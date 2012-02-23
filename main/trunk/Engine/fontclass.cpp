@@ -115,7 +115,7 @@ bool FontClass::LoadTexture(ID3D11Device* device, WCHAR* filename)
 
 
 	// Create the texture object.
-	m_Texture = new TextureClass;
+	m_Texture = new Texture;
 	if(!m_Texture)
 	{
 		return false;

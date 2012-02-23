@@ -53,17 +53,17 @@ public:
 	{
 		D3DXMATRIX scaleMatrix, transitionMatrix, rotationMatrix;
 
+		// Do rotation
+		D3DXMatrixRotationY(&rotationMatrix, mRotationAngle);
+
 		// Do scale
 		D3DXMatrixScaling(&scaleMatrix, mScale.x, mScale.y, mScale.z);
 
 		// Do transition
 		D3DXMatrixTranslation(&transitionMatrix, mPosition.x, mPosition.y, mPosition.z);
 
-		// Do rotation
-		D3DXMatrixRotationY(&rotationMatrix, mRotationAngle);
-
 		// Create world matrix
-		mWorldMatrix = scaleMatrix * transitionMatrix * rotationMatrix;
+		mWorldMatrix = rotationMatrix * scaleMatrix * transitionMatrix;
 
 		return mWorldMatrix;
 	}

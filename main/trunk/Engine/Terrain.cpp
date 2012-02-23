@@ -25,7 +25,7 @@ bool Terrain::Initialize(ID3D11Device* device, char* heightMapFileName, WCHAR* t
 	Timer::GetInstance()->SetTimeA();
 
 	// Load in the height map for the terrain.
-	result = LoadHeightMap(heightMapFileName);
+	result = LoadHeightMap(device, heightMapFileName);
 	if(!result)
 	{
 		return false;
@@ -95,7 +95,7 @@ ID3D11ShaderResourceView* Terrain::GetTexture()
 	return m_Texture->GetTexture();
 }
 
-bool Terrain::LoadHeightMap(char* filename)
+bool Terrain::LoadHeightMap(ID3D11Device* device, char* filename)
 {
 	FILE* filePtr;
 	int error;
@@ -105,6 +105,11 @@ bool Terrain::LoadHeightMap(char* filename)
 	int imageSize, i, j, k, index;
 	unsigned char* bitmapImage;
 	unsigned char height;
+
+	Texture* heighMapTexture = new Texture;
+	ID3D11ShaderResourceView* heightMapResourceView;
+	heighMapTexture->Initialize(device, (WCHAR*) filename);
+	heightMapResourceView = heighMapTexture->GetTexture();
 
 	// Open the height map file in binary.
 	error = fopen_s(&filePtr, filename, "rb");
@@ -146,11 +151,12 @@ bool Terrain::LoadHeightMap(char* filename)
 
 	// Read in the bitmap image data.
 	count = fread(bitmapImage, 1, imageSize, filePtr);
+	/*
 	if(count != imageSize)
 	{
 		return false;
 	}
-
+	*/
 	// Close the file.
 	error = fclose(filePtr);
 	if(error != 0)
@@ -417,7 +423,7 @@ bool Terrain::LoadTexture(ID3D11Device* device, WCHAR* filename)
 
 
 	// Create the texture object.
-	m_Texture = new TextureClass;
+	m_Texture = new Texture;
 	if(!m_Texture)
 	{
 		return false;
