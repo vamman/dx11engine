@@ -3,22 +3,22 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "textureclass.h"
 
-TextureClass::TextureClass()
+Texture::Texture()
 {
 	m_texture = 0;
 }
 
 
-TextureClass::TextureClass(const TextureClass& other)
+Texture::Texture(const Texture& other)
 {
 }
 
 
-TextureClass::~TextureClass()
+Texture::~Texture()
 {
 }
 
-bool TextureClass::Initialize(ID3D11Device* device, WCHAR* filename)
+bool Texture::Initialize(ID3D11Device* device, WCHAR* filename)
 {
 	HRESULT result;
 
@@ -33,7 +33,7 @@ bool TextureClass::Initialize(ID3D11Device* device, WCHAR* filename)
 	return true;
 }
 
-void TextureClass::Shutdown()
+void Texture::Shutdown()
 {
 	// Release the texture resource.
 	if(m_texture)
@@ -45,7 +45,7 @@ void TextureClass::Shutdown()
 	return;
 }
 
-ID3D11ShaderResourceView* TextureClass::GetTexture()
+ID3D11ShaderResourceView* Texture::GetTexture()
 {
 	return m_texture;
 }

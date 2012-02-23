@@ -94,6 +94,8 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return result;
 	}
 
+	ID3D11Device* device = mD3D->GetDevice();
+
 	// Create the camera object.
 	mCamera = new CameraClass;
 	if(!mCamera)
@@ -122,7 +124,9 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the terrain object.
-	result = mTerrain->Initialize(mD3D->GetDevice(), "Engine/data/textures/heightmap01.bmp", L"Engine/data/textures/dirt01.dds", "Engine/data/textures/colorm01.bmp");
+	// heightmap01.bmp / heightmap513; dirt01.dds; colorm01.bmp / colorm513
+	result = mTerrain->Initialize(device, "Engine/data/textures/terrain/heightmap01.bmp",
+								  L"Engine/data/textures/terrain/dirt01.dds", "Engine/data/textures/terrain/colorm01.bmp");
 	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the terrain object.", L"Error", MB_OK);
@@ -137,7 +141,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the quad tree object.
-	result = mQuadTree->Initialize(mTerrain, mD3D->GetDevice());
+	result = mQuadTree->Initialize(mTerrain, device);
 	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the quad tree object.", L"Error", MB_OK);
@@ -218,7 +222,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		mPointLights[i]->SetDiffuseColor(color.x, color.y, color.z, color.w);
 		mPointLights[i]->SetPosition(position.x, position.y, position.z);
 
-		object = mObjectFactory->CreateOrdinaryModel(mD3D->GetDevice(), hwnd, resultName, "Engine/data/models/sphere.txt");
+		object = mObjectFactory->CreateOrdinaryModel(device, hwnd, resultName, "Engine/data/models/sphere.txt");
 		object->SetMaterial(mMaterialFactory->GetMaterialByName("BlueFloor"));
 		object->SetPosition(position);
 	}
@@ -226,7 +230,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// Create the render to texture object.
 	m_RenderTexture = new RenderTextureClass;
 	if(!m_RenderTexture) { return false; }
-	V_RETURN(m_RenderTexture->Initialize(mD3D->GetDevice(), mScreenWidth, mScreenHeight), L"Error", L"Could not initialize the render texture object.");
+	V_RETURN(m_RenderTexture->Initialize(device, mScreenWidth, mScreenHeight), L"Error", L"Could not initialize the render texture object.");
 	
 	// Create the bitmap object.
 	mBitmap = new BitmapClass;
@@ -236,7 +240,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the bitmap object.
-	V_RETURN(mBitmap->Initialize(mD3D->GetDevice(), mScreenWidth, mScreenHeight, L"Engine/data/textures/texture2.dds", 300, 225),
+	V_RETURN(mBitmap->Initialize(device, mScreenWidth, mScreenHeight, L"Engine/data/textures/texture2.dds", 300, 225),
 		L"Error", L"Could not initialize the bitmap object.");
 
 	// Create cursor bitmap
@@ -249,7 +253,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the cursor bitmap object.
-	V_RETURN(mCursor->Initialize(mD3D->GetDevice(), mScreenWidth, mScreenHeight, L"Engine/data/textures/SC2Cursor1.bmp", mCursorWidth / 2, mCursorHeight / 2),
+	V_RETURN(mCursor->Initialize(device, mScreenWidth, mScreenHeight, L"Engine/data/textures/SC2Cursor1.bmp", mCursorWidth / 2, mCursorHeight / 2),
 		L"Error", L"Could not initialize cursor object.");
 
 	// Probably need to initialize another instance of Texture shader for minimap
@@ -264,7 +268,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the mini map object.
-	V_RETURN(m_MiniMap->Initialize(mD3D->GetDevice(), hwnd, screenWidth, screenHeight, mBaseViewMatrix, (float)(terrainWidth - 1), (float)(terrainHeight - 1)),
+	V_RETURN(m_MiniMap->Initialize(device, hwnd, screenWidth, screenHeight, mBaseViewMatrix, (float)(terrainWidth - 1), (float)(terrainHeight - 1)),
 			 L"Error", L"Could not initialize the mini map object.");
 
 	InputClass::GetInstance()->CenterMouseLocation();
@@ -291,13 +295,19 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the sky dome object.
-	result = mSkyDome->Initialize(mD3D->GetDevice(), hwnd);
+	result = mSkyDome->Initialize(device, hwnd);
 	if(!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the sky dome object.", L"Error", MB_OK);
 		return false;
 	}
 
+	result = mSkyDome->CreateCubeTexture(device);
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the sky dome cube map object.", L"Error", MB_OK);
+		return false;
+	}
 
 
 	return result;
@@ -746,16 +756,20 @@ bool GraphicsClass::HandleInput(float frameTime)
 	float posX, posY, posZ, rotX, rotY, rotZ;
 	D3DXVECTOR3 normalCameraDirectionVector, normalCameraRightVector;
 
+	
 	if (InputClass::GetInstance()->IsWireframeModeOn(mIsWireFrameModeOn))
 	{
 		SetFillMode(D3D11_FILL_WIREFRAME);
+		mSkyDome->SetFillMode(mD3D, D3D11_FILL_WIREFRAME);
 		// mSkyDomeBrayn->SetFillMode(mD3D->GetDevice(), D3D11_FILL_WIREFRAME);
 	}
 	else
 	{
 		SetFillMode(D3D11_FILL_SOLID);
+		mSkyDome->SetFillMode(mD3D, D3D11_FILL_SOLID);
 		// mSkyDomeBrayn->SetFillMode(mD3D->GetDevice(), D3D11_FILL_SOLID);
 	}
+	
 
 	normalCameraDirectionVector = mCamera->GetNormalDirectionVector();
 	normalCameraRightVector = mCamera->GetNormalRightVector();
@@ -956,23 +970,7 @@ bool GraphicsClass::RenderScene()
 		pointLightPositions[i] = mPointLights[i]->GetPosition();
 	}
 
-	
-	/*
-	if (mIsWireFrameModeOn)
-	{
-		SetFillMode(D3D11_FILL_WIREFRAME);
-	}
-	else
-	{
-		SetFillMode(D3D11_FILL_SOLID);
-	}
-	*/
-	//mSkyDomeBrayn->RenderSkyDome(deviceContext, worldMatrix, viewMatrix, projectionMatrix, mSkyShape); // 0 - Sphere; 1 - Cube // mBaseViewMatrix
-	// RenderTerrain(worldMatrix, viewMatrix, projectionMatrix);
-	// RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
-
 	////////////////////////////////////////////
-
 	// Get the position of the camera.
 	cameraPosition = mCamera->GetPosition();
 
@@ -985,6 +983,7 @@ bool GraphicsClass::RenderScene()
 	// Turn off the Z buffer.
 	mD3D->TurnZBufferOff();
  
+	
 	if (mIsWireFrameModeOn)
 	{
 		mSkyDome->SetFillMode(mD3D, D3D11_FILL_WIREFRAME);
@@ -993,6 +992,7 @@ bool GraphicsClass::RenderScene()
 	{
 		mSkyDome->SetFillMode(mD3D, D3D11_FILL_SOLID);
 	}
+	
 	// Render the sky dome using the sky dome shader.
 	mSkyDome->Render(deviceContext);
 	mSkyDomeShader->Render(deviceContext, mSkyDome->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, mSkyDome->GetApexColor(), mSkyDome->GetCenterColor());
@@ -1005,8 +1005,8 @@ bool GraphicsClass::RenderScene()
 
 	// Reset the world matrix.
 	mD3D->GetWorldMatrix(worldMatrix);
-
 	////////////////////////////////////////////
+	
 	if (mIsWireFrameModeOn)
 	{
 		SetFillMode(D3D11_FILL_WIREFRAME);
@@ -1042,16 +1042,6 @@ bool GraphicsClass::Render2D()
 	D3DXMATRIX viewMatrix, projectionMatrix, worldMatrix, orthoMatrix;
 	bool result;
 	ID3D11DeviceContext* deviceContext = mD3D->GetDeviceContext();
-
-	if (mIsWireFrameModeOn)
-	{
-		SetFillMode(D3D11_FILL_WIREFRAME);
-	}
-	else
-	{
-		SetFillMode(D3D11_FILL_SOLID);
-	}
-
 	// Generate the view matrix based on the camera's position.
 	mCamera->Render();
 
@@ -1229,6 +1219,7 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 	static float rotation = 0.0f;
 	static float dirDelta = 0.0f;
 	mNumObjectsRendered = 0;
+	int numIndex = 0;
 
 	ModelClass* model;
 	ModelObject* modelObj;
@@ -1295,9 +1286,7 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 				{
 					rotation -= 360.0f;
 				}
-
-				//modelObj->SetRotation(rotation);
-
+				modelObj->SetRotation(rotation);
 				float height;
 				// Set psition above terrain
 				bool foundHeight =  mQuadTree->GetHeightAtPosition(modelObj->GetPosition().x, modelObj->GetPosition().z, height);
@@ -1307,7 +1296,7 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 					D3DXVECTOR3 newPosition = D3DXVECTOR3(modelObj->GetPosition().x, height + 1, modelObj->GetPosition().z);
 					modelObj->SetPosition(newPosition);
 				}
-				modelObj->SetRotation(rotation);
+				//modelObj->SetRotation(rotation);
 				// modelObj->GetWorldMatrix();
 				RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
 			}
@@ -1340,6 +1329,8 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 					if (strcmp(sphereObjPrefix.c_str(), "sphere_") == 0)
 					{
 						float height;
+						float rot = numIndex % 2 == 0 ? rotation : -rotation;
+						modelObj->SetRotation(rot);
 						// Set psition above terrain
 						bool foundHeight =  mQuadTree->GetHeightAtPosition(modelObj->GetPosition().x, modelObj->GetPosition().z, height);
 						if(foundHeight)
@@ -1361,6 +1352,7 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 				}
 			}
 		}
+		numIndex++;
 	}
 	return true;
 }
@@ -1426,7 +1418,7 @@ bool GraphicsClass::RenderText()
 
 	int sentenceNumber = 0;
 
-	SetFillMode(D3D11_FILL_SOLID);
+	// SetFillMode(D3D11_FILL_SOLID);
 
 	// Generate the view matrix based on the camera's position.
 	mCamera->Render();

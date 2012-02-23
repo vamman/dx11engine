@@ -4,6 +4,7 @@ SkyDome::SkyDome(void)
 {
 	mModelFactory = 0;
 	mSkyDomeObject = 0;
+	smrv = 0;
 }
 
 SkyDome::~SkyDome(void)
@@ -28,6 +29,55 @@ bool SkyDome::Initialize(ID3D11Device* device, HWND hwnd)
 	return true;
 }
 
+HRESULT SkyDome::CreateCubeTexture(ID3D11Device* device)
+{
+	HRESULT result = S_OK;
+	//Tell D3D we will be loading a cube texture
+	D3DX11_IMAGE_LOAD_INFO loadSMInfo;
+	loadSMInfo.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+
+	//Load the texture
+	ID3D11Texture2D* SMTexture = 0;
+	result = D3DX11CreateTextureFromFile(device, L"Engine/data/textures/CubeMapAutumn.dds", &loadSMInfo, 0, (ID3D11Resource**)&SMTexture, 0);
+	if (FAILED(result))
+	{
+		return result;
+	}
+
+	//Create the textures description
+	D3D11_TEXTURE2D_DESC SMTextureDesc;
+	SMTexture->GetDesc(&SMTextureDesc);
+
+	//Tell D3D We have a cube texture, which is an array of 2D textures
+	D3D11_SHADER_RESOURCE_VIEW_DESC SMViewDesc;
+	SMViewDesc.Format = SMTextureDesc.Format;
+	SMViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+	SMViewDesc.TextureCube.MipLevels = SMTextureDesc.MipLevels;
+	SMViewDesc.TextureCube.MostDetailedMip = 0;
+
+	//Create the Resource view
+	result = device->CreateShaderResourceView(SMTexture, &SMViewDesc, &smrv);
+
+	// Describe the Sample State
+	D3D11_SAMPLER_DESC sampDesc;
+	ZeroMemory( &sampDesc, sizeof(sampDesc) );
+	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;    
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	sampDesc.MinLOD = 0;
+	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	//Create the Sample State
+	result = device->CreateSamplerState( &sampDesc, &CubesTexSamplerState );
+	if (FAILED(result))
+	{
+		return result;
+	}
+	return result;
+}
+
 void SkyDome::Shutdown()
 {
 	// Release the sky dome model.
@@ -38,6 +88,8 @@ void SkyDome::Shutdown()
 void SkyDome::Render(ID3D11DeviceContext* deviceContext)
 {
 	// Render the sky dome.
+	deviceContext->PSSetShaderResources( 0, 1, &smrv );
+	deviceContext->PSSetSamplers( 0, 1, &CubesTexSamplerState);
 	mSkyDomeObject->GetModel()->RenderOrdinary(deviceContext);
 	return;
 }
