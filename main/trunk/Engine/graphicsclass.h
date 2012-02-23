@@ -81,6 +81,16 @@ const float SCREEN_NEAR = 0.1f;
 	}						\
 }
 
+#define  WRITE_SENTENCE(D3D, numericValue, stringValue, posX, posY, colorR, colorG, colorB, sentenceNumber)		\
+{																												\
+	char tempString[10];																						\
+	char dataString[50];																						\
+	_itoa_s((int) numericValue, tempString, 10);																\
+	strcpy_s(dataString, stringValue);																			\
+	strcat_s(dataString, tempString);																			\
+	result = m_Text->AddSentence(D3D, dataString, posX, posY, colorR, colorG, colorB, sentenceNumber);			\
+	if(!result) { return false; }																				\
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: GraphicsClass
