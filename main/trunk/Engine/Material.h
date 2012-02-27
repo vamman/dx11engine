@@ -6,6 +6,18 @@
 
 using namespace std;
 
+// For .MLT material
+/*
+struct SurfaceMaterial
+{
+	std::wstring matName;
+	D3DXVECTOR4 difColor;
+	int texArrayIndex;
+	bool hasTexture;
+	bool transparent;
+};
+*/
+
 class Material
 {
 	public:
@@ -25,5 +37,15 @@ class Material
 		BasicShader* mShader;
 
 		vector<ID3D11ShaderResourceView*> mTextureVector;
+		
+		// For .MLT material
+		/*
+		vector<int> meshSubsetTexture;
+		ID3D11BlendState* Transparency;
+		vector<ID3D11ShaderResourceView*> meshSRV; // The same as mTextureVector
+
+		vector<SurfaceMaterial> material;
+		vector<std::wstring> textureNameArray;
+		*/
 };
 

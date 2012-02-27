@@ -910,26 +910,16 @@ bool GraphicsClass::RenderScene()
 	RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
 	
 	ModelObject* modelObj = mObjectFactory->GetObjectByName("floor");
-
-	float height;
-	// Set psition above terrain
-	bool foundHeight =  mQuadTree->GetHeightAtPosition(modelObj->GetPosition().x, modelObj->GetPosition().z, height);
-	if(foundHeight)
-	{
-		// If there was a triangle under the camera then position the camera just above it by two units.
-		D3DXVECTOR3 newPosition = D3DXVECTOR3(modelObj->GetPosition().x, height + 0.1f, modelObj->GetPosition().z);
-		modelObj->SetPosition(newPosition);
-	}
-
+	SetPositionAboveTerrain(modelObj, 0.1f);
 	RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirAmbLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
 
 	return true;
 }
 
-bool GraphicsClass::Render2D()
+HRESULT GraphicsClass::Render2D()
 {
 	D3DXMATRIX viewMatrix, projectionMatrix, worldMatrix, orthoMatrix;
-	bool result;
+	HRESULT result = S_OK;
 	ID3D11DeviceContext* deviceContext = mD3D->GetDeviceContext();
 	// Generate the view matrix based on the camera's position.
 	mCamera->Render();
@@ -950,7 +940,7 @@ bool GraphicsClass::Render2D()
 	{
 		// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
 		result = mBitmap->Render(deviceContext, 0, 0);
-		if(!result) { return false; }
+		if(FAILED(result)) { return result; }
 
 		vector<ID3D11ShaderResourceView*> textureArray;
 		textureArray.push_back(m_RenderTexture->GetShaderResourceView());
@@ -962,7 +952,7 @@ bool GraphicsClass::Render2D()
 			worldMatrix,
 			mBaseViewMatrix, 
 			orthoMatrix);
-		if(!result) { return false; }
+		if(FAILED(result)) { return result; }
 	}
 
 	// Turn on the alpha blending before rendering the text.
@@ -972,12 +962,12 @@ bool GraphicsClass::Render2D()
 	float cameraRotX, cameraRotY, cameraRotZ;
 	mCameraMovement->GetRotation(cameraRotX, cameraRotY, cameraRotZ);
 	result = m_MiniMap->Render(deviceContext, worldMatrix, orthoMatrix, mTextureShaderMiniMap, cameraRotY);
-	if(!result) { return false; }
+	if(FAILED(result)) { return result; }
 
 	// Render cursor object
 	// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	result = mCursor->Render(deviceContext, mScreenWidth / 2 - mCursorWidth / 4, mScreenHeight / 2 - mCursorHeight / 4 );
-	if(!result) { return false; }
+	if(FAILED(result)) { return result; }
 
 	D3DXVECTOR4 pixelColor = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
 	vector<ID3D11ShaderResourceView*> textureArray;
@@ -991,7 +981,7 @@ bool GraphicsClass::Render2D()
 		worldMatrix,
 		mBaseViewMatrix, 
 		orthoMatrix);
-	if(!result) { return false; }
+	if(FAILED(result)) { return result; }
 
 	// Render debug text
 	RenderText();
@@ -1001,7 +991,7 @@ bool GraphicsClass::Render2D()
 	// Turn the Z buffer back on now that all 2D rendering has completed.
 	mD3D->TurnZBufferOn();
 
-	return true;
+	return result;
 }
 
 bool GraphicsClass::RenderToTextureFromCameraView()
@@ -1058,9 +1048,9 @@ bool GraphicsClass::RenderToTextureFromReflectionView()
 	return true;
 }
 
-bool GraphicsClass::RenderTerrain(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix)
+HRESULT GraphicsClass::RenderTerrain(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix)
 {
-	bool result = true;
+	HRESULT result = true;
 	ID3D11DeviceContext* deviceContext = mD3D->GetDeviceContext();
 
 	// Render the terrain buffers.
@@ -1071,8 +1061,7 @@ bool GraphicsClass::RenderTerrain(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
 	mTerrainShader->SetTextureArray(deviceContext, texArr);
 	mTerrainShader->SetLightSource(deviceContext, mDirAmbLight);
 	result = mTerrainShader->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, false);
-	if(!result) { return false; }
-
+	if(FAILED(result)) { return result; }
 	// Render the terrain using the quad tree and terrain shader.
 	mQuadTree->Render(m_Frustum, deviceContext, mTerrainShader, mIsAllowToBBRender);
 	
@@ -1132,15 +1121,7 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 		// Render instanced objects
 		if (modelObj->IsInstanced())
 		{
-			float height;
-			// Set psition above terrain
-			bool foundHeight =  mQuadTree->GetHeightAtPosition(modelObj->GetPosition().x, modelObj->GetPosition().z, height);
-			if(foundHeight)
-			{
-				// If there was a triangle under the camera then position the camera just above it by two units.
-				D3DXVECTOR3 newPosition = D3DXVECTOR3(modelObj->GetPosition().x, height + 1, modelObj->GetPosition().z);
-				modelObj->SetPosition(newPosition);
-			}
+			SetPositionAboveTerrain(modelObj, 1.0f);
 			RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_SPECULAR_LIGHT, true);
 		}
 		// Render non-instanced objects
@@ -1155,17 +1136,7 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 					rotation -= 360.0f;
 				}
 				modelObj->SetRotation(rotation);
-				float height;
-				// Set psition above terrain
-				bool foundHeight =  mQuadTree->GetHeightAtPosition(modelObj->GetPosition().x, modelObj->GetPosition().z, height);
-				if(foundHeight)
-				{
-					// If there was a triangle under the camera then position the camera just above it by two units.
-					D3DXVECTOR3 newPosition = D3DXVECTOR3(modelObj->GetPosition().x, height + 1, modelObj->GetPosition().z);
-					modelObj->SetPosition(newPosition);
-				}
-				//modelObj->SetRotation(rotation);
-				// modelObj->GetWorldMatrix();
+				SetPositionAboveTerrain(modelObj, 1.0f);
 				RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
 			}
 			// Draw spaceCompound
@@ -1196,17 +1167,9 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 				{
 					if (strcmp(sphereObjPrefix.c_str(), "sphere_") == 0)
 					{
-						float height;
 						float rot = numIndex % 2 == 0 ? rotation : -rotation;
 						modelObj->SetRotation(rot);
-						// Set psition above terrain
-						bool foundHeight =  mQuadTree->GetHeightAtPosition(modelObj->GetPosition().x, modelObj->GetPosition().z, height);
-						if(foundHeight)
-						{
-							// If there was a triangle under the camera then position the camera just above it by two units.
-							D3DXVECTOR3 newPosition = D3DXVECTOR3(modelObj->GetPosition().x, height + 1, modelObj->GetPosition().z);
-							modelObj->SetPosition(newPosition);
-						}
+						SetPositionAboveTerrain(modelObj, 1.0f);
 						RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_SPECULAR_LIGHT, false);
 					}
 					else if (strcmp(lightObjPrefix.c_str(), "light_") == 0)
@@ -1225,10 +1188,23 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 	return true;
 }
 
-bool GraphicsClass::RenderObject(ModelObject* modelObj, ID3D11DeviceContext* deviceContext, D3DXMATRIX viewMatrix,
+void GraphicsClass::SetPositionAboveTerrain(ModelObject* modelObj, float heightAboveTerrain)
+{
+	float height;
+	// Set psition above terrain
+	bool foundHeight =  mQuadTree->GetHeightAtPosition(modelObj->GetPosition().x, modelObj->GetPosition().z, height);
+	if(foundHeight)
+	{
+		// If there was a triangle under the camera then position the camera just above it by two units.
+		D3DXVECTOR3 newPosition = D3DXVECTOR3(modelObj->GetPosition().x, height + heightAboveTerrain, modelObj->GetPosition().z);
+		modelObj->SetPosition(newPosition);
+	}
+}
+
+HRESULT GraphicsClass::RenderObject(ModelObject* modelObj, ID3D11DeviceContext* deviceContext, D3DXMATRIX viewMatrix,
 								 D3DXMATRIX projectionMatrix, LightClass* lightSource, LightClass::LightTypes lightType, bool isInstanced)
 {
-	bool result;
+	HRESULT result = S_OK;
 	D3DXMATRIX worldMatrix = modelObj->GetWorldMatrix();
 	ModelClass* model = modelObj->GetModel();
 	Material* material = modelObj->GetMaterial();
@@ -1249,6 +1225,7 @@ bool GraphicsClass::RenderObject(ModelObject* modelObj, ID3D11DeviceContext* dev
 			worldMatrix,
 			viewMatrix,
 			projectionMatrix);
+		if(FAILED(result)) { return result; }
 	}
 	else
 	{
@@ -1259,27 +1236,20 @@ bool GraphicsClass::RenderObject(ModelObject* modelObj, ID3D11DeviceContext* dev
 			worldMatrix,
 			viewMatrix, 
 			projectionMatrix);
+		if(FAILED(result)) { return result; }
 	}
-	
-	if(!result) { return false; }
 	return result;
 }
 
-bool GraphicsClass::RenderText()
+HRESULT GraphicsClass::RenderText()
 {
 	D3DXMATRIX orthoMatrix, worldMatrix, staticWorldMatrix;
 	int MAX_STRING_LENGTH = 30;
 	char tempString[10];
-	char fpsString[10];
-	char countString[20];
 	char cpuString[20];
-	char mouseString[20];
-	char darwCountString[35];
-	char drawTimeString[25];
-
 	float posX, posY, posZ, rotX, rotY, rotZ;
 	int terrinDrawCount, mouseX, mouseY;
-	bool result;
+	HRESULT result;
 
 	int sentenceNumber = 0;
 
@@ -1361,9 +1331,6 @@ bool GraphicsClass::RenderText()
 
 	// Render the text strings.
 	result = m_Text->Render(mD3D->GetDeviceContext(), staticWorldMatrix, orthoMatrix);
-	if(!result)
-	{
-		return false;
-	}
-	return true;
+	if(FAILED(result)) { return false; }
+	return result;
 }

@@ -70,7 +70,7 @@ HRESULT FontShader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXf
 	return result;
 }
 
-bool FontShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, 
+HRESULT FontShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, 
 	D3DXMATRIX projectionMatrix)
 {
 	HRESULT result;
@@ -115,30 +115,24 @@ void FontShader::SetTextureArray(ID3D11DeviceContext* deviceContext, vector<ID3D
 	TextureShader::SetTextureArray(deviceContext, textureArray);
 }
 
-bool FontShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
+HRESULT FontShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
 						int indexCount,
 						D3DXMATRIX worldMatrix,
 						D3DXMATRIX viewMatrix, 
 						D3DXMATRIX projectionMatrix)
 {
-	bool result;
+	HRESULT result = S_OK;
 
 	// Set the shader parameters that it will use for rendering.
 	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix/*, texture, pixelColor*/);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
 
 	result = TextureShader::RenderOrdinary(deviceContext, 
 						  indexCount,
 						  worldMatrix,
 						  viewMatrix,
 						  projectionMatrix);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
 	
-	return true;
+	return result;
 }

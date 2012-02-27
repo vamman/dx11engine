@@ -138,15 +138,12 @@ void MiniMap::Shutdown()
 }
 
 
-bool MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX orthoMatrix, TextureShader* textureShader, float cameraRotY)
+HRESULT MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX orthoMatrix, TextureShader* textureShader, float cameraRotY)
 {
-	bool result;
+	HRESULT result = S_OK;
 	// Put the border bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	result = m_Border->Render(deviceContext, (m_mapLocationX - 2), (m_mapLocationY - 2));
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
 
 	// Render the border bitmap using the texture shader.
 	vector<ID3D11ShaderResourceView*> borderTextureArray;
@@ -156,10 +153,7 @@ bool MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix,
 
 	// Put the mini-map bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	result = m_MiniMapBitmap->Render(deviceContext, m_mapLocationX, m_mapLocationY);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
 
 	// Render the mini-map bitmap using the texture shader.
 	vector<ID3D11ShaderResourceView*> minimapTextureArray;
@@ -174,10 +168,7 @@ bool MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix,
 	int offsetX = screenWidth / 2 - mPlayerViewImageWidth / 2;
 	int offsetY = screenHeight / 2 - mPlayerViewImageHeight;
 	result = mPlayerView->Render(deviceContext, offsetX,  offsetY);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
 
 	// Roatate the player view bitmap
 	cameraRotY = cameraRotY * 0.0174532925f;
@@ -195,7 +186,7 @@ bool MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix,
 	mPlayerViewShader->SetPixelBufferColor(deviceContext, pixelColor);
 	mPlayerViewShader->RenderOrdinary(deviceContext, mPlayerView->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
 
-	return true;
+	return result;
 }
 
 void MiniMap::PositionUpdate(float positionX, float positionZ)

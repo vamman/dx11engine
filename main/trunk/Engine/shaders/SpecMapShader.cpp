@@ -45,14 +45,14 @@ bool SpecMapShader::SetLightSource(ID3D11DeviceContext* deviceContext, LightClas
 	return result;
 }
 
-bool SpecMapShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
+HRESULT SpecMapShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
 								    int vertexCount,
 								    int instanceCount,
 								    D3DXMATRIX worldMatrix,
 								    D3DXMATRIX viewMatrix, 
 								    D3DXMATRIX projectionMatrix)
 {
-	bool result;
+	HRESULT result = S_OK;
 
 	result = NormalMapShader::RenderInstanced(deviceContext,
 											  vertexCount,
@@ -61,21 +61,18 @@ bool SpecMapShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
 											  viewMatrix, 
 											  projectionMatrix);
 
-	if (!result)
-	{
-		return false;
-	}
+	if (FAILED(result)) { return result; }
 
-	return true;
+	return result;
 }
 
-bool SpecMapShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
+HRESULT SpecMapShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
 						int indexCount,
 						D3DXMATRIX worldMatrix,
 						D3DXMATRIX viewMatrix, 
 						D3DXMATRIX projectionMatrix)
 {
-	bool result;
+	HRESULT result = S_OK;
 
 	result = NormalMapShader::RenderOrdinary(deviceContext,
 									indexCount,
@@ -83,11 +80,8 @@ bool SpecMapShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
 									viewMatrix, 
 									projectionMatrix);
 
-	if (!result)
-	{
-		return false;
-	}
+	if (FAILED(result)) { return result; }
 
-	return true;
+	return result;
 }
 

@@ -259,13 +259,13 @@ bool LightShader::SetLightSource(ID3D11DeviceContext* deviceContext, LightClass*
 	return true;
 }
 
-bool LightShader::SetShaderParameters(ID3D11DeviceContext* deviceContext,
+HRESULT LightShader::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	D3DXMATRIX worldMatrix,
 	D3DXMATRIX viewMatrix, 
 	D3DXMATRIX projectionMatrix,
 	bool isInstanced)
 {
-	bool result;
+	HRESULT result = S_OK;
 //	TextureShader::SetTextureArray(deviceContext, textureArray);
 	result = TextureShader::SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, isInstanced);
 //	D3DXVECTOR4 pointDiffuseColors[5]; // TODO: Add mulilight functionality
@@ -416,14 +416,14 @@ bool LightShader::SetPointLightShaderParameters(ID3D11DeviceContext* deviceConte
 	return true;
 }
 
-bool LightShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
+HRESULT LightShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
 						 int vertexCount,
 						 int instanceCount,
 						 D3DXMATRIX worldMatrix,
 						 D3DXMATRIX viewMatrix, 
 						 D3DXMATRIX projectionMatrix)
 {
-	bool result;
+	HRESULT result;
 
 	// Set the shader parameters that it will use for rendering.
 	result = SetShaderParameters(deviceContext,
@@ -431,10 +431,7 @@ bool LightShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
 		viewMatrix, 
 		projectionMatrix,
 		true);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
 
 	// Now render the prepared buffers with the shader.
 	result = TextureShader::RenderInstanced(deviceContext,
@@ -443,21 +440,17 @@ bool LightShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
 											worldMatrix,
 											viewMatrix, 
 											projectionMatrix);
-	if(!result)
-	{
-		return false;
-	}
-
-	return true;
+	if(FAILED(result)) { return result; }
+	return result;
 }
 
-bool LightShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
+HRESULT LightShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
 						 int indexCount,
 						 D3DXMATRIX worldMatrix,
 						 D3DXMATRIX viewMatrix, 
 						 D3DXMATRIX projectionMatrix)
 {
-	bool result;
+	HRESULT result;
 
 	// Set the shader parameters that it will use for rendering.
 	result = SetShaderParameters(deviceContext,
@@ -465,10 +458,7 @@ bool LightShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
 		viewMatrix, 
 		projectionMatrix,
 		false);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
 
 	// Now render the prepared buffers with the shader.
 	result = TextureShader::RenderOrdinary(deviceContext,
@@ -476,10 +466,7 @@ bool LightShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
 											worldMatrix,
 											viewMatrix, 
 											projectionMatrix);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
 
-	return true;
+	return result;
 }

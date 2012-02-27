@@ -75,10 +75,10 @@ void TextureShader::Shutdown()
 	}
 }
 
-bool TextureShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, 
+HRESULT TextureShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, 
 	D3DXMATRIX projectionMatrix, bool isInstanced)
 {
-	bool result = true;
+	HRESULT result = S_OK;
 	result = BasicShader::SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, isInstanced);
 	return result;
 }
@@ -89,21 +89,18 @@ void TextureShader::SetTextureArray(ID3D11DeviceContext* deviceContext, vector<I
 	deviceContext->PSSetShaderResources(0, textureArray.size(), &textureArray[0]);
 }
 
-bool TextureShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
+HRESULT TextureShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
 						   int vertexCount,
 						   int instanceCount,
 						   D3DXMATRIX worldMatrix, 
 						   D3DXMATRIX viewMatrix, 
 						   D3DXMATRIX projectionMatrix)
 {
-	bool result;
+	HRESULT result = S_OK;
 
 	// Set the shader parameters that it will use for rendering.
 	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, true);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
 	
 	// Set the sampler state in the pixel shader.
 	deviceContext->PSSetSamplers(0, 1, &m_sampleState);
@@ -112,23 +109,20 @@ bool TextureShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
 	BasicShader::RenderShaderInstanced(deviceContext,
 									   vertexCount,
 									   instanceCount);
-	return true;
+	return result;
 }
 
-bool TextureShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
+HRESULT TextureShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
 							int indexCount,
 							D3DXMATRIX worldMatrix, 
 							D3DXMATRIX viewMatrix, 
 							D3DXMATRIX projectionMatrix)
 {
-	bool result;
+	HRESULT result = S_OK;
 
 	// Set the shader parameters that it will use for rendering.
 	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, false);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
 
 	// Set the sampler state in the pixel shader.
 	deviceContext->PSSetSamplers(0, 1, &m_sampleState);
@@ -137,5 +131,5 @@ bool TextureShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
 	BasicShader::RenderShaderOrdinary(deviceContext,
 							  indexCount);
 
-	return true;
+	return result;
 }

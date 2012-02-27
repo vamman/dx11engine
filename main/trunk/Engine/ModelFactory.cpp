@@ -13,7 +13,7 @@ ModelFactory::~ModelFactory()
 {
 }
 
-ModelObject* ModelFactory::CreateInstancedModel(ID3D11Device* device, HWND hwnd, char* modelName, char* fileName, int numberOfModels)
+ModelObject* ModelFactory::CreateInstancedModel(ID3D11Device* device, HWND hwnd, char* modelName, wstring fileName, int numberOfModels)
 {
 	bool result;
 	m_modelCount = numberOfModels;
@@ -68,7 +68,7 @@ ModelObject* ModelFactory::CreateInstancedModel(ID3D11Device* device, HWND hwnd,
 	return modelObject;
 }
 
-ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, const char* modelName, char* fileName)
+ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, const char* modelName, wstring fileName)
 {
 	bool result;
 	D3DXVECTOR3 posVec;

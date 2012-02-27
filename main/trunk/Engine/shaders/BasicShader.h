@@ -33,14 +33,14 @@ class BasicShader: public BaseShaderClass
 		vector<D3D11_INPUT_ELEMENT_DESC> CreateInputLayout(vector<char *>& layouts);
 		virtual void Shutdown();
 
-		virtual bool RenderInstanced(ID3D11DeviceContext* deviceContext,
+		virtual HRESULT RenderInstanced(ID3D11DeviceContext* deviceContext,
 									 int vertexCount,
 									 int instanceCount,
 									 D3DXMATRIX worldMatrix, 
 									 D3DXMATRIX viewMatrix,
 									 D3DXMATRIX projectionMatrix) const;
 
-		virtual bool RenderOrdinary(ID3D11DeviceContext* deviceContext, 
+		virtual HRESULT RenderOrdinary(ID3D11DeviceContext* deviceContext, 
 									 int indexCount,
 									 D3DXMATRIX worldMatrix, 
 									 D3DXMATRIX viewMatrix,
@@ -50,8 +50,7 @@ class BasicShader: public BaseShaderClass
 		virtual HRESULT SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType);
 		virtual bool SetLightSource(ID3D11DeviceContext* deviceContext, LightClass* lightSource);
 
-		virtual bool SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, 
-			D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, bool isInstanced) const;
+		virtual HRESULT SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, bool isInstanced) const;
 
 		virtual void RenderShaderInstanced(ID3D11DeviceContext* deviceContext, int vertexCount, int instanceCount) const;
 

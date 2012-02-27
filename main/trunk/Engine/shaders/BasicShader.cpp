@@ -268,51 +268,37 @@ void BasicShader::Shutdown()
 	return;
 }
 
-bool BasicShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
-						 int vertexCount,
-						 int instanceCount,
-						 D3DXMATRIX worldMatrix, 
-						 D3DXMATRIX viewMatrix,
-						 D3DXMATRIX projectionMatrix) const
+HRESULT BasicShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
+									 int vertexCount,
+									 int instanceCount,
+									 D3DXMATRIX worldMatrix, 
+									 D3DXMATRIX viewMatrix,
+									 D3DXMATRIX projectionMatrix) const
 {
-	bool result;
-
-
+	HRESULT result = S_OK;
 	// Set the shader parameters that it will use for rendering.
 	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, true);
-	if(!result)
-	{
-		return false;
-	}
-
+	if(FAILED(result)) { return result; }
 	// Now render the prepared buffers with the shader.
 	RenderShaderInstanced(deviceContext,
 						  vertexCount,
 						  instanceCount);
-
-	return true;
+	return result;
 }
 
-bool BasicShader::RenderOrdinary(ID3D11DeviceContext* deviceContext, 
-						 int indexCount,
-						 D3DXMATRIX worldMatrix, 
-						 D3DXMATRIX viewMatrix,
-						 D3DXMATRIX projectionMatrix) const
+HRESULT BasicShader::RenderOrdinary(ID3D11DeviceContext* deviceContext, 
+									 int indexCount,
+									 D3DXMATRIX worldMatrix, 
+									 D3DXMATRIX viewMatrix,
+									 D3DXMATRIX projectionMatrix) const
 {
-	bool result;
-
-
+	HRESULT result = S_OK;
 	// Set the shader parameters that it will use for rendering.
 	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, false);
-	if(!result)
-	{
-		return false;
-	}
-
+	if(FAILED(result)) { return result; }
 	// Now render the prepared buffers with the shader.
 	RenderShaderOrdinary(deviceContext, indexCount);
-
-	return true;
+	return result;
 }
 
 void BasicShader::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
@@ -362,7 +348,7 @@ bool BasicShader::SetLightSource(ID3D11DeviceContext* deviceContext, LightClass*
 	return true;
 }
 
-bool BasicShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, 
+HRESULT BasicShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, 
 	D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, bool isInstanced) const
 {
 	HRESULT result;
@@ -379,7 +365,7 @@ bool BasicShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMA
 	result = deviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	// Get a pointer to the data in the constant buffer.
@@ -400,7 +386,7 @@ bool BasicShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMA
 	// Finanly set the constant buffer in the vertex shader with the updated values.
 	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
 
-	return true;
+	return result;
 }
 
 void BasicShader::RenderShaderInstanced(ID3D11DeviceContext* deviceContext,
