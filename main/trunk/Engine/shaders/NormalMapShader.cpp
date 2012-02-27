@@ -54,47 +54,36 @@ bool NormalMapShader::SetLightSource(ID3D11DeviceContext* deviceContext, LightCl
 	return result;
 }
 
-bool NormalMapShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
+HRESULT NormalMapShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
 							 int vertexCount,
 							 int instanceCount,
 							 D3DXMATRIX worldMatrix,
 							 D3DXMATRIX viewMatrix, 
 							 D3DXMATRIX projectionMatrix)
 {
-	bool result;
-
+	HRESULT result = S_OK;
 	result = LightShader::RenderInstanced(deviceContext, 
 								 vertexCount,
 								 instanceCount,
 								 worldMatrix, 
 								 viewMatrix, 
 								 projectionMatrix);
-
-	if (!result)
-	{
-		return false;
-	}
-
+	if(FAILED(result)) { return result; }
 	return result;
 }
 
-bool NormalMapShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
+HRESULT NormalMapShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
 							 int indexCount,
 							 D3DXMATRIX worldMatrix,
 							 D3DXMATRIX viewMatrix, 
 							 D3DXMATRIX projectionMatrix)
 {
-	bool result;
-
+	HRESULT result = S_OK;
 	result = LightShader::RenderOrdinary(deviceContext, 
 								 indexCount,
 								 worldMatrix, 
 								 viewMatrix, 
 								 projectionMatrix);
-	if (!result)
-	{
-		return false;
-	}
-
+	if(FAILED(result)) { return result; }
 	return result;
 }

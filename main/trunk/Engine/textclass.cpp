@@ -130,16 +130,13 @@ void TextClass::Shutdown()
 	return;
 }
 
-bool TextClass::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX orthoMatrix)
+HRESULT TextClass::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX orthoMatrix)
 {
-	bool result;
+	HRESULT result;
 
 	result = RenderText(deviceContext, worldMatrix, orthoMatrix);
-	if(!result)
-	{
-		return false;
-	}
-	return true;
+	if(FAILED(result)) { return result; }
+	return result;
 }
 
 bool TextClass::InitializeSentence(SentenceType** sentence, int maxLength, ID3D11Device* device)
@@ -348,28 +345,24 @@ void TextClass::ReleaseSentence(SentenceType** sentence)
 	return;
 }
 
-bool TextClass::RenderText(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX orthoMatrix)
+HRESULT TextClass::RenderText(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX orthoMatrix)
 {
-	bool result;
+	HRESULT result;
 
 	for (int i = 0; i < mSentenceVector.size(); ++i)
 	{
 		result = RenderSentence(deviceContext, mSentenceVector[i], worldMatrix, orthoMatrix);
-		if (!result)
-		{
-			return false;
-		}
+		if (FAILED(result)) { return false;	}
 	}
-	return true;
+	return result;
 }
 
-bool TextClass::RenderSentence(ID3D11DeviceContext* deviceContext, SentenceType* sentence, D3DXMATRIX worldMatrix, 
+HRESULT TextClass::RenderSentence(ID3D11DeviceContext* deviceContext, SentenceType* sentence, D3DXMATRIX worldMatrix, 
 	D3DXMATRIX orthoMatrix)
 {
 	unsigned int stride, offset;
 	D3DXVECTOR4 pixelColor;
-	bool result;
-
+	HRESULT result;
 
 	// Set vertex buffer stride and offset.
 	stride = sizeof(VertexType); 
@@ -393,12 +386,9 @@ bool TextClass::RenderSentence(ID3D11DeviceContext* deviceContext, SentenceType*
 	m_FontShader->SetTextureArray(deviceContext, textureArray);
 	m_FontShader->SetPixelBufferColor(deviceContext, pixelColor);
 	result = m_FontShader->RenderOrdinary(deviceContext, sentence->indexCount, worldMatrix, m_baseViewMatrix, orthoMatrix);
-	if(!result)
-	{
-		false;
-	}
+	if(FAILED(result)) { false; }
 
-	return true;
+	return result;
 }
 
 

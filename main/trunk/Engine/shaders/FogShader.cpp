@@ -113,7 +113,7 @@ bool FogShader::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	return true;
 }
 
-bool FogShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
+HRESULT FogShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
 					   int indexCount, 
 					   D3DXMATRIX worldMatrix, 
 					   D3DXMATRIX viewMatrix,
@@ -122,25 +122,19 @@ bool FogShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
 					   float fogStart,
 					   float fogEnd)
 {
-	bool result;
+	HRESULT result = S_OK;
 
 	// Set the shader parameters that it will use for rendering.
 	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, textureVector, fogStart, fogEnd, false);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
 
 	result = TextureShader::RenderOrdinary(deviceContext, indexCount, worldMatrix, viewMatrix, projectionMatrix);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
 
-	return true;
+	return result;
 }
 
-bool FogShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
+HRESULT FogShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
 	int vertexCount,
 	int instanceCount,
 	D3DXMATRIX worldMatrix, 
@@ -150,20 +144,15 @@ bool FogShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
 	float fogStart,
 	float fogEnd)
 {
-	bool result;
+	HRESULT result = S_OK;
 
 	// Set the shader parameters that it will use for rendering.
 	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, textureVector, fogStart, fogEnd, true);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
+
 	TextureShader::SetTextureArray(deviceContext, textureVector);
 	result = TextureShader::RenderInstanced(deviceContext, vertexCount, instanceCount, worldMatrix, viewMatrix, projectionMatrix);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
 
-	return true;
+	return result;
 }

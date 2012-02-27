@@ -26,7 +26,7 @@ HRESULT MultitextureShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* f
 	return result;
 }
 
-bool MultitextureShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
+HRESULT MultitextureShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
 										int vertexCount,
 										int instanceCount,
 										D3DXMATRIX worldMatrix, 
@@ -34,15 +34,12 @@ bool MultitextureShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
 										D3DXMATRIX projectionMatrix,
 										vector<ID3D11ShaderResourceView*>& textureArray)
 {
-	bool result;
+	HRESULT result = S_OK;
 
 	// Set the shader parameters that it will use for rendering.
 
 	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, textureArray, true);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
 
 	// Now render the prepared buffers with the shader.
 	TextureShader::SetTextureArray(deviceContext, textureArray);
@@ -52,30 +49,22 @@ bool MultitextureShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
 											worldMatrix, 
 											viewMatrix,
 											projectionMatrix);
-	if(!result)
-	{
-		return false;
-	}
-
-	return true;
+	if(FAILED(result)) { return result; }
+	return result;
 }
 
-bool MultitextureShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
+HRESULT MultitextureShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
 								int indexCount,
 								D3DXMATRIX worldMatrix, 
 								D3DXMATRIX viewMatrix,
 								D3DXMATRIX projectionMatrix,
 								vector<ID3D11ShaderResourceView*>& textureArray)
 {
-	bool result;
-
+	HRESULT result = S_OK;
 	// Set the shader parameters that it will use for rendering.
 
 	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, textureArray, false);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
 
 	// Now render the prepared buffers with the shader.
 	TextureShader::SetTextureArray(deviceContext, textureArray);
@@ -84,26 +73,19 @@ bool MultitextureShader::RenderOrdinary(ID3D11DeviceContext* deviceContext,
 											worldMatrix, 
 											viewMatrix,
 											projectionMatrix);
-	if(!result)
-	{
-		return false;
-	}
-
-	return true;
+	if(FAILED(result)) { return result; }
+	return result;
 }
 
-bool MultitextureShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, 
+HRESULT MultitextureShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, 
 	D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, 
 	vector<ID3D11ShaderResourceView*>& textureArray, bool isInstanced)
 {
-	bool result;
+	HRESULT result;
 	result = BasicShader::SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, isInstanced);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result;	}
 
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, textureArray.size(), &textureArray[0]);
-	return true;
+	return result;
 }

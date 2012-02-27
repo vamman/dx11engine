@@ -65,21 +65,18 @@ void BitmapClass::Shutdown()
 	return;
 }
 
-bool BitmapClass::Render(ID3D11DeviceContext* deviceContext, int positionX, int positionY)
+HRESULT BitmapClass::Render(ID3D11DeviceContext* deviceContext, int positionX, int positionY)
 {
-	bool result;
+	HRESULT result;
 
 	// Re-build the dynamic vertex buffer for rendering to possibly a different location on the screen.
 	result = UpdateBuffers(deviceContext, positionX, positionY);
-	if(!result)
-	{
-		return false;
-	}
+	if(FAILED(result)) { return result; }
 
 	// Put the vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	RenderBuffers(deviceContext);
 
-	return true;
+	return result;
 }
 
 int BitmapClass::GetIndexCount()
@@ -204,7 +201,7 @@ void BitmapClass::ShutdownBuffers()
 	return;
 }
 
-bool BitmapClass::UpdateBuffers(ID3D11DeviceContext* deviceContext, int positionX, int positionY)
+HRESULT BitmapClass::UpdateBuffers(ID3D11DeviceContext* deviceContext, int positionX, int positionY)
 {
 	float left, right, top, bottom;
 	VertexType* vertices;
@@ -216,7 +213,7 @@ bool BitmapClass::UpdateBuffers(ID3D11DeviceContext* deviceContext, int position
 	// currently has the correct parameters.
 	if((positionX == m_previousPosX) && (positionY == m_previousPosY))
 	{
-		return true;
+		return S_OK;
 	}
 
 	// If it has changed then update the position it is being rendered to.
@@ -239,7 +236,7 @@ bool BitmapClass::UpdateBuffers(ID3D11DeviceContext* deviceContext, int position
 	vertices = new VertexType[m_vertexCount];
 	if(!vertices)
 	{
-		return false;
+		return S_OK;
 	}
 
 	// Load the vertex array with data.
@@ -267,7 +264,7 @@ bool BitmapClass::UpdateBuffers(ID3D11DeviceContext* deviceContext, int position
 	result = deviceContext->Map(m_vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	if(FAILED(result))
 	{
-		return false;
+		return result;
 	}
 
 	// Get a pointer to the data in the vertex buffer.
@@ -283,7 +280,7 @@ bool BitmapClass::UpdateBuffers(ID3D11DeviceContext* deviceContext, int position
 	delete [] vertices;
 	vertices = 0;
 
-	return true;
+	return result;
 }
 
 void BitmapClass::RenderBuffers(ID3D11DeviceContext* deviceContext)

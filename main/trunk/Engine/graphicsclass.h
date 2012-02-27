@@ -6,6 +6,7 @@
 
 #include <windows.h>
 #include <string>
+#include <sstream>
 
 #include "d3dclass.h"
 #include "cameraclass.h"
@@ -115,17 +116,18 @@ class GraphicsClass
 		bool InitMaterials();
 		bool InitObjects(HWND hwnd);
 
-		bool RenderText();
+		HRESULT RenderText();
 		bool RenderToTextureFromCameraView();
 		bool RenderToTextureFromReflectionView();
-		bool RenderTerrain(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix);
+		HRESULT RenderTerrain(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix);
 		bool RenderScene();
 		bool RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, float fogStart, float fogEnd);
 		void ShutdownShaders();
-		bool Render2D();
+		HRESULT Render2D();
 		bool SetFillMode(D3D11_FILL_MODE mode);
-		bool RenderObject(ModelObject* modelObj, ID3D11DeviceContext* deviceContext, D3DXMATRIX viewMatrix,
+		HRESULT RenderObject(ModelObject* modelObj, ID3D11DeviceContext* deviceContext, D3DXMATRIX viewMatrix,
 						  D3DXMATRIX projectionMatrix, LightClass* lightSource, LightClass::LightTypes lightType, bool isInstanced);
+		void SetPositionAboveTerrain(ModelObject* modelObj, float heightAboveTerrain);
 
 	private:
 

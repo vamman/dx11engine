@@ -11,18 +11,18 @@ class TextureShader : public BasicShader
 							  LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts);
 		virtual void Shutdown();
 
-		virtual bool SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, 
+		virtual HRESULT SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, 
 										 D3DXMATRIX projectionMatrix, bool isInstanced);
 		virtual void SetTextureArray(ID3D11DeviceContext* deviceContext, vector<ID3D11ShaderResourceView*>& textureArray);
 
-		virtual bool RenderInstanced(ID3D11DeviceContext* deviceContext,
+		virtual HRESULT RenderInstanced(ID3D11DeviceContext* deviceContext,
 							int vertexCount,
 							int instanceCount,
 							D3DXMATRIX worldMatrix, 
 							D3DXMATRIX viewMatrix, 
 							D3DXMATRIX projectionMatrix);
 
-		virtual bool RenderOrdinary(ID3D11DeviceContext* deviceContext,
+		virtual HRESULT RenderOrdinary(ID3D11DeviceContext* deviceContext,
 							int indexCount,
 							D3DXMATRIX worldMatrix, 
 							D3DXMATRIX viewMatrix, 

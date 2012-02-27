@@ -41,15 +41,15 @@ public:
 
 	HRESULT Initialize(ID3D11Device*, ID3D11DeviceContext*, HWND, int, int, D3DXMATRIX);
 	void Shutdown();
-	bool Render(ID3D11DeviceContext*, D3DXMATRIX, D3DXMATRIX);
+	HRESULT Render(ID3D11DeviceContext*, D3DXMATRIX, D3DXMATRIX);
 	bool AddSentence(D3DClass* d3d, char *text, int posX, int posY, float colorR, float colorG, float colorB, int numerator);
 
 private:
 	bool InitializeSentence(SentenceType**, int, ID3D11Device*);
 	bool UpdateSentence(SentenceType*, char*, int, int, float, float, float, ID3D11DeviceContext*);
 	void ReleaseSentence(SentenceType**);
-	bool RenderText(ID3D11DeviceContext*, D3DXMATRIX, D3DXMATRIX);
-	bool RenderSentence(ID3D11DeviceContext*, SentenceType*, D3DXMATRIX, D3DXMATRIX);
+	HRESULT RenderText(ID3D11DeviceContext*, D3DXMATRIX, D3DXMATRIX);
+	HRESULT RenderSentence(ID3D11DeviceContext*, SentenceType*, D3DXMATRIX, D3DXMATRIX);
 
 private:
 	FontClass* m_Font;

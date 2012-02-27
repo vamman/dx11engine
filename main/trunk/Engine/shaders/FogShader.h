@@ -28,24 +28,24 @@ class FogShader : public TextureShader
 								 float fogEnd,
 								 bool isInstanced);
 
-		bool RenderOrdinary(ID3D11DeviceContext* deviceContext,
-					int indexCount, 
-					D3DXMATRIX worldMatrix, 
-					D3DXMATRIX viewMatrix,
-					D3DXMATRIX projectionMatrix, 
-					vector<ID3D11ShaderResourceView*> textureVector, 
-					float fogStart,
-					float fogEnd);
+		HRESULT RenderOrdinary(ID3D11DeviceContext* deviceContext,
+								int indexCount, 
+								D3DXMATRIX worldMatrix, 
+								D3DXMATRIX viewMatrix,
+								D3DXMATRIX projectionMatrix, 
+								vector<ID3D11ShaderResourceView*> textureVector, 
+								float fogStart,
+								float fogEnd);
 
-		bool RenderInstanced(ID3D11DeviceContext* deviceContext,
-					int vertexCount,
-					int instanceCount,
-					D3DXMATRIX worldMatrix, 
-					D3DXMATRIX viewMatrix,
-					D3DXMATRIX projectionMatrix, 
-					vector<ID3D11ShaderResourceView*> textureVector, 
-					float fogStart,
-					float fogEnd);
+		HRESULT RenderInstanced(ID3D11DeviceContext* deviceContext,
+								int vertexCount,
+								int instanceCount,
+								D3DXMATRIX worldMatrix, 
+								D3DXMATRIX viewMatrix,
+								D3DXMATRIX projectionMatrix, 
+								vector<ID3D11ShaderResourceView*> textureVector, 
+								float fogStart,
+								float fogEnd);
 
 	private:
 		ID3D11Buffer* m_fogBuffer;

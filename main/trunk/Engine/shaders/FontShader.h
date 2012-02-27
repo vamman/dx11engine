@@ -13,14 +13,14 @@ class FontShader :public TextureShader
 							  LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts);
 		virtual void SetTextureArray(ID3D11DeviceContext* deviceContext, vector<ID3D11ShaderResourceView*>& textureArray);
 		HRESULT SetPixelBufferColor(ID3D11DeviceContext* deviceContext, D3DXVECTOR4 pixelColor);
-		virtual bool RenderOrdinary(ID3D11DeviceContext* deviceContext,
+		virtual HRESULT RenderOrdinary(ID3D11DeviceContext* deviceContext,
 									int indexCount,
 									D3DXMATRIX worldMatrix,
 									D3DXMATRIX viewMatrix, 
 									D3DXMATRIX projectionMatrix);
 
 	private:
-		virtual bool SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix);
+		virtual HRESULT SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix);
 		struct PixelBufferType
 		{
 			D3DXVECTOR4 pixelColor;
