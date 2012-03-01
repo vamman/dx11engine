@@ -74,12 +74,13 @@ ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, 
 	D3DXVECTOR3 posVec;
 	ModelClass* model = new ModelClass;
 	// Create the model object.
-	if(!model)
-	{
-		return false;
-	}
+	if(!model) { return false; }
 
-	int existingIndex = GetExistingModelIndex(fileName, false);
+	//char* stringPath = "";
+	char* stringPath = (char *)malloc( 100 );
+
+	wcstombs(stringPath, fileName.c_str(), 100);
+	int existingIndex = GetExistingModelIndex(stringPath, false);
 	// If this model was already loaded before
 	if (existingIndex != -1)
 	{
@@ -91,7 +92,7 @@ ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, 
 	else
 	{
 		// Initialize the model.
-		result = model->InitializeOrdinary(device, fileName);
+		result = model->InitializeOrdinary(device, fileName, MODEL_FILE_TXT);
 		if(!result)
 		{
 			MessageBox(hwnd, L"Could not initialize an ordinary model object.", L"Error", MB_OK);
