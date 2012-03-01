@@ -71,8 +71,10 @@ ModelObject* ModelFactory::CreateInstancedModel(ID3D11Device* device, HWND hwnd,
 ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, const char* modelName, wstring fileName)
 {
 	bool result;
+	int formatLength = 4;
 	D3DXVECTOR3 posVec;
 	ModelClass* model = new ModelClass;
+	wstring fileFormat = fileName.substr(fileName.length() - formatLength, formatLength);
 	// Create the model object.
 	if(!model) { return false; }
 
@@ -92,7 +94,18 @@ ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, 
 	else
 	{
 		// Initialize the model.
-		result = model->InitializeOrdinary(device, fileName, MODEL_FILE_TXT);
+		ModelFileFormat FF = MODEL_FILE_TXT;
+		
+		if (fileFormat.compare(wstring(L".txt")) == 0)
+		{
+			FF = MODEL_FILE_TXT;
+		}
+		else if (fileFormat.compare(wstring(L".obj")) == 0)
+		{
+			FF = MODEL_FILE_OBJ;
+		}
+
+		result = model->InitializeOrdinary(device, fileName, FF);
 		if(!result)
 		{
 			MessageBox(hwnd, L"Could not initialize an ordinary model object.", L"Error", MB_OK);
