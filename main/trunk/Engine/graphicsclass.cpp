@@ -189,7 +189,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		mPointLights[i]->SetDiffuseColor(color.x, color.y, color.z, color.w);
 		mPointLights[i]->SetPosition(position.x, position.y, position.z);
 
-		object = mObjectFactory->CreateOrdinaryModel(device, hwnd, resultName, "Engine/data/models/sphere.txt");
+		object = mObjectFactory->CreateOrdinaryModel(device, hwnd, resultName, wstring(L"Engine/data/models/sphere.txt"));
 		object->SetMaterial(mMaterialFactory->GetMaterialByName("BlueFloor"));
 		object->SetPosition(position);
 	}
@@ -480,10 +480,10 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 	if(!mObjectFactory) { return false; }
 
 	//  Create instanced sphere
-	CREATE_INSTANCED_OBJ_WITH_MAT("instancedSphere", "Engine/data/models/sphere.txt", "NormalWithSpec", 5)
+	CREATE_INSTANCED_OBJ_WITH_MAT("instancedSphere", wstring(L"Engine/data/models/sphere.txt"), "NormalWithSpec", 5)
 
 	// Create floor
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "floor", "Engine/data/models/floor.txt", "TexturedFloor");
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, "floor", wstring(L"Engine/data/models/floor.txt"), "TexturedFloor");
 	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 132.0f)); 
 
 	// Create 10 ordinary spheres
@@ -495,7 +495,7 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 		_itoa_s(i, number, 10);
 		sprintf_s(resultName, "%s%s", prefix, number);
 
-		CREATE_ORDINARY_OBJ_WITH_MAT(object, resultName, "Engine/data/models/sphere.txt", "NormalWithSpec");
+		CREATE_ORDINARY_OBJ_WITH_MAT(object, resultName, wstring(L"Engine/data/models/sphere.txt"), "NormalWithSpec");
 
 		// Generate a random position in front of the viewer for the mode.
 		float positionX = 130.0f; // 130.0f;
@@ -514,12 +514,12 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 	}
 
 	// Create cube
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "cube", "Engine/data/models/cube.txt", "NormalWithSpec");
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, "cube", wstring(L"Engine/data/models/cube.txt"), "NormalWithSpec");
 	object->SetPosition(D3DXVECTOR3(130.0f, 1.0f, 130.0f)); // 130.0f, 1.0f, 130.0f
 	
 
 	// Create space compound
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "spaceCompound", "Engine/data/models/spaceCompound.txt", "spaceCompoundMaterial"); // spaceCompoundMaterial // NormalWithSpec
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, "spaceCompound", wstring(L"Engine/data/models/spaceCompound.txt"), "spaceCompoundMaterial"); // spaceCompoundMaterial // NormalWithSpec
 	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 132.0f)); 
 
 	Timer::GetInstance()->SetTimeB();
@@ -1064,7 +1064,6 @@ HRESULT GraphicsClass::RenderTerrain(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatr
 	if(FAILED(result)) { return result; }
 	// Render the terrain using the quad tree and terrain shader.
 	mQuadTree->Render(m_Frustum, deviceContext, mTerrainShader, mIsAllowToBBRender);
-	
 	return result;
 }
 
@@ -1085,30 +1084,20 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 	vector<ModelObject*> listOfModels = mObjectFactory->GetVectorOfObjects();
 	vector<ModelObject*>::iterator modelIt;
 	ID3D11DeviceContext* deviceContext = mD3D->GetDeviceContext();
+
 	float dirDeltaStep = 0.01f;
+	if (mDirUp) { dirDelta += dirDeltaStep; }
+	if (mDirDown) { dirDelta -= dirDeltaStep; }
 
-	if (mDirUp)
-	{
-		dirDelta += dirDeltaStep;
-	}
-	if (mDirDown)
-	{
-		dirDelta -= dirDeltaStep;
-	}
-
-	if (dirDelta > 1.0f)
-	{
-		mDirUp   = false;
-		mDirDown = true;
-	}
-	if (dirDelta < -1.0f)
-	{
-		mDirUp   = true;
-		mDirDown = false;
-	}
+	if (dirDelta > 1.0f) { mDirUp   = false; mDirDown = true; }
+	if (dirDelta < -1.0f) { mDirUp   = true; mDirDown = false; }
 	
 	mDirSpecLight->SetDirection(0.0f, dirDelta, 1.0f);
 	mDirAmbLight->SetDirection(0.0f, dirDelta, 1.0f);
+
+	// Update the rotation variable each frame.
+	rotation += (float)D3DX_PI * 0.00099f;
+	if(rotation > 360.0f) { rotation -= 360.0f; }
 
 	for (modelIt = listOfModels.begin(); modelIt != listOfModels.end(); ++modelIt)
 	{
@@ -1129,12 +1118,6 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 		{		
 			if (strcmp(modelObj->GetModelName(), "cube") == 0)
 			{
-				// Update the rotation variable each frame.
-				rotation += (float)D3DX_PI * 0.00099f;
-				if(rotation > 360.0f)
-				{
-					rotation -= 360.0f;
-				}
 				modelObj->SetRotation(rotation);
 				SetPositionAboveTerrain(modelObj, 1.0f);
 				RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
@@ -1169,7 +1152,7 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 					{
 						float rot = numIndex % 2 == 0 ? rotation : -rotation;
 						modelObj->SetRotation(rot);
-						SetPositionAboveTerrain(modelObj, 1.0f);
+						SetPositionAboveTerrain(modelObj, radius);
 						RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_SPECULAR_LIGHT, false);
 					}
 					else if (strcmp(lightObjPrefix.c_str(), "light_") == 0)
@@ -1186,19 +1169,6 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 		numIndex++;
 	}
 	return true;
-}
-
-void GraphicsClass::SetPositionAboveTerrain(ModelObject* modelObj, float heightAboveTerrain)
-{
-	float height;
-	// Set psition above terrain
-	bool foundHeight =  mQuadTree->GetHeightAtPosition(modelObj->GetPosition().x, modelObj->GetPosition().z, height);
-	if(foundHeight)
-	{
-		// If there was a triangle under the camera then position the camera just above it by two units.
-		D3DXVECTOR3 newPosition = D3DXVECTOR3(modelObj->GetPosition().x, height + heightAboveTerrain, modelObj->GetPosition().z);
-		modelObj->SetPosition(newPosition);
-	}
 }
 
 HRESULT GraphicsClass::RenderObject(ModelObject* modelObj, ID3D11DeviceContext* deviceContext, D3DXMATRIX viewMatrix,
@@ -1239,6 +1209,19 @@ HRESULT GraphicsClass::RenderObject(ModelObject* modelObj, ID3D11DeviceContext* 
 		if(FAILED(result)) { return result; }
 	}
 	return result;
+}
+
+void GraphicsClass::SetPositionAboveTerrain(ModelObject* modelObject, float heightAbove)
+{
+	float height;
+	// Set psition above terrain
+	bool foundHeight =  mQuadTree->GetHeightAtPosition(modelObject->GetPosition().x, modelObject->GetPosition().z, height);
+	if(foundHeight)
+	{
+		// If there was a triangle under the camera then position the camera just above it by two units.
+		D3DXVECTOR3 newPosition = D3DXVECTOR3(modelObject->GetPosition().x, height + heightAbove, modelObject->GetPosition().z);
+		modelObject->SetPosition(newPosition);
+	}
 }
 
 HRESULT GraphicsClass::RenderText()

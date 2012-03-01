@@ -4,27 +4,18 @@
 #ifndef _MODELCLASS_H_
 #define _MODELCLASS_H_
 
-
-//////////////
-// INCLUDES //
-//////////////
 #include <d3d11.h>
 #include <d3dx10math.h>
+#include <vector>
 #include <fstream>
+#include <istream>
 #include <time.h>
 #include <vector>
 #include <sstream>
 using namespace std;
 
-///////////////////////
-// MY CLASS INCLUDES //
-///////////////////////
 #include "textureclass.h"
 
-
-////////////////////////////////////////////////////////////////////////////////
-// Class name: ModelClass
-////////////////////////////////////////////////////////////////////////////////
 
 enum ModelFileFormat
 {
@@ -148,9 +139,10 @@ class ModelClass
 		void RenderBuffersInstanced(ID3D11DeviceContext* deviceContext);
 		void RenderBuffersOrdinary(ID3D11DeviceContext* deviceContext);
 
-		bool LoadModelFromTXT(char* modelFilename);
-		bool LoadTXTModel(char* modelFilename);
-		bool LoadModelFromOBJ(ID3D11Device* device, wstring filename);
+
+		bool LoadModelFromTXT(wstring modelFilename);
+		bool LoadTXTModel(wstring modelFilename);
+		bool LoadModelFromOBJ(ID3D11Device* device, wstring modelFilename);
 		void ReleaseModel();
 
 		void CalculateModelVectors();
@@ -160,20 +152,25 @@ class ModelClass
 	private:
 		ID3D11Buffer *mVertexBuffer, *mInstanceBuffer, *mIndexBuffer;
 		int mVertexCount, mInstanceCount, mIndexCount;
+		int meshSubsets;
+		std::vector<int> meshSubsetIndexStart;
+		std::vector<int> meshSubsetTexture;
+		std::vector<ID3D11ShaderResourceView*> meshSRV;
+		std::vector<std::wstring> textureNameArray;
 		ModelType* mModel;
 		char mModelFileName[50];
 
-		int meshSubsets;
-		vector<int> meshSubsetIndexStart;
+		//int meshSubsets;
+		//vector<int> meshSubsetIndexStart;
 
 		// TODO: Probably need this in material
 		// For .MLT material
-		vector<int> meshSubsetTexture;
+		//vector<int> meshSubsetTexture;
 		ID3D11BlendState* Transparency;
-		vector<ID3D11ShaderResourceView*> meshSRV;
+		//vector<ID3D11ShaderResourceView*> meshSRV;
 
 		vector<SurfaceMaterial> material;
-		vector<std::wstring> textureNameArray;
+		//vector<std::wstring> textureNameArray;
 };
 
 #endif

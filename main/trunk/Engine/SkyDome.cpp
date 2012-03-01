@@ -19,8 +19,8 @@ bool SkyDome::Initialize(ID3D11Device* device, HWND hwnd)
 	mSkyDomeSphere = new ModelObject;
 
 	// Load in the sky dome model.
-	mSkyDomeSphere = mModelFactory->CreateOrdinaryModel(device, hwnd, "skyDome", "Engine/data/models/sphere.txt");
-	mSkyDomeCube = mModelFactory->CreateOrdinaryModel(device, hwnd, "skyDome", "Engine/data/models/cube.txt");
+	mSkyDomeSphere = mModelFactory->CreateOrdinaryModel(device, hwnd, "skyDome", wstring(L"Engine/data/models/sphere.txt"));
+	mSkyDomeCube = mModelFactory->CreateOrdinaryModel(device, hwnd, "skyDome", wstring(L"Engine/data/models/cube.txt"));
 
 	// Set the color at the top of the sky dome.
 	m_apexColor = D3DXVECTOR4(0.15f, 0.26f, 0.78f, 1.0f); // 0.0f, 0.15f, 0.66f, 1.0f

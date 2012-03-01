@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "modelclass.h"
 
-ModelClass::ModelClass() : mInstanceCount(-1), mVertexCount(-1), mIndexCount(-1)
+ModelClass::ModelClass() : mInstanceCount(-1), mVertexCount(-1), mIndexCount(-1), meshSubsets(0)
 {
 	mVertexBuffer = 0;
 	mIndexBuffer = 0;
@@ -12,7 +12,7 @@ ModelClass::ModelClass() : mInstanceCount(-1), mVertexCount(-1), mIndexCount(-1)
 }
 
 
-ModelClass::ModelClass(const ModelClass& existingModel) : mInstanceCount(-1), mVertexCount(-1), mIndexCount(-1)
+ModelClass::ModelClass(const ModelClass& existingModel) : mInstanceCount(-1), mVertexCount(-1), mIndexCount(-1), meshSubsets(0)
 {
 	mVertexBuffer = existingModel.GetVertexBuffer();
 	mIndexBuffer = existingModel.GetIndexBuffer();
@@ -68,11 +68,14 @@ bool ModelClass::InitializeOrdinary(ID3D11Device* device, wstring modelFilename,
 	return true;
 }
 
-bool ModelClass::LoadTXTModel(char* modelFilename)
+bool ModelClass::LoadTXTModel(wstring modelFilename)
 {
 	bool result;
+	//char* stringPath = "";
+	char* stringPath = (char *)malloc( 100 );
 
-	strcpy_s(mModelFileName, modelFilename);
+	wcstombs(stringPath, modelFilename.c_str(), 100);
+	strcpy_s(mModelFileName, stringPath);
 
 	// Load in the model data,
 	result = LoadModelFromTXT(modelFilename);
@@ -1155,7 +1158,7 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 	return true;
 }
 
-bool ModelClass::LoadModelFromTXT(char* filename)
+bool ModelClass::LoadModelFromTXT(wstring filename)
 {
 	ifstream fin;
 	char input;
@@ -1163,7 +1166,7 @@ bool ModelClass::LoadModelFromTXT(char* filename)
 
 
 	// Open the model file.
-	fin.open(filename);
+	fin.open(filename.c_str());
 
 	// If it could not open the file then exit.
 	if(fin.fail())
