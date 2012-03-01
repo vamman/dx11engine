@@ -788,7 +788,10 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 
 	//Close the obj file, and open the mtl file
 	fileIn.close();
-	fileIn.open(meshMatLib.c_str());
+	
+	wstring mltPath = wstring(L"Engine/data/models/spaceCompound/");
+	wstring mltFileName = mltPath.append(meshMatLib);
+	fileIn.open(mltFileName.c_str()); // meshMatLib.c_str()
 
 	std::wstring lastStringRead;
 	int matCount = material.size();	//total materials

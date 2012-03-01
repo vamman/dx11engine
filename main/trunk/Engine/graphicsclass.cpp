@@ -519,6 +519,7 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 	
 
 	// Create space compound
+	// /spaceCompound.obj
 	CREATE_ORDINARY_OBJ_WITH_MAT(object, "spaceCompound", wstring(L"Engine/data/models/spaceCompound.txt"), "spaceCompoundMaterial"); // spaceCompoundMaterial // NormalWithSpec
 	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 132.0f)); 
 
