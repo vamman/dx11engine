@@ -1,7 +1,9 @@
 #include "ModelFactory.h"
 
-ModelFactory::ModelFactory()
+ModelFactory::ModelFactory() : m_modelCount(0)
 {
+	m_instanceBuffer = 0;
+	mVectorOfObjects.clear();
 }
 
 ModelFactory::ModelFactory(const ModelFactory& other)

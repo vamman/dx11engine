@@ -71,6 +71,14 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 //	int videoMemory;
 	int terrainWidth, terrainHeight;
 
+	// Create the model factory object.
+	mObjectFactory = new ModelFactory;
+	if(!mObjectFactory) { return false; }
+
+	// Create the material factory object.
+	mMaterialFactory = new MaterialFactory();
+	if(!mMaterialFactory) { return false; }
+
 	mScreenWidth = screenWidth;
 	mScreenHeight = screenHeight;
 
@@ -111,19 +119,6 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	mCamera->SetPosition(cameraX, cameraY, cameraZ);
 
-	// Create the terrain object.
-	mTerrain = new Terrain;
-	if(!mTerrain) { return result; }
-	// heightmap01.bmp / heightmap513; dirt01.dds; colorm01.bmp / colorm513
-	V_RETURN(mTerrain->Initialize(device, "Engine/data/textures/terrain/heightmap01.bmp", L"Engine/data/textures/terrain/dirt01.dds", "Engine/data/textures/terrain/colorm01.bmp"),
-			 L"Error", L"Could not initialize the terrain object");
-	
-	// Create the quad tree object.
-	mQuadTree = new QuadTree;
-	if(!mQuadTree) { return false; }
-
-	V_RETURN(mQuadTree->Initialize(mTerrain, device), L"Error",	L"Could not initialize the quad tree object");
-
 	// Create the position object.
 	mCameraMovement = new CameraMovement;
 	if(!mCameraMovement)
@@ -159,11 +154,6 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	pointLightInfos[3]->color	= D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
 	pointLightInfos[3]->position = D3DXVECTOR3(2.0f, 1.0f, -2.0f);
 
-	InitLights();
-	InitializeShaders(hwnd);
-	InitMaterials();
-	InitObjects(hwnd);
-
 	// Create the frustum object.
 	m_Frustum = new FrustumClass;
 	if(!m_Frustum)
@@ -171,6 +161,10 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return result;
 	}
 
+	InitLights();
+	InitializeShaders(hwnd);
+	InitMaterials();
+	
 	for (int i = 0; i < 4; ++i)
 	{
 		char* prefix = "light_";
@@ -193,6 +187,21 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		object->SetMaterial(mMaterialFactory->GetMaterialByName("BlueFloor"));
 		object->SetPosition(position);
 	}
+
+	InitObjects(hwnd);
+
+	// Create the terrain object.
+	mTerrain = new Terrain;
+	if(!mTerrain) { return result; }
+	// heightmap01.bmp / heightmap513; dirt01.dds; colorm01.bmp / colorm513
+	V_RETURN(mTerrain->Initialize(device, "Engine/data/textures/terrain/heightmap01.bmp", L"Engine/data/textures/terrain/dirt01.dds", "Engine/data/textures/terrain/colorm01.bmp"),
+		L"Error", L"Could not initialize the terrain object");
+
+	// Create the quad tree object.
+	mQuadTree = new QuadTree;
+	if(!mQuadTree) { return false; }
+
+	V_RETURN(mQuadTree->Initialize(mTerrain, device), L"Error",	L"Could not initialize the quad tree object");
 
 	// Create the render to texture object.
 	m_RenderTexture = new RenderTextureClass;
@@ -419,7 +428,6 @@ bool GraphicsClass::InitMaterials()
 	Timer::GetInstance()->SetTimeA();
 
 	// Create material "NormalWithSpec"
-	mMaterialFactory = new MaterialFactory();
 	material = mMaterialFactory->CreateMaterial("NormalWithSpec");
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone02.dds");
 	if(!result) { return false; }
@@ -475,10 +483,6 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 
 	Timer::GetInstance()->SetTimeA();
 
-	// Create the model factory object.
-	mObjectFactory = new ModelFactory;
-	if(!mObjectFactory) { return false; }
-
 	//  Create instanced sphere
 	CREATE_INSTANCED_OBJ_WITH_MAT("instancedSphere", wstring(L"Engine/data/models/sphere.txt"), "NormalWithSpec", 5)
 
@@ -520,7 +524,7 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 
 	// Create space compound
 	// /spaceCompound.obj
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "spaceCompound", wstring(L"Engine/data/models/spaceCompound.txt"), "spaceCompoundMaterial"); // spaceCompoundMaterial // NormalWithSpec
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, "spaceCompound", wstring(L"Engine/data/models/spaceCompound/spaceCompound.obj"), "spaceCompoundMaterial"); // spaceCompoundMaterial // NormalWithSpec
 	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 132.0f)); 
 
 	Timer::GetInstance()->SetTimeB();

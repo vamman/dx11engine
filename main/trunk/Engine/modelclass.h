@@ -136,9 +136,6 @@ class ModelClass
 		bool InitializeBuffersInstanced(ID3D11Device* device, InstanceType* instances /* vector<InstanceType*> instancesVector */, int numModels);
 		bool InitializeBuffersOrdinary(ID3D11Device* device);
 		void ShutdownBuffers();
-		void RenderBuffersInstanced(ID3D11DeviceContext* deviceContext);
-		void RenderBuffersOrdinary(ID3D11DeviceContext* deviceContext);
-
 
 		bool LoadModelFromTXT(wstring modelFilename);
 		bool LoadTXTModel(wstring modelFilename);
@@ -148,6 +145,10 @@ class ModelClass
 		void CalculateModelVectors();
 		void CalculateTangentBinormal(TempVertexType, TempVertexType, TempVertexType, VectorType&, VectorType&);
 		void CalculateNormal(VectorType, VectorType, VectorType&);
+
+		void RenderBuffersInstanced(ID3D11DeviceContext* deviceContext);
+		void RenderBuffersOrdinaryForTXTFile(ID3D11DeviceContext* deviceContext);
+		void RenderBuffersOrdinaryForOBJFile(ID3D11DeviceContext* deviceContext);
 
 	private:
 		ID3D11Buffer *mVertexBuffer, *mInstanceBuffer, *mIndexBuffer;
@@ -171,6 +172,8 @@ class ModelClass
 
 		vector<SurfaceMaterial> material;
 		//vector<std::wstring> textureNameArray;
+
+		ModelFileFormat mFileFormat;
 };
 
 #endif

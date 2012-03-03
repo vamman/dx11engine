@@ -32,6 +32,7 @@ ModelClass::~ModelClass()
 bool ModelClass::InitializeInstanced(ID3D11Device* device, wstring modelFilename, InstanceType* instances, int numModels)
 {
 	bool result;
+	mFileFormat = MODEL_FILE_TXT;
 
 	result = LoadTXTModel(modelFilename.c_str());
 
@@ -48,7 +49,15 @@ bool ModelClass::InitializeInstanced(ID3D11Device* device, wstring modelFilename
 bool ModelClass::InitializeOrdinary(ID3D11Device* device, wstring modelFilename, ModelFileFormat fileFormat)
 {
 	bool result;
-	switch (fileFormat)
+	D3D11_BLEND_DESC blendDesc;
+	D3D11_RENDER_TARGET_BLEND_DESC rtbd;
+
+	ZeroMemory( &blendDesc, sizeof(blendDesc) );
+	ZeroMemory( &rtbd, sizeof(rtbd) );
+
+	mFileFormat = fileFormat;
+
+	switch (mFileFormat)
 	{
 		case MODEL_FILE_TXT:
 		{
@@ -62,6 +71,21 @@ bool ModelClass::InitializeOrdinary(ID3D11Device* device, wstring modelFilename,
 		{
 			result = LoadModelFromOBJ(device, modelFilename);
 			if(!result) { return false; }
+
+			// New blend state for mlt material
+			ZeroMemory( &rtbd, sizeof(rtbd) );
+			rtbd.BlendEnable			 = true;
+			rtbd.SrcBlend				 = D3D11_BLEND_INV_SRC_ALPHA;
+			rtbd.DestBlend				 = D3D11_BLEND_SRC_ALPHA;
+			rtbd.BlendOp				 = D3D11_BLEND_OP_ADD;
+			rtbd.SrcBlendAlpha			 = D3D11_BLEND_INV_SRC_ALPHA;
+			rtbd.DestBlendAlpha			 = D3D11_BLEND_SRC_ALPHA;
+			rtbd.BlendOpAlpha			 = D3D11_BLEND_OP_ADD;
+			rtbd.RenderTargetWriteMask	 = D3D10_COLOR_WRITE_ENABLE_ALL;
+			blendDesc.AlphaToCoverageEnable = false;
+			blendDesc.RenderTarget[0] = rtbd;
+			device->CreateBlendState(&blendDesc, &Transparency);
+
 			break;
 		}
 	}
@@ -95,22 +119,6 @@ void ModelClass::Shutdown()
 	return;
 }
 
-void ModelClass::RenderInstanced(ID3D11DeviceContext* deviceContext)
-{
-	// Put the vertex and index buffers on the graphics pipeline to prepare them for drawing.
-	RenderBuffersInstanced(deviceContext);
-
-	return;
-}
-
-void ModelClass::RenderOrdinary(ID3D11DeviceContext* deviceContext)
-{
-	// Put the vertex and index buffers on the graphics pipeline to prepare them for drawing.
-	RenderBuffersOrdinary(deviceContext);
-
-	return;
-}
-
 int ModelClass::GetVertexCount() const
 {
 	return mVertexCount;
@@ -123,7 +131,29 @@ int ModelClass::GetInstanceCount() const
 
 int ModelClass::GetIndexCount() const
 {
-	return mIndexCount;
+	int indexCount;
+	switch (mFileFormat)
+	{
+		case MODEL_FILE_TXT:
+		{
+			indexCount = mIndexCount;
+			break;
+		}
+		case MODEL_FILE_OBJ:
+		{
+			for(int i = 0; i < meshSubsets; ++i)
+			{
+				indexCount = meshSubsetIndexStart[i+1] - meshSubsetIndexStart[i];
+			}
+			break;
+		}
+		default:
+		{
+			indexCount = mIndexCount;
+			break;
+		}
+	}
+	return indexCount;
 }
 
 char* ModelClass::GetModelFileName() const
@@ -370,7 +400,7 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 	int meshTriangles = 0;
 
 	bool isRHCoordSys = true;
-	bool computeNormals = false;
+	bool computeNormals = true;
 
 	//Check to see if the file was opened
 	if (fileIn)
@@ -1411,6 +1441,38 @@ void ModelClass::ShutdownBuffers()
 	return;
 }
 
+void ModelClass::RenderInstanced(ID3D11DeviceContext* deviceContext)
+{
+	// Put the vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	RenderBuffersInstanced(deviceContext);
+	return;
+}
+
+void ModelClass::RenderOrdinary(ID3D11DeviceContext* deviceContext)
+{
+	// Put the vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	switch (mFileFormat)
+	{
+		case MODEL_FILE_TXT:
+		{
+			RenderBuffersOrdinaryForTXTFile(deviceContext);
+			break;
+		}
+		case MODEL_FILE_OBJ:
+		{
+			RenderBuffersOrdinaryForOBJFile(deviceContext);
+			break;
+		}
+		default:
+		{
+			RenderBuffersOrdinaryForTXTFile(deviceContext);
+			break;
+		}
+	}
+	
+	return;
+}
+
 void ModelClass::RenderBuffersInstanced(ID3D11DeviceContext* deviceContext )
 {
 	unsigned int strides[2];
@@ -1438,7 +1500,7 @@ void ModelClass::RenderBuffersInstanced(ID3D11DeviceContext* deviceContext )
 	return;
 }
 
-void ModelClass::RenderBuffersOrdinary(ID3D11DeviceContext* deviceContext)
+void ModelClass::RenderBuffersOrdinaryForTXTFile(ID3D11DeviceContext* deviceContext)
 {
 	unsigned int stride;
 	unsigned int offset;
@@ -1457,4 +1519,84 @@ void ModelClass::RenderBuffersOrdinary(ID3D11DeviceContext* deviceContext)
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	return;
+}
+
+void ModelClass::RenderBuffersOrdinaryForOBJFile(ID3D11DeviceContext* deviceContext)
+{
+	unsigned int stride;
+	unsigned int offset;
+
+	// Set vertex buffer stride and offset.
+	stride = sizeof(VertexTypeNormalMap); // TODO: Probably need to pass Vertex type of the model which need to be rendered
+	offset = 0;
+
+	//Draw our model's NON-transparent subsets
+	for(int i = 0; i < meshSubsets; ++i)
+	{
+		//Set the grounds index buffer
+		deviceContext->IASetIndexBuffer( mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		//Set the grounds vertex buffer
+		deviceContext->IASetVertexBuffers( 0, 1, &mVertexBuffer, &stride, &offset );
+
+		//Set the WVP matrix and send it to the constant buffer in effect file
+		/*
+		WVP = meshWorld * camView * camProjection;
+		cbPerObj.WVP = XMMatrixTranspose(WVP);	
+		cbPerObj.World = XMMatrixTranspose(meshWorld);	
+		cbPerObj.difColor = material[meshSubsetTexture[i]].difColor;
+		cbPerObj.hasTexture = material[meshSubsetTexture[i]].hasTexture;
+		deviceContext->UpdateSubresource( cbPerObjectBuffer, 0, NULL, &cbPerObj, 0, 0 );
+		deviceContext->VSSetConstantBuffers( 0, 1, &cbPerObjectBuffer );
+		deviceContext->PSSetConstantBuffers( 1, 1, &cbPerObjectBuffer );
+		if(material[meshSubsetTexture[i]].hasTexture)
+		{
+			deviceContext->PSSetShaderResources( 0, 1, &meshSRV[material[meshSubsetTexture[i]].texArrayIndex] );
+		}
+		deviceContext->PSSetSamplers( 0, 1, &CubesTexSamplerState );
+		*/
+		// deviceContext->RSSetState(RSCullNone);
+		int indexStart = meshSubsetIndexStart[i];
+		int indexDrawAmount =  meshSubsetIndexStart[i+1] - meshSubsetIndexStart[i];
+		if(!material[meshSubsetTexture[i]].transparent)
+		{
+			deviceContext->DrawIndexed( indexDrawAmount, indexStart, 0 );
+		}
+	}
+
+	//Draw our model's TRANSPARENT subsets now
+
+	//Set our blend state
+	deviceContext->OMSetBlendState(Transparency, NULL, 0xffffffff);
+
+	for(int i = 0; i < meshSubsets; ++i)
+	{
+		//Set the grounds index buffer
+		deviceContext->IASetIndexBuffer( mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		//Set the grounds vertex buffer
+		deviceContext->IASetVertexBuffers( 0, 1, &mVertexBuffer, &stride, &offset );
+
+		//Set the WVP matrix and send it to the constant buffer in effect file
+		/*
+		WVP = meshWorld * camView * camProjection;
+		cbPerObj.WVP = XMMatrixTranspose(WVP);	
+		cbPerObj.World = XMMatrixTranspose(meshWorld);	
+		cbPerObj.difColor = material[meshSubsetTexture[i]].difColor;
+		cbPerObj.hasTexture = material[meshSubsetTexture[i]].hasTexture;
+		deviceContext->UpdateSubresource( cbPerObjectBuffer, 0, NULL, &cbPerObj, 0, 0 );
+		deviceContext->VSSetConstantBuffers( 0, 1, &cbPerObjectBuffer );
+		deviceContext->PSSetConstantBuffers( 1, 1, &cbPerObjectBuffer );
+		if(material[meshSubsetTexture[i]].hasTexture)
+		{
+			deviceContext->PSSetShaderResources( 0, 1, &meshSRV[material[meshSubsetTexture[i]].texArrayIndex] );
+		}
+		deviceContext->PSSetSamplers( 0, 1, &CubesTexSamplerState );
+		*/
+		// deviceContext->RSSetState(RSCullNone);
+		int indexStart = meshSubsetIndexStart[i];
+		int indexDrawAmount =  meshSubsetIndexStart[i+1] - meshSubsetIndexStart[i];
+		if(material[meshSubsetTexture[i]].transparent)
+		{
+			deviceContext->DrawIndexed( indexDrawAmount, indexStart, 0 );
+		}
+	}
 }

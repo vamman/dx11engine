@@ -13,6 +13,7 @@ struct DeletedModelInfo
 	bool isInst;
 };
 
+// TODO: Make this class a singleton
 class ModelFactory
 {
 	public:
