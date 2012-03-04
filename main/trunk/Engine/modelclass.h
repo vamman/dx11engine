@@ -15,6 +15,7 @@
 using namespace std;
 
 #include "textureclass.h"
+#include "Log.h"
 
 
 enum ModelFileFormat

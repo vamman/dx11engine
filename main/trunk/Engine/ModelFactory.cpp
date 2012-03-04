@@ -1,7 +1,19 @@
 #include "ModelFactory.h"
 
+ModelFactory* ModelFactory::m_pInstance = NULL;  
+
+ModelFactory* ModelFactory::GetInstance()
+{
+	if (!m_pInstance)
+	{
+		m_pInstance = new ModelFactory;
+	}
+	return m_pInstance;
+}
+
 ModelFactory::ModelFactory() : m_modelCount(0)
 {
+	Log::GetInstance()->WriteToOutput(100, "ModelFactory::ModelFactory");
 	m_instanceBuffer = 0;
 	mVectorOfObjects.clear();
 }

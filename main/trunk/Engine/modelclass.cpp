@@ -1531,13 +1531,14 @@ void ModelClass::RenderBuffersOrdinaryForOBJFile(ID3D11DeviceContext* deviceCont
 	offset = 0;
 
 	//Draw our model's NON-transparent subsets
-	for(int i = 0; i < meshSubsets; ++i)
+	/*
+	for(int i = 0; i < 1; ++i) // meshSubsets
 	{
 		//Set the grounds index buffer
 		deviceContext->IASetIndexBuffer( mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 		//Set the grounds vertex buffer
 		deviceContext->IASetVertexBuffers( 0, 1, &mVertexBuffer, &stride, &offset );
-
+	*/
 		//Set the WVP matrix and send it to the constant buffer in effect file
 		/*
 		WVP = meshWorld * camView * camProjection;
@@ -1554,6 +1555,7 @@ void ModelClass::RenderBuffersOrdinaryForOBJFile(ID3D11DeviceContext* deviceCont
 		}
 		deviceContext->PSSetSamplers( 0, 1, &CubesTexSamplerState );
 		*/
+	/*
 		// deviceContext->RSSetState(RSCullNone);
 		int indexStart = meshSubsetIndexStart[i];
 		int indexDrawAmount =  meshSubsetIndexStart[i+1] - meshSubsetIndexStart[i];
@@ -1562,13 +1564,13 @@ void ModelClass::RenderBuffersOrdinaryForOBJFile(ID3D11DeviceContext* deviceCont
 			deviceContext->DrawIndexed( indexDrawAmount, indexStart, 0 );
 		}
 	}
-
+	*/
 	//Draw our model's TRANSPARENT subsets now
 
 	//Set our blend state
 	deviceContext->OMSetBlendState(Transparency, NULL, 0xffffffff);
 
-	for(int i = 0; i < meshSubsets; ++i)
+	for(int i = 0; i < 1; ++i) // meshSubsets
 	{
 		//Set the grounds index buffer
 		deviceContext->IASetIndexBuffer( mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);

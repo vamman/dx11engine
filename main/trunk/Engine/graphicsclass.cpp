@@ -72,12 +72,15 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	int terrainWidth, terrainHeight;
 
 	// Create the model factory object.
-	mObjectFactory = new ModelFactory;
+	/*
+	mObjectFactory = ModelFactory::GetInstance();
 	if(!mObjectFactory) { return false; }
-
+	*/
 	// Create the material factory object.
-	mMaterialFactory = new MaterialFactory();
+	/*
+	mMaterialFactory = MaterialFactory::GetInstance();
 	if(!mMaterialFactory) { return false; }
+	*/
 
 	mScreenWidth = screenWidth;
 	mScreenHeight = screenHeight;
@@ -183,8 +186,8 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		mPointLights[i]->SetDiffuseColor(color.x, color.y, color.z, color.w);
 		mPointLights[i]->SetPosition(position.x, position.y, position.z);
 
-		object = mObjectFactory->CreateOrdinaryModel(device, hwnd, resultName, wstring(L"Engine/data/models/sphere.txt"));
-		object->SetMaterial(mMaterialFactory->GetMaterialByName("BlueFloor"));
+		object = ModelFactory::GetInstance()->CreateOrdinaryModel(device, hwnd, resultName, wstring(L"Engine/data/models/sphere.txt")); // mObjectFactory
+		object->SetMaterial(MaterialFactory::GetInstance()->GetMaterialByName("BlueFloor")); // mMaterialFactory
 		object->SetPosition(position);
 	}
 
@@ -428,7 +431,7 @@ bool GraphicsClass::InitMaterials()
 	Timer::GetInstance()->SetTimeA();
 
 	// Create material "NormalWithSpec"
-	material = mMaterialFactory->CreateMaterial("NormalWithSpec");
+	material = MaterialFactory::GetInstance()->CreateMaterial("NormalWithSpec"); // mMaterialFactory
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone02.dds");
 	if(!result) { return false; }
 
@@ -441,21 +444,21 @@ bool GraphicsClass::InitMaterials()
 	material->SetMaterialShader(m_SpecMapShader);
 
 	// Create material "BlueFloor"
-	material = mMaterialFactory->CreateMaterial("BlueFloor");
+	material = MaterialFactory::GetInstance()->CreateMaterial("BlueFloor"); // mMaterialFactory
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/blue01.dds");
 	if(!result) { return false; }
 
 	material->SetMaterialShader(mDirSpecLightShader);
 
 	// Create material "TexturedFloor"
-	material = mMaterialFactory->CreateMaterial("TexturedFloor");
+	material = MaterialFactory::GetInstance()->CreateMaterial("TexturedFloor"); // mMaterialFactory
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone02.dds");
 	if(!result) { return false; }
 
 	material->SetMaterialShader(mDirAmbLightShader);
 
 	// Create normal map material for space compound
-	material = mMaterialFactory->CreateMaterial("spaceCompoundMaterial");
+	material = MaterialFactory::GetInstance()->CreateMaterial("spaceCompoundMaterial"); // mMaterialFactory
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone01.dds");
 	if(!result) { return false; }
 
@@ -485,10 +488,12 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 
 	//  Create instanced sphere
 	CREATE_INSTANCED_OBJ_WITH_MAT("instancedSphere", wstring(L"Engine/data/models/sphere.txt"), "NormalWithSpec", 5)
+	mMaterialFactory = MaterialFactory::GetInstance(); mObjectFactory = ModelFactory::GetInstance();
 
 	// Create floor
 	CREATE_ORDINARY_OBJ_WITH_MAT(object, "floor", wstring(L"Engine/data/models/floor.txt"), "TexturedFloor");
 	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 132.0f)); 
+	mMaterialFactory = MaterialFactory::GetInstance(); mObjectFactory = ModelFactory::GetInstance();
 
 	// Create 10 ordinary spheres
 	for (int i = 0; i < 5; ++i)
@@ -516,16 +521,20 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 
 		object->SetPosition(posVector);
 	}
+	mMaterialFactory = MaterialFactory::GetInstance(); mObjectFactory = ModelFactory::GetInstance();
 
 	// Create cube
 	CREATE_ORDINARY_OBJ_WITH_MAT(object, "cube", wstring(L"Engine/data/models/cube.txt"), "NormalWithSpec");
 	object->SetPosition(D3DXVECTOR3(130.0f, 1.0f, 130.0f)); // 130.0f, 1.0f, 130.0f
 	
+	mMaterialFactory = MaterialFactory::GetInstance(); mObjectFactory = ModelFactory::GetInstance();
 
 	// Create space compound
 	// /spaceCompound.obj
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "spaceCompound", wstring(L"Engine/data/models/spaceCompound/spaceCompound.obj"), "spaceCompoundMaterial"); // spaceCompoundMaterial // NormalWithSpec
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, "spaceCompound", wstring(L"Engine/data/models/spaceCompound.txt"), "spaceCompoundMaterial"); // spaceCompoundMaterial // NormalWithSpec
 	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 132.0f)); 
+
+	mMaterialFactory = MaterialFactory::GetInstance(); mObjectFactory = ModelFactory::GetInstance();
 
 	Timer::GetInstance()->SetTimeB();
 	funcTime = Timer::GetInstance()->GetDeltaTime();
@@ -574,8 +583,6 @@ void GraphicsClass::Shutdown()
 		m_Frustum = 0;
 	}
 
-	SHUTDOWN_OBJ(mObjectFactory);
-	SHUTDOWN_OBJ(mMaterialFactory);
 	// Release the quad tree object.
 	SHUTDOWN_OBJ(mQuadTree);
 	// Release the terrain object.
@@ -596,6 +603,10 @@ void GraphicsClass::Shutdown()
 	}
 	// Release the sky dome object.
 	SHUTDOWN_OBJ(mSkyDome);
+
+	ModelFactory::GetInstance()->Shutdown(); // mObjectFactory
+
+//	MaterialFactory::GetInstance()->Shutdown(); // mMaterialFactory
 
 	SHUTDOWN_OBJ(mD3D);
 	return;
@@ -850,7 +861,7 @@ bool GraphicsClass::RenderScene()
 	m_Frustum->ConstructFrustum(SCREEN_DEPTH, projectionMatrix, viewMatrix);
 
 	// Get the number of models that will be rendered.
-	modelCount = mObjectFactory->GetModelCount();
+	modelCount = ModelFactory::GetInstance()->GetModelCount(); // mObjectFactory
 
 	// Initialize the count of models that have been rendered.
 	mNumObjectsRendered = 0;
@@ -912,11 +923,12 @@ bool GraphicsClass::RenderScene()
 	}
 	
 	RenderTerrain(worldMatrix, viewMatrix, projectionMatrix);
-	RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
-	
-	ModelObject* modelObj = mObjectFactory->GetObjectByName("floor");
+
+	ModelObject* modelObj = ModelFactory::GetInstance()->GetObjectByName("floor"); // mObjectFactory
 	SetPositionAboveTerrain(modelObj, 0.1f);
 	RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirAmbLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
+
+	RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
 
 	return true;
 }
@@ -1086,7 +1098,7 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 	ModelObject* modelObj;
 	D3DXVECTOR3 posVector;
 
-	vector<ModelObject*> listOfModels = mObjectFactory->GetVectorOfObjects();
+	vector<ModelObject*> listOfModels = ModelFactory::GetInstance()->GetVectorOfObjects(); // mObjectFactory
 	vector<ModelObject*>::iterator modelIt;
 	ID3D11DeviceContext* deviceContext = mD3D->GetDeviceContext();
 
@@ -1108,6 +1120,13 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 	{
 		modelObj = (*modelIt);
 		model = modelObj->GetModel();
+
+		// Exclusions
+		if ( strcmp(modelObj->GetModelName(), "skyDomeSphere") == 0 || strcmp(modelObj->GetModelName(), "skyDomeCube") == 0 )
+		{
+			continue;
+		}
+
 		Material* material = modelObj->GetMaterial();
 		vector<ID3D11ShaderResourceView*> textureVector = material->GetTextureVector();
 		ID3D11ShaderResourceView** textureArray = &textureVector[0];

@@ -5,6 +5,7 @@
 #include <vector>
 #include "ModelObject.h"
 
+
 using namespace std;
 
 struct DeletedModelInfo 
@@ -17,14 +18,10 @@ struct DeletedModelInfo
 class ModelFactory
 {
 	public:
-		ModelFactory();
-		ModelFactory(const ModelFactory&);
-		~ModelFactory();
+		static ModelFactory* GetInstance();
 
 		void Shutdown();
-
 		int GetModelCount();
-
 		ModelObject* CreateInstancedModel(ID3D11Device* device, HWND hwnd, char* modelName, wstring fileName, int numberOfModels);
 		ModelObject* CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, const char* modelName, wstring fileName);
 
@@ -36,11 +33,15 @@ class ModelFactory
 		ID3D11Buffer* GetInstanceBuffer();
 
 	private:
+		ModelFactory();
+		ModelFactory(const ModelFactory&);
+		~ModelFactory();
 		int GetExistingModelIndex(char* modelFileName, bool isInstanced);
 		bool HasObjectBeenDeleted(ModelObject* currentDeletingObject, vector<DeletedModelInfo*>& vectorOfDeletedModelInfos);
 		int m_modelCount;
 		ID3D11Buffer *m_instanceBuffer;
 		vector<ModelObject*> mVectorOfObjects;
+		static ModelFactory* m_pInstance;
 };
 
 #endif

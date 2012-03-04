@@ -1,8 +1,19 @@
 #include "MaterialFactory.h"
 
+MaterialFactory* MaterialFactory::mInstance = NULL;
+
+MaterialFactory* MaterialFactory::GetInstance()
+{
+	if (!mInstance)
+	{
+		mInstance = new MaterialFactory;
+	}
+	return mInstance;
+}
+
 MaterialFactory::MaterialFactory(void)
 {
-
+	Log::GetInstance()->WriteToOutput(100, "MaterialFactory::MaterialFactory");
 }
 
 MaterialFactory::~MaterialFactory(void)
