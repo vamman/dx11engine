@@ -61,15 +61,15 @@ const float SCREEN_NEAR = 0.1f;
 
 #define  CREATE_ORDINARY_OBJ_WITH_MAT(obj, objectNmae, objectFilePath, materialToAssign)					\
 {																											\
-	obj = mObjectFactory->CreateOrdinaryModel(mD3D->GetDevice(), hwnd, objectNmae, objectFilePath);			\
-	obj->SetMaterial(mMaterialFactory->GetMaterialByName(materialToAssign));								\
+	obj = ModelFactory::GetInstance()->CreateOrdinaryModel(mD3D->GetDevice(), hwnd, objectNmae, objectFilePath);			\
+	obj->SetMaterial(MaterialFactory::GetInstance()->GetMaterialByName(materialToAssign));								\
 }
 
 #define  CREATE_INSTANCED_OBJ_WITH_MAT(objectNmae, objectFilePath, materialToAssign, numberOfObjects)						\
 {																															\
 	ModelObject* object = new ModelObject();																				\
-	object = mObjectFactory->CreateInstancedModel(mD3D->GetDevice(), hwnd, objectNmae, objectFilePath, numberOfObjects);	\
-	object->SetMaterial(mMaterialFactory->GetMaterialByName(materialToAssign));												\
+	object = ModelFactory::GetInstance()->CreateInstancedModel(mD3D->GetDevice(), hwnd, objectNmae, objectFilePath, numberOfObjects);	\
+	object->SetMaterial(MaterialFactory::GetInstance()->GetMaterialByName(materialToAssign));												\
 }
 
 #define SHUTDOWN_OBJ(obj)	\

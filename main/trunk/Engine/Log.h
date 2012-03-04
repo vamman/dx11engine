@@ -17,11 +17,13 @@ class Log
 		void WriteToOutput(DWORD deltaTime, char* functionName);
 
 	private:
-		Log(){};  // Private so that it can  not be called
+		Log();  // Private so that it can  not be called
 		Log(Log const&){};             // copy constructor is private
 		Log& operator=(Log const&){};  // assignment operator is private
+		~Log();
 		char* GenerateString(DWORD deltaTime, char* functionName);
 		static Log* m_pInstance;
+		ofstream fout;
 };
 
 #endif

@@ -5,22 +5,33 @@ Log* Log::m_pInstance = NULL;
   
 Log* Log::GetInstance()
 {
-   if (!m_pInstance)   // Only allow one instance of class to be generated.
-      m_pInstance = new Log;
-
+   if (!m_pInstance)
+   {
+	   m_pInstance = new Log;
+   }
    return m_pInstance;
 }
 
+Log::Log()
+{
+	fout.open("log.txt", ios::app);
+	WriteToOutput(100, "Log::Log");
+}
+
+Log::~Log()
+{
+	fout.close();
+}
 void Log::WriteToLogFile(DWORD deltaTime, char* functionName)
 {
-	ofstream fout;
+	// ofstream fout;
 	char resultStr[100];
 	strcpy_s(resultStr, sizeof(resultStr), GenerateString(deltaTime, functionName));
 
 	// Open a file to write the message to.
-	fout.open("log.txt", ios::app);
+	// fout.open("log.txt", ios::app);
 	fout << resultStr << "\n";
-	fout.close();
+	// fout.close();
 }
 
 void Log::WriteToOutput(DWORD deltaTime, char* functionName)
