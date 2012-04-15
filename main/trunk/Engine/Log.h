@@ -13,13 +13,15 @@ class Log
 {
 	public:
 		static Log* GetInstance();
-		void WriteToLogFile(DWORD deltaTime, char* functionName);
-		void WriteToOutput(DWORD deltaTime, char* functionName);
+		void WriteTimedMessageToFile(DWORD deltaTime, char* message);
+		void WriteTimedMessageToOutput(DWORD deltaTime, char* message);
+		void WriteTextMessageToFile(char* message);
+		void WriteTextMessageToOutput(char* message);
 
 	private:
-		Log();  // Private so that it can  not be called
-		Log(Log const&){};             // copy constructor is private
-		Log& operator=(Log const&){};  // assignment operator is private
+		Log();
+		Log(Log const&){};
+		Log& operator=(Log const&){};
 		~Log();
 		char* GenerateString(DWORD deltaTime, char* functionName);
 		static Log* m_pInstance;

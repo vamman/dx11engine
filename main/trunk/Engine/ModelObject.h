@@ -6,6 +6,7 @@
 #include "modelclass.h"
 #include "Material.h"
 
+// TODO: Add hierarchy relations (parent/child) to store relational hierarchy like single ModelObject
 class ModelObject
 {
 public:

@@ -72,8 +72,8 @@ HRESULT TextClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceC
 
 	if (funcTime != -1)
 	{
-		Log::GetInstance()->WriteToLogFile(funcTime, "	TextClass::Initialize time: ");
-		Log::GetInstance()->WriteToOutput(funcTime, "	TextClass::Initialize time: ");
+		Log::GetInstance()->WriteTimedMessageToFile(funcTime, "	TextClass::Initialize time: ");
+		Log::GetInstance()->WriteTimedMessageToOutput(funcTime, "	TextClass::Initialize time: ");
 	}
 
 	return result;

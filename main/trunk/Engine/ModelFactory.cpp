@@ -13,7 +13,7 @@ ModelFactory* ModelFactory::GetInstance()
 
 ModelFactory::ModelFactory() : m_modelCount(0)
 {
-	Log::GetInstance()->WriteToOutput(100, "ModelFactory::ModelFactory");
+	Log::GetInstance()->WriteTimedMessageToOutput(100, "ModelFactory::ModelFactory");
 	m_instanceBuffer = 0;
 	mVectorOfObjects.clear();
 }
@@ -27,7 +27,7 @@ ModelFactory::~ModelFactory()
 {
 }
 
-ModelObject* ModelFactory::CreateInstancedModel(ID3D11Device* device, HWND hwnd, char* modelName, wstring fileName, int numberOfModels)
+ModelObject* ModelFactory::CreateInstancedModel(ID3D11Device* device, HWND hwnd, char* modelName, string fileName, int numberOfModels)
 {
 	bool result;
 	m_modelCount = numberOfModels;
@@ -82,21 +82,18 @@ ModelObject* ModelFactory::CreateInstancedModel(ID3D11Device* device, HWND hwnd,
 	return modelObject;
 }
 
-ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, const char* modelName, wstring fileName)
+ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, const char* modelName, string fileName)
 {
 	bool result;
 	int formatLength = 4;
 	D3DXVECTOR3 posVec;
 	ModelClass* model = new ModelClass;
-	wstring fileFormat = fileName.substr(fileName.length() - formatLength, formatLength);
+	string fileFormat = fileName.substr(fileName.length() - formatLength, formatLength);
+
 	// Create the model object.
 	if(!model) { return false; }
 
-	//char* stringPath = "";
-	char* stringPath = (char *)malloc( 100 );
-
-	wcstombs(stringPath, fileName.c_str(), 100);
-	int existingIndex = GetExistingModelIndex(stringPath, false);
+	int existingIndex = GetExistingModelIndex((char *)fileName.c_str(), false);
 	// If this model was already loaded before
 	if (existingIndex != -1)
 	{
@@ -110,11 +107,11 @@ ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, 
 		// Initialize the model.
 		ModelFileFormat FF = MODEL_FILE_TXT;
 		
-		if (fileFormat.compare(wstring(L".txt")) == 0)
+		if (fileFormat.compare(string(".txt")) == 0)
 		{
 			FF = MODEL_FILE_TXT;
 		}
-		else if (fileFormat.compare(wstring(L".obj")) == 0)
+		else if (fileFormat.compare(string(".obj")) == 0)
 		{
 			FF = MODEL_FILE_OBJ;
 		}
