@@ -121,7 +121,7 @@ class GraphicsClass
 		bool RenderToTextureFromReflectionView();
 		HRESULT RenderTerrain(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix);
 		bool RenderScene();
-		bool RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, float fogStart, float fogEnd);
+		bool RenderObjects(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, float fogStart, float fogEnd);
 		void ShutdownShaders();
 		HRESULT Render2D();
 		bool SetFillMode(D3D11_FILL_MODE mode);

@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include "textureclass.h"
 #include "timerclass.h"
+#include "shaders/TerrainShader.h"
 #include "Log.h"
 
 const int TEXTURE_REPEAT = 16;
@@ -37,6 +38,7 @@ class Terrain
 			float tu, tv;
 			float nx, ny, nz;
 			float r, g, b;
+			int rIndex, gIndex, bIndex;
 		};
 
 		struct VectorType 
@@ -44,17 +46,29 @@ class Terrain
 			float x, y, z;
 		};
 
+		struct MaterialGroupType 
+		{ 
+			int textureIndex1, textureIndex2, alphaIndex;
+			int red, green, blue;
+			ID3D11Buffer *vertexBuffer, *indexBuffer;
+			int vertexCount, indexCount;
+			VertexType* vertices;
+			unsigned long* indices;
+		};
+
 	public:
 		Terrain();
 		Terrain(const Terrain&);
 		~Terrain();
 
-		bool Initialize(ID3D11Device* device, char* heightMapFileName, WCHAR* textureFilename, char* colorMapFilename);
+		bool Initialize(ID3D11Device* device, char* heightMapFileName, /* WCHAR* textureFilename,*/ 
+						char* materialsFilename, char* materialMapFilename, char* colorMapFilename);
 		void Shutdown();
 		ID3D11ShaderResourceView* GetTexture();
 		int GetVertexCount();
 		void CopyVertexArray(void*);
 		void GetTerrainSize(int&, int&);
+		bool Render(ID3D11DeviceContext* deviceContext, TerrainShader* shader, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix);
 
 	private:
 		bool LoadHeightMap(ID3D11Device* device, char* heightMapFileName);
@@ -70,12 +84,22 @@ class Terrain
 		bool InitializeBuffers(ID3D11Device*);
 		void ShutdownBuffers();
 
+		bool LoadMaterialFile(char* filename, char* materialMapFilename, ID3D11Device* device);
+		bool LoadMaterialMap(char*);
+		bool LoadMaterialBuffers(ID3D11Device*);
+		void ReleaseMaterials();
+
+
 	private:
 		int m_terrainWidth, m_terrainHeight;
 		int m_vertexCount;
 		HeightMapType* m_heightMap;
 		Texture* m_Texture;
 		VertexType* m_vertices;
+
+		int m_textureCount, m_materialCount;
+		Texture* m_Textures;
+		MaterialGroupType* m_Materials;
 	};
 
 #endif

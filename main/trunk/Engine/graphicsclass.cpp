@@ -186,7 +186,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		mPointLights[i]->SetDiffuseColor(color.x, color.y, color.z, color.w);
 		mPointLights[i]->SetPosition(position.x, position.y, position.z);
 
-		object = ModelFactory::GetInstance()->CreateOrdinaryModel(device, hwnd, resultName, wstring(L"Engine/data/models/sphere.txt")); // mObjectFactory
+		object = ModelFactory::GetInstance()->CreateOrdinaryModel(device, hwnd, resultName, string("Engine/data/models/sphere.txt")); // mObjectFactory
 		object->SetMaterial(MaterialFactory::GetInstance()->GetMaterialByName("BlueFloor")); // mMaterialFactory
 		object->SetPosition(position);
 	}
@@ -197,14 +197,15 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	mTerrain = new Terrain;
 	if(!mTerrain) { return result; }
 	// heightmap01.bmp / heightmap513; dirt01.dds; colorm01.bmp / colorm513
-	V_RETURN(mTerrain->Initialize(device, "Engine/data/textures/terrain/heightmap01.bmp", L"Engine/data/textures/terrain/dirt01.dds", "Engine/data/textures/terrain/colorm01.bmp"),
+	V_RETURN(mTerrain->Initialize(device, "Engine/data/textures/terrain/heightmap01.bmp", "Engine/data/textures/terrain/legend.txt", "Engine/data/textures/terrain/materialmap01.bmp", "Engine/data/textures/terrain/colorm01.bmp" ),
 		L"Error", L"Could not initialize the terrain object");
 
 	// Create the quad tree object.
-	mQuadTree = new QuadTree;
-	if(!mQuadTree) { return false; }
+//	mQuadTree = new QuadTree;
+//	if(!mQuadTree) { return false; }
 
-	V_RETURN(mQuadTree->Initialize(mTerrain, device), L"Error",	L"Could not initialize the quad tree object");
+//	V_RETURN(mQuadTree->Initialize(mTerrain, device), L"Error",	L"Could not initialize the quad tree object");
+	
 
 	// Create the render to texture object.
 	m_RenderTexture = new RenderTextureClass;
@@ -252,8 +253,8 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	if (funcTime != -1)
 	{
-		Log::GetInstance()->WriteToLogFile(funcTime, "GraphicsClass::Initialize time: ");
-		Log::GetInstance()->WriteToOutput(funcTime, "GraphicsClass::Initialize time: ");
+		Log::GetInstance()->WriteTimedMessageToFile(funcTime, "GraphicsClass::Initialize time: ");
+		Log::GetInstance()->WriteTimedMessageToOutput(funcTime, "GraphicsClass::Initialize time: ");
 	}
 
 	// Create the sky dome object.
@@ -303,8 +304,8 @@ bool GraphicsClass::InitLights()
 
 	if (funcTime != -1)
 	{
-		Log::GetInstance()->WriteToLogFile(funcTime, "	GraphicsClass::InitLights time: ");
-		Log::GetInstance()->WriteToOutput(funcTime, "	GraphicsClass::InitLights time: ");
+		Log::GetInstance()->WriteTimedMessageToFile(funcTime, "	GraphicsClass::InitLights time: ");
+		Log::GetInstance()->WriteTimedMessageToOutput(funcTime, "	GraphicsClass::InitLights time: ");
 	}
 
 	return true;
@@ -415,8 +416,8 @@ HRESULT GraphicsClass::InitializeShaders(HWND hwnd)
 
 	if (funcTime != -1)
 	{
-		Log::GetInstance()->WriteToLogFile(funcTime, "	GraphicsClass::InitializeShaders time: ");
-		Log::GetInstance()->WriteToOutput(funcTime, "	GraphicsClass::InitializeShaders time: ");
+		Log::GetInstance()->WriteTimedMessageToFile(funcTime, "	GraphicsClass::InitializeShaders time: ");
+		Log::GetInstance()->WriteTimedMessageToOutput(funcTime, "	GraphicsClass::InitializeShaders time: ");
 	}
 
 	return result;
@@ -472,8 +473,8 @@ bool GraphicsClass::InitMaterials()
 
 	if (funcTime != -1)
 	{
-		Log::GetInstance()->WriteToLogFile(funcTime, "	GraphicsClass::InitMaterials time: ");
-		Log::GetInstance()->WriteToOutput(funcTime, "	GraphicsClass::InitMaterials time: ");
+		Log::GetInstance()->WriteTimedMessageToFile(funcTime, "	GraphicsClass::InitMaterials time: ");
+		Log::GetInstance()->WriteTimedMessageToOutput(funcTime, "	GraphicsClass::InitMaterials time: ");
 	}
 
 	return true;
@@ -487,13 +488,11 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 	Timer::GetInstance()->SetTimeA();
 
 	//  Create instanced sphere
-	CREATE_INSTANCED_OBJ_WITH_MAT("instancedSphere", wstring(L"Engine/data/models/sphere.txt"), "NormalWithSpec", 5)
-	mMaterialFactory = MaterialFactory::GetInstance(); mObjectFactory = ModelFactory::GetInstance();
+	CREATE_INSTANCED_OBJ_WITH_MAT("instancedSphere", string("Engine/data/models/sphere.txt"), "NormalWithSpec", 5)
 
 	// Create floor
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "floor", wstring(L"Engine/data/models/floor.txt"), "TexturedFloor");
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, "floor", string("Engine/data/models/floor.txt"), "TexturedFloor");
 	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 132.0f)); 
-	mMaterialFactory = MaterialFactory::GetInstance(); mObjectFactory = ModelFactory::GetInstance();
 
 	// Create 10 ordinary spheres
 	for (int i = 0; i < 5; ++i)
@@ -504,7 +503,7 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 		_itoa_s(i, number, 10);
 		sprintf_s(resultName, "%s%s", prefix, number);
 
-		CREATE_ORDINARY_OBJ_WITH_MAT(object, resultName, wstring(L"Engine/data/models/sphere.txt"), "NormalWithSpec");
+		CREATE_ORDINARY_OBJ_WITH_MAT(object, resultName, string("Engine/data/models/sphere.txt"), "NormalWithSpec");
 
 		// Generate a random position in front of the viewer for the mode.
 		float positionX = 130.0f; // 130.0f;
@@ -521,28 +520,33 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 
 		object->SetPosition(posVector);
 	}
-	mMaterialFactory = MaterialFactory::GetInstance(); mObjectFactory = ModelFactory::GetInstance();
 
 	// Create cube
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "cube", wstring(L"Engine/data/models/cube.txt"), "NormalWithSpec");
-	object->SetPosition(D3DXVECTOR3(130.0f, 1.0f, 130.0f)); // 130.0f, 1.0f, 130.0f
-	
-	mMaterialFactory = MaterialFactory::GetInstance(); mObjectFactory = ModelFactory::GetInstance();
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, "cube", string("Engine/data/models/cube.txt"), "NormalWithSpec");
+	object->SetPosition(D3DXVECTOR3(130.0f, 1.0f, 130.0f));
 
-	// Create space compound
-	// /spaceCompound.obj
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "spaceCompound", wstring(L"Engine/data/models/spaceCompound.txt"), "spaceCompoundMaterial"); // spaceCompoundMaterial // NormalWithSpec
-	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 132.0f)); 
+	// Create space compound from TXT
+	/*
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, "spaceCompound", string("Engine/data/models/spaceCompound.txt"), "spaceCompoundMaterial");
+	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 132.0f));
+	*/
 
-	mMaterialFactory = MaterialFactory::GetInstance(); mObjectFactory = ModelFactory::GetInstance();
+	// Create space compound from OBJ
+	/*
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, "spaceCompound", string("Engine/data/models/spaceCompound/spaceCompound.obj"), "spaceCompoundMaterial");
+	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 132.0f));
+	*/
+
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, "cubeObj", string("Engine/data/models/cube.obj"), "NormalWithSpec");
+	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 125.0f)); 
 
 	Timer::GetInstance()->SetTimeB();
 	funcTime = Timer::GetInstance()->GetDeltaTime();
 
 	if (funcTime != -1)
 	{
-		Log::GetInstance()->WriteToLogFile(funcTime, "	GraphicsClass::InitObjects time: ");
-		Log::GetInstance()->WriteToOutput(funcTime, "	GraphicsClass::InitObjects time: ");
+		Log::GetInstance()->WriteTimedMessageToFile(funcTime, "	GraphicsClass::InitObjects time: ");
+		Log::GetInstance()->WriteTimedMessageToOutput(funcTime, "	GraphicsClass::InitObjects time: ");
 	}
 	return true;
 }
@@ -584,7 +588,8 @@ void GraphicsClass::Shutdown()
 	}
 
 	// Release the quad tree object.
-	SHUTDOWN_OBJ(mQuadTree);
+//	SHUTDOWN_OBJ(mQuadTree);
+
 	// Release the terrain object.
 	SHUTDOWN_OBJ(mTerrain);
 
@@ -800,13 +805,14 @@ bool GraphicsClass::Render()
 	position = mCamera->GetPosition();
 
 	// Get the height of the triangle that is directly underneath the given camera position.
+	/*
 	foundHeight =  mQuadTree->GetHeightAtPosition(position.x, position.z, height);
 	if(foundHeight)
 	{
 		// If there was a triangle under the camera then position the camera just above it by two units.
 		mCamera->SetPosition(position.x, height + 2.0f, position.z);
 	}
-
+	*/
 	//result = RenderToTextureFromReflectionView(); // TODO
 
 	// Render the entire scene to the texture first.
@@ -925,10 +931,10 @@ bool GraphicsClass::RenderScene()
 	RenderTerrain(worldMatrix, viewMatrix, projectionMatrix);
 
 	ModelObject* modelObj = ModelFactory::GetInstance()->GetObjectByName("floor"); // mObjectFactory
-	SetPositionAboveTerrain(modelObj, 0.1f);
+//	SetPositionAboveTerrain(modelObj, 0.1f);
 	RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirAmbLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
 
-	RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
+	RenderObjects(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
 
 	return true;
 }
@@ -1072,19 +1078,23 @@ HRESULT GraphicsClass::RenderTerrain(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatr
 
 	// Render the terrain buffers.
 	vector<ID3D11ShaderResourceView*> texArr;
-	texArr.push_back(mTerrain->GetTexture());
+//	texArr.push_back(mTerrain->GetTexture());
 
 	// Render the terrain using the terrain shader.
-	mTerrainShader->SetTextureArray(deviceContext, texArr);
+//	mTerrainShader->SetTextureArray(deviceContext, texArr, true);
 	mTerrainShader->SetLightSource(deviceContext, mDirAmbLight);
+	/*
 	result = mTerrainShader->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, false);
 	if(FAILED(result)) { return result; }
+	*/
 	// Render the terrain using the quad tree and terrain shader.
-	mQuadTree->Render(m_Frustum, deviceContext, mTerrainShader, mIsAllowToBBRender);
+	//mQuadTree->Render(m_Frustum, deviceContext, mTerrainShader, mIsAllowToBBRender);
+
+	result = mTerrain->Render(deviceContext, mTerrainShader, worldMatrix, viewMatrix, projectionMatrix);
 	return result;
 }
 
-bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, float fogStart, float fogEnd)
+bool GraphicsClass::RenderObjects(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, float fogStart, float fogEnd)
 {
 	bool renderModel;
 	D3DXMATRIX reflectionMatrix, rotationMatrix;
@@ -1110,7 +1120,7 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 	if (dirDelta < -1.0f) { mDirUp   = true; mDirDown = false; }
 	
 	mDirSpecLight->SetDirection(0.0f, dirDelta, 1.0f);
-	mDirAmbLight->SetDirection(0.0f, dirDelta, 1.0f);
+	mDirAmbLight->SetDirection(0.0f, -0.5f, 1.0f); // dirDelta
 
 	// Update the rotation variable each frame.
 	rotation += (float)D3DX_PI * 0.00099f;
@@ -1121,7 +1131,7 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 		modelObj = (*modelIt);
 		model = modelObj->GetModel();
 
-		// Exclusions
+		// Exclusions. TODO: Create understandable way of excluding objects from main draw loop
 		if ( strcmp(modelObj->GetModelName(), "skyDomeSphere") == 0 || strcmp(modelObj->GetModelName(), "skyDomeCube") == 0 )
 		{
 			continue;
@@ -1135,19 +1145,34 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 		if (modelObj->IsInstanced())
 		{
 			SetPositionAboveTerrain(modelObj, 1.0f);
-			RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_SPECULAR_LIGHT, true);
+			RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_SPECULAR_LIGHT, true);	
 		}
 		// Render non-instanced objects
 		else if (!modelObj->IsInstanced())
-		{		
+		{
+			
+			// Draw cube
 			if (strcmp(modelObj->GetModelName(), "cube") == 0)
 			{
 				modelObj->SetRotation(rotation);
-				SetPositionAboveTerrain(modelObj, 1.0f);
+			//	SetPositionAboveTerrain(modelObj, 1.0f);
 				RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
 			}
 			// Draw spaceCompound
 			else if (strcmp(modelObj->GetModelName(), "spaceCompound") == 0)
+			{
+				/*
+				// Turn back face culling back off.
+				mD3D->TurnOffCulling();
+				RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirAmbLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
+				// Turn back face culling back on.
+				mD3D->TurnOnCulling();
+				*/
+			}
+			
+
+			// Draw cubeObj
+			if (strcmp(modelObj->GetModelName(), "cubeObj") == 0)
 			{
 				// Turn back face culling back off.
 				mD3D->TurnOffCulling();
@@ -1176,7 +1201,7 @@ bool GraphicsClass::RenderModel(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D
 					{
 						float rot = numIndex % 2 == 0 ? rotation : -rotation;
 						modelObj->SetRotation(rot);
-						SetPositionAboveTerrain(modelObj, radius);
+					//	SetPositionAboveTerrain(modelObj, radius);
 						RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_SPECULAR_LIGHT, false);
 					}
 					else if (strcmp(lightObjPrefix.c_str(), "light_") == 0)
@@ -1239,6 +1264,7 @@ void GraphicsClass::SetPositionAboveTerrain(ModelObject* modelObject, float heig
 {
 	float height;
 	// Set psition above terrain
+	/*
 	bool foundHeight =  mQuadTree->GetHeightAtPosition(modelObject->GetPosition().x, modelObject->GetPosition().z, height);
 	if(foundHeight)
 	{
@@ -1246,6 +1272,7 @@ void GraphicsClass::SetPositionAboveTerrain(ModelObject* modelObject, float heig
 		D3DXVECTOR3 newPosition = D3DXVECTOR3(modelObject->GetPosition().x, height + heightAbove, modelObject->GetPosition().z);
 		modelObject->SetPosition(newPosition);
 	}
+	*/
 }
 
 HRESULT GraphicsClass::RenderText()
@@ -1298,7 +1325,7 @@ HRESULT GraphicsClass::RenderText()
 
 	mCameraMovement->GetPosition(posX, posY, posZ);
 	mCameraMovement->GetRotation(rotX, rotY, rotZ);
-	terrinDrawCount = mQuadTree->GetDrawCount();
+//	terrinDrawCount = mQuadTree->GetDrawCount();
 
 	// Truncate the position if it exceeds either 9999 or -9999.
 	if(posX > 9999) { posX = 9999; }
@@ -1327,8 +1354,8 @@ HRESULT GraphicsClass::RenderText()
 	WRITE_SENTENCE(mD3D, rotZ, "rZ: ", 800, 360, 0.0f, 1.0f, 1.0f, sentenceNumber);
 	++sentenceNumber;
 
-	WRITE_SENTENCE(mD3D, terrinDrawCount, "terrain draw count: ", 800, 400, 0.0f, 1.0f, 1.0f, sentenceNumber);
-	++sentenceNumber;
+//	WRITE_SENTENCE(mD3D, terrinDrawCount, "terrain draw count: ", 800, 400, 0.0f, 1.0f, 1.0f, sentenceNumber);
+//	++sentenceNumber;
 
 	if (mDrawFuncTime != -1)
 	{

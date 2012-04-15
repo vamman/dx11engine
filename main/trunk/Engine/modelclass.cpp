@@ -29,7 +29,7 @@ ModelClass::~ModelClass()
 {
 }
 
-bool ModelClass::InitializeInstanced(ID3D11Device* device, wstring modelFilename, InstanceType* instances, int numModels)
+bool ModelClass::InitializeInstanced(ID3D11Device* device, string modelFilename, InstanceType* instances, int numModels)
 {
 	bool result;
 	mFileFormat = MODEL_FILE_TXT;
@@ -46,7 +46,7 @@ bool ModelClass::InitializeInstanced(ID3D11Device* device, wstring modelFilename
 	return true;
 }
 
-bool ModelClass::InitializeOrdinary(ID3D11Device* device, wstring modelFilename, ModelFileFormat fileFormat)
+bool ModelClass::InitializeOrdinary(ID3D11Device* device, string modelFilename, ModelFileFormat fileFormat)
 {
 	bool result;
 	D3D11_BLEND_DESC blendDesc;
@@ -92,14 +92,14 @@ bool ModelClass::InitializeOrdinary(ID3D11Device* device, wstring modelFilename,
 	return true;
 }
 
-bool ModelClass::LoadTXTModel(wstring modelFilename)
+bool ModelClass::LoadTXTModel(string modelFilename)
 {
 	bool result;
-	//char* stringPath = "";
-	char* stringPath = (char *)malloc( 100 );
+	// char* stringPath = "";
+	// char* stringPath = (char *)malloc( 100 );
 
-	wcstombs(stringPath, modelFilename.c_str(), 100);
-	strcpy_s(mModelFileName, stringPath);
+	//wcstombs(stringPath, modelFilename.c_str(), 100);
+	strcpy_s(mModelFileName, modelFilename.c_str());
 
 	// Load in the model data,
 	result = LoadModelFromTXT(modelFilename);
@@ -184,13 +184,6 @@ ID3D11Buffer* ModelClass::GetInstanceBuffer() const
 bool ModelClass::InitializeBuffersInstanced(ID3D11Device* device, InstanceType* instances /* vector<InstanceType*> instancesVector */, int numModels)
 {
 	VertexTypeNormalMap* vertices;
-	// InstanceType* instances;
-
-	D3D11_SUBRESOURCE_DATA vertexData, instanceData;
-
-	//unsigned long* indices;
-	D3D11_BUFFER_DESC vertexBufferDesc, instanceBufferDesc; // indexBufferDesc;
-	//D3D11_SUBRESOURCE_DATA vertexData, indexData;
 	HRESULT result;
 
 	// Create the vertex array.
@@ -211,21 +204,7 @@ bool ModelClass::InitializeBuffersInstanced(ID3D11Device* device, InstanceType* 
 		// indices[i] = i;
 	}
 
-	// Set up the description of the static vertex buffer.
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(VertexTypeNormalMap) * mVertexCount;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
-	vertexBufferDesc.MiscFlags = 0;
-	vertexBufferDesc.StructureByteStride = 0;
-
-	// Give the subresource structure a pointer to the vertex data.
-	vertexData.pSysMem = vertices;
-	vertexData.SysMemPitch = 0;
-	vertexData.SysMemSlicePitch = 0;
-
-	// Now create the vertex buffer.
-	result = device->CreateBuffer(&vertexBufferDesc, &vertexData, &mVertexBuffer);
+	result = BufferManager::GetInstance()->CreateVertexBuffer(device, sizeof(VertexTypeNormalMap) * mVertexCount, vertices, &mVertexBuffer);
 	if(FAILED(result))
 	{
 		return false;
@@ -235,30 +214,14 @@ bool ModelClass::InitializeBuffersInstanced(ID3D11Device* device, InstanceType* 
 	delete [] vertices;
 	vertices = 0;
 	
-	mInstanceCount = numModels; // instancesVector.size()
-
-	// Set up the description of the instance buffer.
-	instanceBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	instanceBufferDesc.ByteWidth = sizeof(InstanceType) * mInstanceCount;
-	instanceBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	instanceBufferDesc.CPUAccessFlags = 0;
-	instanceBufferDesc.MiscFlags = 0;
-	instanceBufferDesc.StructureByteStride = 0;
-
-	// Give the subresource structure a pointer to the instance data.
-	instanceData.pSysMem = instances; // instances // &instancesVector[0]
-	instanceData.SysMemPitch = 0;
-	instanceData.SysMemSlicePitch = 0;
-
-	// Create the instance buffer.
-	result = device->CreateBuffer(&instanceBufferDesc, &instanceData, &mInstanceBuffer);
+	mInstanceCount = numModels;
+	result = BufferManager::GetInstance()->CreateInstanceBuffer(device, sizeof(InstanceType) * mInstanceCount, instances, &mInstanceBuffer);
 	if(FAILED(result))
 	{
 		return false;
 	}
 
 	// Release the instance array now that the instance buffer has been created and loaded.
-	
 	delete [] instances;
 	instances = 0;
 	
@@ -271,8 +234,6 @@ bool ModelClass::InitializeBuffersOrdinary(ID3D11Device* device)
 {
 	VertexTypeNormalMap* vertices;
 	unsigned long* indices;
-	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
-	D3D11_SUBRESOURCE_DATA vertexData, indexData;
 	HRESULT result;
 
 	// Create the vertex array.
@@ -302,21 +263,7 @@ bool ModelClass::InitializeBuffersOrdinary(ID3D11Device* device)
 		indices[i] = i;
 	}
 
-	// Set up the description of the static vertex buffer.
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(VertexTypeNormalMap) * mVertexCount;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
-	vertexBufferDesc.MiscFlags = 0;
-	vertexBufferDesc.StructureByteStride = 0;
-
-	// Give the subresource structure a pointer to the vertex data.
-	vertexData.pSysMem = vertices;
-	vertexData.SysMemPitch = 0;
-	vertexData.SysMemSlicePitch = 0;
-
-	// Now create the vertex buffer.
-	result = device->CreateBuffer(&vertexBufferDesc, &vertexData, &mVertexBuffer);
+	result = BufferManager::GetInstance()->CreateVertexBuffer(device, sizeof(VertexTypeNormalMap) * mVertexCount, vertices, &mVertexBuffer);
 	if(FAILED(result))
 	{
 		return false;
@@ -326,25 +273,12 @@ bool ModelClass::InitializeBuffersOrdinary(ID3D11Device* device)
 	delete [] vertices;
 	vertices = 0;
 
-	// Set up the description of the static index buffer.
-	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexBufferDesc.ByteWidth = sizeof(unsigned long) * mIndexCount;
-	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.CPUAccessFlags = 0;
-	indexBufferDesc.MiscFlags = 0;
-	indexBufferDesc.StructureByteStride = 0;
-
-	// Give the subresource structure a pointer to the index data.
-	indexData.pSysMem = indices;
-	indexData.SysMemPitch = 0;
-	indexData.SysMemSlicePitch = 0;
-
-	// Create the index buffer.
-	result = device->CreateBuffer(&indexBufferDesc, &indexData, &mIndexBuffer);
+	result = BufferManager::GetInstance()->CreateIndexBuffer(device, sizeof(unsigned long) * mIndexCount, indices, &mIndexBuffer);
 	if(FAILED(result))
 	{
 		return false;
 	}
+	
 
 	delete [] indices;
 	indices = 0;
@@ -363,19 +297,19 @@ D3DXVECTOR3* ModelClass::GetPosition()
 	return posVector;
 }
 
-bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
+bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, string filename)
 {
 	HRESULT hr = 0;
 
-	wifstream fileIn(filename.c_str());	//Open file
-	wstring meshMatLib;					//String to hold our obj material library filename
+	ifstream fileIn(filename.c_str());	//Open file
+	string meshMatLib;					//String to hold our obj material library filename
 
 	//Arrays to store our model's information
 	vector<DWORD> indices;
 	vector<D3DXVECTOR3> vertPos;
 	vector<D3DXVECTOR3> vertNorm;
 	vector<D3DXVECTOR2> vertTexCoord;
-	vector<wstring> meshMaterials;
+	vector<string> meshMaterials;
 
 	//Vertex definition indices
 	vector<int> vertPosIndex;
@@ -387,22 +321,25 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 	bool hasNorm = false;
 
 	//Temp variables to store into vectors
-	std::wstring meshMaterialsTemp;
+	string meshMaterialsTemp;
 	int vertPosIndexTemp;
 	int vertNormIndexTemp;
 	int vertTCIndexTemp;
 
 	wchar_t checkChar;		//The variable we will use to store one char from file at a time
-	wstring face;		//Holds the string containing our face vertices
+	string face;		//Holds the string containing our face vertices
 	int vIndex = 0;			//Keep track of our vertex index count
 	int triangleCount = 0;	//Total Triangles
 	int totalVerts = 0;
 	int meshTriangles = 0;
 
-	bool isRHCoordSys = true;
+	bool isRHCoordSys = false; // true
 	bool computeNormals = true;
 
 	//Check to see if the file was opened
+	char headerStr[100];
+	sprintf_s(headerStr, 100, "	OBJ vertexes for %s are :", filename.c_str());
+	Log::GetInstance()->WriteTextMessageToFile(headerStr);
 	if (fileIn)
 	{
 		while(fileIn)
@@ -422,7 +359,6 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 				{
 					float vz, vy, vx;
 					fileIn >> vx >> vy >> vz;	//Store the next three types
-
 					if(isRHCoordSys)	//If model is from an RH Coord System
 						vertPos.push_back(D3DXVECTOR3( vx, vy, vz * -1.0f));	//Invert the Z axis
 					else
@@ -467,12 +403,12 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 				break;
 
 				//Get Face Index
-			case 'f':	//f - defines the faces
+			case 'f':	// f - defines the faces
 				checkChar = fileIn.get();
 				if(checkChar == ' ')
 				{
-					face = L"";
-					wstring VertDef;	//Holds one vertex definition at a time
+					face = "";
+					string VertDef;	//Holds one vertex definition at a time
 					triangleCount = 0;
 
 					checkChar = fileIn.get();
@@ -490,7 +426,9 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 
 					triangleCount -= 1;		//Ever vertex in the face AFTER the first two are new faces
 
-					wstringstream ss(face);
+					stringstream ss(face);
+					Log::GetInstance()->WriteTextMessageToFile("	FACE is : ");
+					Log::GetInstance()->WriteTextMessageToFile((char *)face.c_str());
 
 					if(face.length() > 0)
 					{
@@ -566,6 +504,7 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 
 							//Avoid duplicate vertices
 							bool vertAlreadyExists = false;
+							
 							if(totalVerts >= 3)	//Make sure we at least have one triangle to check
 							{
 								//Loop through all the vertices
@@ -585,6 +524,7 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 									}
 								}
 							}
+							
 
 							//If this vertex is not already in our vertex arrays, put it there
 							if(!vertAlreadyExists)
@@ -611,6 +551,7 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 								lastVIndex = indices[vIndex];	//The last vertex index of this TRIANGLE
 							}
 							vIndex++;	//Increment index count
+							mIndexCount++;
 						}
 
 						meshTriangles++;	//One triangle down
@@ -619,6 +560,7 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 						//we convert the face to triangles. We created our first triangle above, now we will
 						//create a new triangle for every new vertex in the face, using the very first vertex
 						//of the face, and the last vertex from the triangle before the current triangle
+						/*
 						for(int l = 0; l < triangleCount-1; ++l)	//Loop through the next vertices to create new triangles
 						{
 							//First vertex of this triangle (the very first vertex of the face too)
@@ -714,28 +656,23 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 							meshTriangles++;	//New triangle defined
 							vIndex++;		
 						}
+						*/
 					}
 				}
 				break;
 
 			case 'm':	//mtllib - material library filename
-				checkChar = fileIn.get();
-				if(checkChar == 't')
+				if (CheckChar(fileIn, 't'))
 				{
-					checkChar = fileIn.get();
-					if(checkChar == 'l')
+					if (CheckChar(fileIn, 'l'))
 					{
-						checkChar = fileIn.get();
-						if(checkChar == 'l')
+						if (CheckChar(fileIn, 'l'))
 						{
-							checkChar = fileIn.get();
-							if(checkChar == 'i')
+							if (CheckChar(fileIn, 'i'))
 							{
-								checkChar = fileIn.get();
-								if(checkChar == 'b')
+								if (CheckChar(fileIn, 'b'))
 								{
-									checkChar = fileIn.get();
-									if(checkChar == ' ')
+									if (CheckChar(fileIn, ' '))
 									{
 										//Store the material libraries file name
 										fileIn >> meshMatLib;
@@ -749,25 +686,19 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 				break;
 
 			case 'u':	//usemtl - which material to use
-				checkChar = fileIn.get();
-				if(checkChar == 's')
+				if (CheckChar(fileIn, 's'))
 				{
-					checkChar = fileIn.get();
-					if(checkChar == 'e')
+					if (CheckChar(fileIn, 'e'))
 					{
-						checkChar = fileIn.get();
-						if(checkChar == 'm')
+						if (CheckChar(fileIn, 'm'))
 						{
-							checkChar = fileIn.get();
-							if(checkChar == 't')
+							if (CheckChar(fileIn, 't'))
 							{
-								checkChar = fileIn.get();
-								if(checkChar == 'l')
+								if (CheckChar(fileIn, 'l'))
 								{
-									checkChar = fileIn.get();
-									if(checkChar == ' ')
+									if (CheckChar(fileIn, ' '))
 									{
-										meshMaterialsTemp = L"";	//Make sure this is cleared
+										meshMaterialsTemp = "";	//Make sure this is cleared
 
 										fileIn >> meshMaterialsTemp; //Get next type (string)
 
@@ -788,17 +719,15 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 	}
 	else	//If we could not open the file
 	{
-		//SwapChain->SetFullscreenState(false, NULL);	//Make sure we are out of fullscreen
-
 		//create message
-		wstring message = L"Could not open: ";
+		string message = "Could not open: ";
 		message += filename;
 
-		MessageBox(0, message.c_str(), L"Error", MB_OK);
+		MessageBox(0, (LPCWSTR) message.c_str(), L"Error", MB_OK);
 
 		return false;
 	}
-	
+
 	meshSubsetIndexStart.push_back(vIndex); //There won't be another index start after our last subset, so set it here
 
 	//sometimes "g" is defined at the very top of the file, then again before the first group of faces.
@@ -818,13 +747,14 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 
 	//Close the obj file, and open the mtl file
 	fileIn.close();
-	
-	wstring mltPath = wstring(L"Engine/data/models/spaceCompound/");
-	wstring mltFileName = mltPath.append(meshMatLib);
-	fileIn.open(mltFileName.c_str()); // meshMatLib.c_str()
+	/*
+	int slashPos = filename.find_last_of("/\\");
+	string mltPath = filename.substr(0, slashPos + 1);
+	string mltFileName = mltPath.append(meshMatLib);
+	fileIn.open(mltFileName.c_str());
 
 	std::wstring lastStringRead;
-	int matCount = material.size();	//total materials
+	int matCount = material.size();
 
 	//kdset - If our diffuse color was not set, we can use the ambient color (which is usually the same)
 	//If the diffuse color WAS set, then we don't need to set our diffuse color to ambient
@@ -847,8 +777,7 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 
 				//Set diffuse color
 			case 'K':
-				checkChar = fileIn.get();
-				if(checkChar == 'd')	//Diffuse Color
+				if (CheckChar(fileIn, 't'))	//Diffuse Color
 				{
 					checkChar = fileIn.get();	//remove space
 
@@ -860,7 +789,7 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 				}
 
 				//Ambient Color (We'll store it in diffuse if there isn't a diffuse already)
-				if(checkChar == 'a')	
+				if (CheckChar(fileIn, 'a'))	
 				{					
 					checkChar = fileIn.get();	//remove space
 					if(!kdset)
@@ -874,8 +803,7 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 
 				//Check for transparency
 			case 'T':
-				checkChar = fileIn.get();
-				if(checkChar == 'r')
+				if (CheckChar(fileIn, 'r'))
 				{
 					checkChar = fileIn.get();	//remove space
 					float Transparency;
@@ -890,8 +818,7 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 
 				//Some obj files specify d for transparency
 			case 'd':
-				checkChar = fileIn.get();
-				if(checkChar == ' ')
+				if (CheckChar(fileIn, ' '))
 				{
 					float Transparency;
 					fileIn >> Transparency;
@@ -908,21 +835,16 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 
 				//Get the diffuse map (texture)
 			case 'm':
-				checkChar = fileIn.get();
-				if(checkChar == 'a')
+				if (CheckChar(fileIn, 'a'))
 				{
-					checkChar = fileIn.get();
-					if(checkChar == 'p')
+					if (CheckChar(fileIn, 'p'))
 					{
-						checkChar = fileIn.get();
-						if(checkChar == '_')
+						if (CheckChar(fileIn, '_'))
 						{
 							//map_Kd - Diffuse map
-							checkChar = fileIn.get();
-							if(checkChar == 'K')
+							if (CheckChar(fileIn, 'K'))
 							{
-								checkChar = fileIn.get();
-								if(checkChar == 'd')
+								if (CheckChar(fileIn, 'd'))
 								{
 									std::wstring fileNamePath;
 
@@ -990,23 +912,17 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 				break;
 
 			case 'n':	//newmtl - Declare new material
-				checkChar = fileIn.get();
-				if(checkChar == 'e')
+				if (CheckChar(fileIn, 'e'))
 				{
-					checkChar = fileIn.get();
-					if(checkChar == 'w')
+					if (CheckChar(fileIn, 'w'))
 					{
-						checkChar = fileIn.get();
-						if(checkChar == 'm')
+						if (CheckChar(fileIn, 'm'))
 						{
-							checkChar = fileIn.get();
-							if(checkChar == 't')
+							if (CheckChar(fileIn, 't'))
 							{
-								checkChar = fileIn.get();
-								if(checkChar == 'l')
+								if (CheckChar(fileIn, 'l'))
 								{
-									checkChar = fileIn.get();
-									if(checkChar == ' ')
+									if (CheckChar(fileIn, ' '))
 									{
 										//New material, set its defaults
 										SurfaceMaterial tempMat;
@@ -1034,10 +950,10 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 	{
 		//SwapChain->SetFullscreenState(false, NULL);	//Make sure we are out of fullscreen
 
-		std::wstring message = L"Could not open: ";
+		string message = "Could not open: ";
 		message += meshMatLib;
 
-		MessageBox(0, message.c_str(),
+		MessageBox(0, (LPCWSTR) message.c_str(),
 			L"Error", MB_OK);
 
 		return false;
@@ -1059,15 +975,26 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 		if(!hasMat)
 			meshSubsetTexture.push_back(0); //Use first material in array
 	}
-
+	*/
 	vector<VertexTypeLight> vertices;
 	VertexTypeLight tempVert;
 
 	//Create our vertices using the information we got 
 	//from the file and store them in a vector
+	char totalVertsStr[100];
+	sprintf_s(totalVertsStr, "	TOTAL VERTS = %d", totalVerts);
+	Log::GetInstance()->WriteTextMessageToFile(totalVertsStr);
+
+	mVertexCount = totalVerts;
+
 	for(int j = 0 ; j < totalVerts; ++j)
 	{
 		tempVert.position = vertPos[vertPosIndex[j]];
+
+		char vertexStr[100];
+		sprintf_s(vertexStr, "	vx = %f; vy = %f, vz = %f", tempVert.position.x, tempVert.position.y, tempVert.position.z);
+		Log::GetInstance()->WriteTextMessageToFile(vertexStr);
+
 		tempVert.normal = vertNorm[vertNormIndex[j]];
 		tempVert.texture = vertTexCoord[vertTCIndex[j]];
 
@@ -1187,11 +1114,19 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 	ZeroMemory( &vertexBufferData, sizeof(vertexBufferData) );
 	vertexBufferData.pSysMem = &vertices[0];
 	hr = device->CreateBuffer( &vertexBufferDesc, &vertexBufferData, &mVertexBuffer);
+
+	Log::GetInstance()->WriteTextMessageToFile("");
 	
 	return true;
 }
 
-bool ModelClass::LoadModelFromTXT(wstring filename)
+bool ModelClass::CheckChar(ifstream& fileIn, wchar_t charToCheck)
+{
+	wchar_t checkChar = fileIn.get();
+	return checkChar == charToCheck;
+}
+
+bool ModelClass::LoadModelFromTXT(string filename)
 {
 	ifstream fin;
 	char input;
@@ -1237,12 +1172,21 @@ bool ModelClass::LoadModelFromTXT(wstring filename)
 	fin.get(input);
 
 	// Read in the vertex data.
+	char headerStr[100];
+	sprintf_s(headerStr, 100, "	TXT vertexes for %s are :", filename.c_str());
+	Log::GetInstance()->WriteTextMessageToFile(headerStr);
 	for(i=0; i<mVertexCount; i++)
 	{
 		fin >> mModel[i].x >> mModel[i].y >> mModel[i].z;
+
+		char vertexStr[100];
+		sprintf_s(vertexStr, "	vx = %f; vy = %f, vz = %f", mModel[i].x, mModel[i].y, mModel[i].z);
+		Log::GetInstance()->WriteTextMessageToFile(vertexStr);
+
 		fin >> mModel[i].tu >> mModel[i].tv;
 		fin >> mModel[i].nx >> mModel[i].ny >> mModel[i].nz;
 	}
+	Log::GetInstance()->WriteTextMessageToFile("");
 
 	// Close the model file.
 	fin.close();
@@ -1531,14 +1475,13 @@ void ModelClass::RenderBuffersOrdinaryForOBJFile(ID3D11DeviceContext* deviceCont
 	offset = 0;
 
 	//Draw our model's NON-transparent subsets
-	/*
 	for(int i = 0; i < 1; ++i) // meshSubsets
 	{
 		//Set the grounds index buffer
 		deviceContext->IASetIndexBuffer( mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 		//Set the grounds vertex buffer
 		deviceContext->IASetVertexBuffers( 0, 1, &mVertexBuffer, &stride, &offset );
-	*/
+
 		//Set the WVP matrix and send it to the constant buffer in effect file
 		/*
 		WVP = meshWorld * camView * camProjection;
@@ -1555,16 +1498,19 @@ void ModelClass::RenderBuffersOrdinaryForOBJFile(ID3D11DeviceContext* deviceCont
 		}
 		deviceContext->PSSetSamplers( 0, 1, &CubesTexSamplerState );
 		*/
-	/*
+	
 		// deviceContext->RSSetState(RSCullNone);
+
+		// deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 		int indexStart = meshSubsetIndexStart[i];
 		int indexDrawAmount =  meshSubsetIndexStart[i+1] - meshSubsetIndexStart[i];
-		if(!material[meshSubsetTexture[i]].transparent)
-		{
+		//if(!material[meshSubsetTexture[i]].transparent)
+		//{
 			deviceContext->DrawIndexed( indexDrawAmount, indexStart, 0 );
-		}
+		//}
 	}
-	*/
+	
 	//Draw our model's TRANSPARENT subsets now
 
 	//Set our blend state
@@ -1594,11 +1540,14 @@ void ModelClass::RenderBuffersOrdinaryForOBJFile(ID3D11DeviceContext* deviceCont
 		deviceContext->PSSetSamplers( 0, 1, &CubesTexSamplerState );
 		*/
 		// deviceContext->RSSetState(RSCullNone);
+
+		// deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
 		int indexStart = meshSubsetIndexStart[i];
 		int indexDrawAmount =  meshSubsetIndexStart[i+1] - meshSubsetIndexStart[i];
-		if(material[meshSubsetTexture[i]].transparent)
-		{
+		//if(material[meshSubsetTexture[i]].transparent)
+		//{
 			deviceContext->DrawIndexed( indexDrawAmount, indexStart, 0 );
-		}
+		//}
 	}
 }

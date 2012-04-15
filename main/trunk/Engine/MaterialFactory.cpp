@@ -13,7 +13,7 @@ MaterialFactory* MaterialFactory::GetInstance()
 
 MaterialFactory::MaterialFactory(void)
 {
-	Log::GetInstance()->WriteToOutput(100, "MaterialFactory::MaterialFactory");
+	Log::GetInstance()->WriteTimedMessageToOutput(100, "MaterialFactory::MaterialFactory");
 }
 
 MaterialFactory::~MaterialFactory(void)

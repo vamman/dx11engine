@@ -14,39 +14,47 @@ Log* Log::GetInstance()
 
 Log::Log()
 {
+	remove("log.txt");
 	fout.open("log.txt", ios::app);
-	WriteToOutput(100, "Log::Log");
+	WriteTextMessageToFile("Log::Log");
+	WriteTextMessageToOutput("Log::Log");
 }
 
 Log::~Log()
 {
 	fout.close();
 }
-void Log::WriteToLogFile(DWORD deltaTime, char* functionName)
-{
-	// ofstream fout;
-	char resultStr[100];
-	strcpy_s(resultStr, sizeof(resultStr), GenerateString(deltaTime, functionName));
 
-	// Open a file to write the message to.
-	// fout.open("log.txt", ios::app);
+void Log::WriteTimedMessageToFile(DWORD deltaTime, char* message)
+{
+	char resultStr[100];
+	strcpy_s(resultStr, sizeof(resultStr), GenerateString(deltaTime, message));
 	fout << resultStr << "\n";
-	// fout.close();
 }
 
-void Log::WriteToOutput(DWORD deltaTime, char* functionName)
+void Log::WriteTimedMessageToOutput(DWORD deltaTime, char* message)
 {
 	char resultStr[100];
-	strcpy_s(resultStr, sizeof(resultStr), GenerateString(deltaTime, functionName));
+	strcpy_s(resultStr, sizeof(resultStr), GenerateString(deltaTime, message));
 	OutputDebugStringA((LPCSTR)resultStr);
 	OutputDebugStringA("\n");
 }
 
-char* Log::GenerateString(DWORD deltaTime, char* functionName)
+void Log::WriteTextMessageToFile(char* message)
+{
+	fout << message << "\n";
+}
+void Log::WriteTextMessageToOutput(char* message)
+{
+	OutputDebugStringA((LPCSTR)message);
+	OutputDebugStringA("\n");
+}
+
+char* Log::GenerateString(DWORD deltaTime, char* message)
 {
 	char tempString[10];
 	char resultStr[100];
-	strcpy_s(resultStr, functionName);
+	strcpy_s(resultStr, message);
 	_itoa_s(deltaTime, tempString, 10);
 	strcat_s(resultStr, tempString);
 	return resultStr;

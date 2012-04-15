@@ -16,6 +16,7 @@ using namespace std;
 
 #include "textureclass.h"
 #include "Log.h"
+#include "BufferManager.h"
 
 
 enum ModelFileFormat
@@ -41,7 +42,7 @@ struct ModelType
 // For .MLT material
 struct SurfaceMaterial
 {
-	std::wstring matName;
+	string matName;
 	D3DXVECTOR4 difColor;
 	int texArrayIndex;
 	bool hasTexture;
@@ -113,8 +114,8 @@ class ModelClass
 		ModelClass(const ModelClass&);
 		~ModelClass();
 
-		bool InitializeInstanced(ID3D11Device* device, wstring filename, InstanceType* instances /* vector<InstanceType*> instancesVector */, int numModels);
-		bool InitializeOrdinary(ID3D11Device* device, wstring filename, ModelFileFormat fileFormat);
+		bool InitializeInstanced(ID3D11Device* device, string filename, InstanceType* instances /* vector<InstanceType*> instancesVector */, int numModels);
+		bool InitializeOrdinary(ID3D11Device* device, string filename, ModelFileFormat fileFormat);
 
 		void Shutdown();
 		void RenderInstanced(ID3D11DeviceContext* deviceContext);
@@ -138,9 +139,10 @@ class ModelClass
 		bool InitializeBuffersOrdinary(ID3D11Device* device);
 		void ShutdownBuffers();
 
-		bool LoadModelFromTXT(wstring modelFilename);
-		bool LoadTXTModel(wstring modelFilename);
-		bool LoadModelFromOBJ(ID3D11Device* device, wstring modelFilename);
+		bool LoadModelFromTXT(string modelFilename);
+		bool LoadTXTModel(string modelFilename);
+		bool LoadModelFromOBJ(ID3D11Device* device, string modelFilename);
+		bool CheckChar(ifstream& fileIn, wchar_t charToCheck);
 		void ReleaseModel();
 
 		void CalculateModelVectors();
