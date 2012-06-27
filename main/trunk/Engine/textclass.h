@@ -11,6 +11,7 @@
 #include "timerclass.h"
 #include "Log.h"
 #include "d3dclass.h"
+#include "BufferManager.h"
 
 const int MAX_LENGTH = 35;
 

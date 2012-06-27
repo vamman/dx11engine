@@ -1,6 +1,7 @@
 // Filename: terrainclass.cpp
 ////////////////////////////////////////////////////////////////////////////////
 #include "Terrain.h"
+#include "graphicsclass.h"
 
 Terrain::Terrain()
 {
@@ -19,7 +20,7 @@ Terrain::~Terrain()
 {
 }
 
-bool Terrain::Initialize(ID3D11Device* device, char* heightMapFileName, /* WCHAR* textureFilename,*/ char* materialsFilename, char* materialMapFilename, char* colorMapFilename)
+bool Terrain::InitializeWithQuadTree(ID3D11Device* device, char* heightMapFileName, WCHAR* textureFilename, char* colorMapFilename)
 {
 	bool result;
 	DWORD funcTime = -1;
@@ -27,64 +28,70 @@ bool Terrain::Initialize(ID3D11Device* device, char* heightMapFileName, /* WCHAR
 	Timer::GetInstance()->SetTimeA();
 
 	// Load in the height map for the terrain.
-	result = LoadHeightMap(device, heightMapFileName);
-	if(!result)
-	{
-		return false;
-	}
+	ASSERT(LoadHeightMap(device, heightMapFileName), L"Terrain::LoadHeightMap FAILED");
 
 	// Normalize the height of the height map.
 	NormalizeHeightMap();
 
 	// Calculate the normals for the terrain data.
-	result = CalculateNormals();
-	if(!result)
-	{
-		return false;
-	}
+	ASSERT(CalculateNormals(), L"Terrain::CalculateNormals FAILED");
 
 	// Calculate the texture coordinates.
-	// CalculateTextureCoordinates();
+	CalculateTextureCoordinates();
 
 	// Load the texture.
-	/*
-	result = LoadTexture(device, textureFilename);
-	if(!result)
-	{
-		return false;
-	}
-	*/
+	ASSERT(LoadTexture(device, textureFilename), L"Terrain::LoadTexture FAILED");
 
 	// Load in the color map for the terrain.
-	result = LoadColorMap(colorMapFilename);
-	if(!result)
-	{
-		return false;
-	}
+	ASSERT(LoadColorMap(colorMapFilename), L"Terrain::LoadColorMap FAILED");
 
 	// Initialize the vertex and index buffer that hold the geometry for the terrain.
-	/*
-	result = InitializeBuffers(device);
-	if(!result)
-	{
-		return false;
-	}
-	*/
-
-	// Initialize the material groups for the terrain.
-	result = LoadMaterialFile(materialsFilename, materialMapFilename, device);
-	if(!result)
-	{
-		return false;
-	}
+	ASSERT(InitializeBuffers(device), L"Terrain::InitializeBuffers FAILED");
 
 	Timer::GetInstance()->SetTimeB();
 	funcTime = Timer::GetInstance()->GetDeltaTime();
 
 	if (funcTime != -1)
 	{
-		Log::GetInstance()->WriteTimedMessageToFile(funcTime, "	Terrain::Initialize time: ");
-		Log::GetInstance()->WriteTimedMessageToOutput(funcTime, "	Terrain::Initialize time: ");
+		Log::GetInstance()->WriteTimedMessageToFile(funcTime, "	Terrain::InitializeWithQuadTree time: ");
+		Log::GetInstance()->WriteTimedMessageToOutput(funcTime, "	Terrain::InitializeWithQuadTree time: ");
+	}
+
+	return true;
+}
+
+bool Terrain::InitializeWithMaterials(ID3D11Device* device, char* heightMapFileName, /* WCHAR* textureFilename,*/ char* materialsFilename, char* materialMapFilename, char* colorMapFilename)
+{
+	bool result;
+	DWORD funcTime = -1;
+
+	Timer::GetInstance()->SetTimeA();
+
+	// Load in the height map for the terrain.
+	ASSERT(LoadHeightMap(device, heightMapFileName), L"Terrain::LoadHeightMap FAILED");
+
+	// Normalize the height of the height map.
+	NormalizeHeightMap();
+
+	// Calculate the normals for the terrain data.
+	ASSERT(CalculateNormals(), L"Terrain::CalculateNormals FAILED");
+
+	// Load in the color map for the terrain.
+	ASSERT(LoadColorMap(colorMapFilename), L"Terrain::LoadColorMap FAILED");
+
+	// Initialize the vertex and index buffer that hold the geometry for the terrain.
+	ASSERT(InitializeBuffers(device), L"Terrain::InitializeBuffers FAILED");
+
+	// Initialize the material groups for the terrain.
+	ASSERT(LoadMaterialFile(materialsFilename, materialMapFilename, device), L"Terrain::LoadMaterialFile FAILED");
+
+	Timer::GetInstance()->SetTimeB();
+	funcTime = Timer::GetInstance()->GetDeltaTime();
+
+	if (funcTime != -1)
+	{
+		Log::GetInstance()->WriteTimedMessageToFile(funcTime, "	Terrain::InitializeWithMaterials time: ");
+		Log::GetInstance()->WriteTimedMessageToOutput(funcTime, "	Terrain::InitializeWithMaterials time: ");
 	}
 
 	return true;
@@ -112,6 +119,7 @@ ID3D11ShaderResourceView* Terrain::GetTexture()
 	return m_Texture->GetTexture();
 }
 
+// TODO: Each method more than 30 lines has be checked for result by assert
 bool Terrain::LoadHeightMap(ID3D11Device* device, char* filename)
 {
 	FILE* filePtr;
@@ -231,6 +239,7 @@ void Terrain::NormalizeHeightMap()
 	return;
 }
 
+// TODO: Each method more than 30 lines has be checked for result by assert
 bool Terrain::CalculateNormals()
 {
 	int i, j, index1, index2, index3, index, count;
@@ -378,6 +387,7 @@ void Terrain::ShutdownHeightMap()
 	return;
 }
 
+// TODO: Each method more than 30 lines has be checked for result by assert
 void Terrain::CalculateTextureCoordinates()
 {
 	int incrementCount, i, j, tuCount, tvCount;
@@ -456,7 +466,8 @@ bool Terrain::LoadTexture(ID3D11Device* device, WCHAR* filename)
 	return true;
 }
 
-bool Terrain::LoadColorMap(char* filename)
+// TODO: Each method more than 30 lines has be checked for result by assert
+HRESULT Terrain::LoadColorMap(char* filename)
 {
 	int error, imageSize, i, j, k, index, colorMapWidth, colorMapHeight;
 	FILE* filePtr;
@@ -470,21 +481,21 @@ bool Terrain::LoadColorMap(char* filename)
 	error = fopen_s(&filePtr, filename, "rb");
 	if(error != 0)
 	{
-		return false;
+		return E_FAIL;
 	}
 
 	// Read in the file header.
 	count = fread(&bitmapFileHeader, sizeof(BITMAPFILEHEADER), 1, filePtr);
 	if(count != 1)
 	{
-		return false;
+		return E_FAIL;
 	}
 
 	// Read in the bitmap info header.
 	count = fread(&bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, filePtr);
 	if(count != 1)
 	{
-		return false;
+		return E_FAIL;
 	}
 
 	// Make sure the color map dimensions are the same as the terrain dimensions for easy 1 to 1 mapping.
@@ -493,7 +504,7 @@ bool Terrain::LoadColorMap(char* filename)
 
 	if((colorMapWidth != m_terrainWidth) || (colorMapHeight != m_terrainHeight))
 	{
-		return false;
+		return E_FAIL;
 	}
 
 	// Calculate the size of the bitmap image data.
@@ -503,7 +514,7 @@ bool Terrain::LoadColorMap(char* filename)
 	bitmapImage = new unsigned char[imageSize];
 	if(!bitmapImage)
 	{
-		return false;
+		return E_FAIL;
 	}
 
 	// Move to the beginning of the bitmap data.
@@ -513,14 +524,14 @@ bool Terrain::LoadColorMap(char* filename)
 	count = fread(bitmapImage, 1, imageSize, filePtr);
 	if(count != imageSize)
 	{
-		return false;
+		return E_FAIL;
 	}
 
 	// Close the file.
 	error = fclose(filePtr);
 	if(error != 0)
 	{
-		return false;
+		return E_FAIL;
 	}
 
 	// Initialize the position in the image data buffer.
@@ -545,9 +556,10 @@ bool Terrain::LoadColorMap(char* filename)
 	delete [] bitmapImage;
 	bitmapImage = 0;
 
-	return true;
+	return S_OK;
 }
 
+// TODO: Each method more than 30 lines has be checked for result by assert
 bool Terrain::LoadMaterialFile(char* filename, char* materialMapFilename, ID3D11Device* device)
 {
 	ifstream fin;
@@ -626,13 +638,6 @@ bool Terrain::LoadMaterialFile(char* filename, char* materialMapFilename, ID3D11
 	}
 
 	// Initialize the material group array.
-	for(i=0; i<m_materialCount; i++)
-	{
-		m_Materials[i].vertexBuffer = 0;
-		m_Materials[i].indexBuffer = 0;
-		m_Materials[i].vertices = 0;
-		m_Materials[i].indices = 0;
-	}
 
 	// Load each of the material group indexes in.
 	for(i=0; i<m_materialCount; i++)
@@ -666,6 +671,7 @@ bool Terrain::LoadMaterialFile(char* filename, char* materialMapFilename, ID3D11
 	return true;
 }
 
+// TODO: Each method more than 30 lines has be checked for result by assert
 bool Terrain::LoadMaterialMap(char* filename)
 {
 	int error, imageSize, i, j, k, index;
@@ -734,12 +740,13 @@ bool Terrain::LoadMaterialMap(char* filename)
 	k=0;
 
 	// Read the material index data into the height map structure.
-	for(j=0; j<m_terrainHeight; j++)
+	for(j = 0; j < m_terrainHeight; j++)
 	{
-		for(i=0; i<m_terrainWidth; i++)
+		for(i = 0; i < m_terrainWidth; i++)
 		{
 			index = (m_terrainHeight * j) + i;
 
+			// TODO: Fix bug: In m_heightMap rIndex, gIndex and bIndex are written incorrect
 			m_heightMap[index].rIndex = (int)bitmapImage[k+2];
 			m_heightMap[index].gIndex = (int)bitmapImage[k+1];
 			m_heightMap[index].bIndex = (int)bitmapImage[k];
@@ -755,6 +762,8 @@ bool Terrain::LoadMaterialMap(char* filename)
 	return true;
 }
 
+// TODO: Each method more than 30 lines has be checked for result by assert
+// TODO: Fix bug: In m_heightMap rIndex, gIndex and bIndex are written incorrect
 bool Terrain::LoadMaterialBuffers(ID3D11Device* device)
 {
 	int maxVertexCount, maxIndexCount, i, j, index1, index2, index3, index4, redIndex, greenIndex, blueIndex, index, vIndex;
@@ -830,6 +839,15 @@ bool Terrain::LoadMaterialBuffers(ID3D11Device* device)
 			m_Materials[index].vertices[vIndex].normal = D3DXVECTOR3(m_heightMap[index3].nx, m_heightMap[index3].ny, m_heightMap[index3].nz);
 			m_Materials[index].vertices[vIndex].color = D3DXVECTOR4(m_heightMap[index3].r, m_heightMap[index3].g, m_heightMap[index3].b, 1.0f);
 			m_Materials[index].indices[vIndex] = vIndex;
+
+			// Fill vertices buffers here
+			/*
+			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index3].x, m_heightMap[index3].y, m_heightMap[index3].z);
+			m_vertices[index].texture = D3DXVECTOR2(0.0f, 0.0f);
+			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index3].nx, m_heightMap[index3].ny, m_heightMap[index3].nz);
+			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index3].r, m_heightMap[index3].g, m_heightMap[index3].b, 1.0f);
+			*/
+
 			vIndex++;
 
 			// Upper right.
@@ -840,13 +858,13 @@ bool Terrain::LoadMaterialBuffers(ID3D11Device* device)
 			m_Materials[index].indices[vIndex] = vIndex;
 			vIndex++;
 
-			// Bottom left.
-			m_Materials[index].vertices[vIndex].position = D3DXVECTOR3(m_heightMap[index1].x, m_heightMap[index1].y, m_heightMap[index1].z);
-			m_Materials[index].vertices[vIndex].texture = D3DXVECTOR2(0.0f, 1.0f);
-			m_Materials[index].vertices[vIndex].normal = D3DXVECTOR3(m_heightMap[index1].nx, m_heightMap[index1].ny, m_heightMap[index1].nz);
-			m_Materials[index].vertices[vIndex].color = D3DXVECTOR4(m_heightMap[index1].r, m_heightMap[index1].g, m_heightMap[index1].b, 1.0f);
-			m_Materials[index].indices[vIndex] = vIndex;
-			vIndex++;
+			// Fill vertices buffers here
+			/*
+			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index4].x, m_heightMap[index4].y, m_heightMap[index4].z);
+			m_vertices[index].texture = D3DXVECTOR2(1.0f, 0.0f);
+			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index4].nx, m_heightMap[index4].ny, m_heightMap[index4].nz);
+			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index4].r, m_heightMap[index4].g, m_heightMap[index4].b, 1.0f);
+			*/
 
 			// Bottom left.
 			m_Materials[index].vertices[vIndex].position = D3DXVECTOR3(m_heightMap[index1].x, m_heightMap[index1].y, m_heightMap[index1].z);
@@ -855,6 +873,30 @@ bool Terrain::LoadMaterialBuffers(ID3D11Device* device)
 			m_Materials[index].vertices[vIndex].color = D3DXVECTOR4(m_heightMap[index1].r, m_heightMap[index1].g, m_heightMap[index1].b, 1.0f);
 			m_Materials[index].indices[vIndex] = vIndex;
 			vIndex++;
+
+			// Fill vertices buffers here
+			/*
+			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index1].x, m_heightMap[index1].y, m_heightMap[index1].z);
+			m_vertices[index].texture = D3DXVECTOR2(0.0f, 1.0f);
+			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index1].nx, m_heightMap[index1].ny, m_heightMap[index1].nz);
+			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index1].r, m_heightMap[index1].g, m_heightMap[index1].b, 1.0f);
+			*/
+
+			// Bottom left.
+			m_Materials[index].vertices[vIndex].position = D3DXVECTOR3(m_heightMap[index1].x, m_heightMap[index1].y, m_heightMap[index1].z);
+			m_Materials[index].vertices[vIndex].texture = D3DXVECTOR2(0.0f, 1.0f);
+			m_Materials[index].vertices[vIndex].normal = D3DXVECTOR3(m_heightMap[index1].nx, m_heightMap[index1].ny, m_heightMap[index1].nz);
+			m_Materials[index].vertices[vIndex].color = D3DXVECTOR4(m_heightMap[index1].r, m_heightMap[index1].g, m_heightMap[index1].b, 1.0f);
+			m_Materials[index].indices[vIndex] = vIndex;
+			vIndex++;
+
+			// Fill vertices buffers here
+			/*
+			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index1].x, m_heightMap[index1].y, m_heightMap[index1].z);
+			m_vertices[index].texture = D3DXVECTOR2(0.0f, 1.0f);
+			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index1].nx, m_heightMap[index1].ny, m_heightMap[index1].nz);
+			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index1].r, m_heightMap[index1].g, m_heightMap[index1].b, 1.0f);
+			*/
 
 			// Upper right.
 			m_Materials[index].vertices[vIndex].position = D3DXVECTOR3(m_heightMap[index4].x, m_heightMap[index4].y, m_heightMap[index4].z);
@@ -863,6 +905,14 @@ bool Terrain::LoadMaterialBuffers(ID3D11Device* device)
 			m_Materials[index].vertices[vIndex].color = D3DXVECTOR4(m_heightMap[index4].r, m_heightMap[index4].g, m_heightMap[index4].b, 1.0f);
 			m_Materials[index].indices[vIndex] = vIndex;
 			vIndex++;
+
+			// Fill vertices buffers here
+			/*
+			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index4].x, m_heightMap[index4].y, m_heightMap[index4].z);
+			m_vertices[index].texture = D3DXVECTOR2(1.0f, 0.0f);
+			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index4].nx, m_heightMap[index4].ny, m_heightMap[index4].nz);
+			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index4].r, m_heightMap[index4].g, m_heightMap[index4].b, 1.0f);
+			*/
 
 			// Bottom right.
 			m_Materials[index].vertices[vIndex].position = D3DXVECTOR3(m_heightMap[index2].x, m_heightMap[index2].y, m_heightMap[index2].z);
@@ -871,6 +921,14 @@ bool Terrain::LoadMaterialBuffers(ID3D11Device* device)
 			m_Materials[index].vertices[vIndex].color = D3DXVECTOR4(m_heightMap[index2].r, m_heightMap[index2].g, m_heightMap[index2].b, 1.0f);
 			m_Materials[index].indices[vIndex] = vIndex;
 			vIndex++;
+
+			// Fill vertices buffers here
+			/*
+			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index1].x, m_heightMap[index1].y, m_heightMap[index1].z);
+			m_vertices[index].texture = D3DXVECTOR2(1.0f, 1.0f);
+			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index1].nx, m_heightMap[index1].ny, m_heightMap[index1].nz);
+			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index1].r, m_heightMap[index1].g, m_heightMap[index1].b, 1.0f);
+			*/
 
 			// Increment the vertex and index array counts.
 			m_Materials[index].vertexCount += 6;
@@ -881,35 +939,13 @@ bool Terrain::LoadMaterialBuffers(ID3D11Device* device)
 	// Now create the vertex and index buffers from the vertex and index arrays for each material group.
 	for(i=0; i<m_materialCount; i++)
 	{
-		vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		vertexBufferDesc.ByteWidth = sizeof(VertexType) * m_Materials[i].vertexCount;
-		vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		vertexBufferDesc.CPUAccessFlags = 0;
-		vertexBufferDesc.MiscFlags = 0;
-		vertexBufferDesc.StructureByteStride = 0;
-
-		vertexData.pSysMem = m_Materials[i].vertices;
-		vertexData.SysMemPitch = 0;
-		vertexData.SysMemSlicePitch = 0;
-
-		result = device->CreateBuffer(&vertexBufferDesc, &vertexData, &m_Materials[i].vertexBuffer);
+		result = BufferManager::GetInstance()->CreateVertexBuffer(device, sizeof(VertexType) * m_Materials[i].vertexCount, m_Materials[i].vertices, &m_Materials[i].vertexBuffer);
 		if(FAILED(result))
 		{
 			return false;
 		}
 
-		indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		indexBufferDesc.ByteWidth = sizeof(unsigned long) * m_Materials[i].indexCount;
-		indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-		indexBufferDesc.CPUAccessFlags = 0;
-		indexBufferDesc.MiscFlags = 0;
-		indexBufferDesc.StructureByteStride = 0;
-
-		indexData.pSysMem = m_Materials[i].indices;
-		indexData.SysMemPitch = 0;
-		indexData.SysMemSlicePitch = 0;
-
-		result = device->CreateBuffer(&indexBufferDesc, &indexData, &m_Materials[i].indexBuffer);
+		result = BufferManager::GetInstance()->CreateIndexBuffer(device, sizeof(unsigned long) * m_Materials[i].indexCount, m_Materials[i].indices, &m_Materials[i].indexBuffer);
 		if(FAILED(result))
 		{
 			return false;
@@ -992,6 +1028,7 @@ void Terrain::ReleaseTexture()
 	return;
 }
 
+// TODO: Each method more than 30 lines has be checked for result by assert
 bool Terrain::InitializeBuffers(ID3D11Device* device)
 {
 	int index, i, j, index1, index2, index3, index4;
@@ -1091,6 +1128,7 @@ bool Terrain::InitializeBuffers(ID3D11Device* device)
 	return true;
 }
 
+// TODO: Each method more than 30 lines has be checked for result by assert
 bool Terrain::Render(ID3D11DeviceContext* deviceContext, TerrainShader* shader, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix)
 {
 	unsigned int stride;
@@ -1166,6 +1204,7 @@ void Terrain::ShutdownBuffers()
 
 int Terrain::GetVertexCount()
 {
+	m_vertexCount = (m_terrainWidth - 1) * (m_terrainHeight - 1) * 6;
 	return m_vertexCount;
 }
 

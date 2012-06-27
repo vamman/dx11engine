@@ -59,6 +59,8 @@ class D3DClass
 		ID3D11DepthStencilView* GetDepthStencilView();
 		void SetBackBufferRenderTarget();
 
+		void EnableSecondBlendState();
+
 	private:
 		bool m_vsync_enabled;
 		int m_videoCardMemory;
@@ -78,6 +80,8 @@ class D3DClass
 
 		ID3D11BlendState* m_alphaEnableBlendingState;
 		ID3D11BlendState* m_alphaDisableBlendingState;
+
+		ID3D11BlendState* m_alphaBlendState2;
 };
 
 #endif

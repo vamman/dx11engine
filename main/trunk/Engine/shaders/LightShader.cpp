@@ -18,6 +18,7 @@ LightShader::~LightShader(void)
 void LightShader::Shutdown()
 {
 	TextureShader::Shutdown();
+
 	// Release the light constant buffer.
 	if(m_lightBuffer)
 	{

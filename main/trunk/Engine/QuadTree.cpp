@@ -142,8 +142,6 @@ void QuadTree::CreateTreeNode(NodeType* node, float positionX, float positionZ, 
 	VertexType* vertices;
 	unsigned long* indices;
 	bool result;
-	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
-	D3D11_SUBRESOURCE_DATA vertexData, indexData;
 
 	// Store the node position and size.
 	node->positionX = positionX;
@@ -265,38 +263,10 @@ void QuadTree::CreateTreeNode(NodeType* node, float positionX, float positionZ, 
 	}
 
 	// Set up the description of the vertex buffer.
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(VertexType) * vertexCount;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
-	vertexBufferDesc.MiscFlags = 0;
-	vertexBufferDesc.StructureByteStride = 0;
-
-	// Give the subresource structure a pointer to the vertex data.
-	vertexData.pSysMem = vertices;
-	vertexData.SysMemPitch = 0;
-	vertexData.SysMemSlicePitch = 0;
-
-	// Now finally create the vertex buffer.
-	device->CreateBuffer(&vertexBufferDesc, &vertexData, &node->vertexBuffer);
+	BufferManager::GetInstance()->CreateVertexBuffer(device, sizeof(VertexType) * vertexCount, vertices, &node->vertexBuffer);
 
 	// Set up the description of the index buffer.
-	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexBufferDesc.ByteWidth = sizeof(unsigned long) * vertexCount;
-	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.CPUAccessFlags = 0;
-	indexBufferDesc.MiscFlags = 0;
-	indexBufferDesc.StructureByteStride = 0;
-
-	// Give the subresource structure a pointer to the index data.
-	indexData.pSysMem = indices;
-	indexData.SysMemPitch = 0;
-	indexData.SysMemSlicePitch = 0;
-
-	// Create the index buffer.
-	device->CreateBuffer(&indexBufferDesc, &indexData, &node->indexBuffer);
-
-	//CreateBoxBufferForNode(*node, device);
+	BufferManager::GetInstance()->CreateIndexBuffer(device, sizeof(unsigned long) * vertexCount, indices, &node->indexBuffer);
 
 	// Release the vertex and index arrays now that the data is stored in the buffers in the node.
 	delete [] vertices;

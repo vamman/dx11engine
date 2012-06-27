@@ -181,7 +181,7 @@ ID3D11Buffer* ModelClass::GetInstanceBuffer() const
 	return mInstanceBuffer;
 }
 
-bool ModelClass::InitializeBuffersInstanced(ID3D11Device* device, InstanceType* instances /* vector<InstanceType*> instancesVector */, int numModels)
+bool ModelClass::InitializeBuffersInstanced(ID3D11Device* device, InstanceType* instances, int numModels)
 {
 	VertexTypeNormalMap* vertices;
 	HRESULT result;
@@ -1085,6 +1085,7 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, string filename)
 	}
 
 	//Create index buffer
+	/*
 	D3D11_BUFFER_DESC indexBufferDesc;
 	ZeroMemory( &indexBufferDesc, sizeof(indexBufferDesc) );
 
@@ -1098,8 +1099,12 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, string filename)
 
 	iinitData.pSysMem = &indices[0];
 	device->CreateBuffer(&indexBufferDesc, &iinitData, &mIndexBuffer);
+	*/
+
+	BufferManager::GetInstance()->CreateIndexBuffer(device, sizeof(DWORD) * meshTriangles * 3, &indices[0], &mIndexBuffer);
 
 	//Create Vertex Buffer
+	/*
 	D3D11_BUFFER_DESC vertexBufferDesc;
 	ZeroMemory( &vertexBufferDesc, sizeof(vertexBufferDesc) );
 
@@ -1114,7 +1119,8 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, string filename)
 	ZeroMemory( &vertexBufferData, sizeof(vertexBufferData) );
 	vertexBufferData.pSysMem = &vertices[0];
 	hr = device->CreateBuffer( &vertexBufferDesc, &vertexBufferData, &mVertexBuffer);
-
+	*/
+	BufferManager::GetInstance()->CreateVertexBuffer(device, sizeof(VertexTypeLight) * totalVerts, &vertices[0], &mVertexBuffer);
 	Log::GetInstance()->WriteTextMessageToFile("");
 	
 	return true;

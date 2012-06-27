@@ -4,8 +4,6 @@
 GraphicsClass::GraphicsClass() : mIsAllowToBBRender(true), mIsAllowToCameraDisplayRender(true), mDirUp(true), 
 								 mDirDown(false), mIsWireFrameModeOn(true), mSkyShape((SkyShape)0), mSkyPixelShaderType((SkyPixelShaderType)0)
 {
-	mObjectFactory = 0;
-	mMaterialFactory = 0;
 	mTerrain = 0;
 	mQuadTree = 0;
 	m_MiniMap = 0;
@@ -37,10 +35,14 @@ GraphicsClass::GraphicsClass() : mIsAllowToBBRender(true), mIsAllowToCameraDispl
 	mDirAmbLightShader = 0;
 	mPointLightShader = 0;
 	mDirSpecLight = 0;
-	mTerrainShader = 0;
+	mTerrainWithMaterialsShader = 0;
+	mTerrainWithQuadTreeShader = 0;
 	mSkyDomeShader = 0;
 
 	mSkyDome = 0;
+
+	m_SkyPlane = 0;
+	m_SkyPlaneShader = 0;
 
 	for (int i = 0; i < 4; ++i)
 	{
@@ -71,17 +73,6 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 //	int videoMemory;
 	int terrainWidth, terrainHeight;
 
-	// Create the model factory object.
-	/*
-	mObjectFactory = ModelFactory::GetInstance();
-	if(!mObjectFactory) { return false; }
-	*/
-	// Create the material factory object.
-	/*
-	mMaterialFactory = MaterialFactory::GetInstance();
-	if(!mMaterialFactory) { return false; }
-	*/
-
 	mScreenWidth = screenWidth;
 	mScreenHeight = screenHeight;
 
@@ -97,9 +88,14 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the Direct3D object.
+	
+	ASSERT(mD3D->Initialize(mScreenWidth, mScreenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR),
+		   L"Could not initialize Direct3D");
+	
+	/*
 	V_RETURN(mD3D->Initialize(mScreenWidth, mScreenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR), L"Error",
 			 L"Could not initialize Direct3D");
-
+	*/
 	ID3D11Device* device = mD3D->GetDevice();
 
 	// Create the camera object.
@@ -117,7 +113,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	// Set the initial position of the camera.
 	cameraX = 130.0f;
-	cameraY = 2.0f;
+	cameraY = 20.0f;
 	cameraZ = 110.0f;
 
 	mCamera->SetPosition(cameraX, cameraY, cameraZ);
@@ -186,8 +182,8 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		mPointLights[i]->SetDiffuseColor(color.x, color.y, color.z, color.w);
 		mPointLights[i]->SetPosition(position.x, position.y, position.z);
 
-		object = ModelFactory::GetInstance()->CreateOrdinaryModel(device, hwnd, resultName, string("Engine/data/models/sphere.txt")); // mObjectFactory
-		object->SetMaterial(MaterialFactory::GetInstance()->GetMaterialByName("BlueFloor")); // mMaterialFactory
+		object = ModelFactory::GetInstance()->CreateOrdinaryModel(device, hwnd, resultName, string("Engine/data/models/sphere.txt"));
+		object->SetMaterial(MaterialFactory::GetInstance()->GetMaterialByName("BlueFloor"));
 		object->SetPosition(position);
 	}
 
@@ -196,15 +192,21 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// Create the terrain object.
 	mTerrain = new Terrain;
 	if(!mTerrain) { return result; }
-	// heightmap01.bmp / heightmap513; dirt01.dds; colorm01.bmp / colorm513
-	V_RETURN(mTerrain->Initialize(device, "Engine/data/textures/terrain/heightmap01.bmp", "Engine/data/textures/terrain/legend.txt", "Engine/data/textures/terrain/materialmap01.bmp", "Engine/data/textures/terrain/colorm01.bmp" ),
+	// heightmap01.bmp / heightmap513; materialmap01 / materialmap02; colorm01.bmp / colorm513
+	V_RETURN(mTerrain->InitializeWithMaterials(device, "Engine/data/textures/terrain/heightmap01.bmp", "Engine/data/textures/terrain/legend.txt", "Engine/data/textures/terrain/materialmap01.bmp", "Engine/data/textures/terrain/colorm01.bmp" ),
 		L"Error", L"Could not initialize the terrain object");
+	
+	// simple_hmap_512_24
+	/*
+	V_RETURN(mTerrain->InitializeWithQuadTree(device, "Engine/data/textures/terrain/simple_hmap_512_24.bmp", L"Engine/data/textures/terrain/dirt01.dds", "Engine/data/textures/terrain/colorm513.bmp" ),
+		L"Error", L"Could not initialize the terrain object");
+	*/
 
 	// Create the quad tree object.
-//	mQuadTree = new QuadTree;
-//	if(!mQuadTree) { return false; }
+	mQuadTree = new QuadTree;
+	if(!mQuadTree) { return false; }
 
-//	V_RETURN(mQuadTree->Initialize(mTerrain, device), L"Error",	L"Could not initialize the quad tree object");
+	V_RETURN(mQuadTree->Initialize(mTerrain, device), L"Error",	L"Could not initialize the quad tree object");
 	
 
 	// Create the render to texture object.
@@ -262,6 +264,13 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	if(!mSkyDome) { return false; }
 	V_RETURN(mSkyDome->Initialize(device, hwnd), L"Error",	L"Could not initialize the sky dome object");
 	V_RETURN(mSkyDome->CreateCubeTexture(device), L"Error",	L"Could not initialize the sky dome cube map object");
+
+	// Create the sky plane object.
+	m_SkyPlane = new SkyPlane;
+	if(!m_SkyPlane)	{ return false;	}
+	V_RETURN(m_SkyPlane->Initialize(mD3D->GetDevice(), L"Engine/data/textures/cloud001.dds",
+									L"Engine/data/textures/cloud002.dds"),
+									L"Error",	L"Could not initialize the sky plane object");
 	return result;
 }
 
@@ -348,10 +357,16 @@ HRESULT GraphicsClass::InitializeShaders(HWND hwnd)
 	V_RETURN(mDirAmbLightShader->Initialize(mDirAmbLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/AmbientLight.fx", "LightVertexShader", "LightPixelShader"),
 		L"Error", L"Could not initialize the light shader object.");
 
-	// Create terrain shader
-	mTerrainShader = new TerrainShader;
-	if(!mTerrainShader)	{ return result; }
-	V_RETURN(mTerrainShader->Initialize(mDirAmbLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/Terrain.fx", "TerrainVertexShader", "TerrainPixelShader"),
+	// Create terrain shader for terrain with materials
+	mTerrainWithMaterialsShader = new TerrainShader;
+	if(!mTerrainWithMaterialsShader)	{ return result; }
+	V_RETURN(mTerrainWithMaterialsShader->Initialize(mDirAmbLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/TerrainWithMaterials.fx", "TerrainVertexShader", "TerrainPixelShader"),
+		L"Error", L"Could not initialize the terrain shader object.");
+
+	// Create terrain shader for terrain with quad tree
+	mTerrainWithQuadTreeShader = new TerrainShader;
+	if(!mTerrainWithQuadTreeShader)	{ return result; }
+	V_RETURN(mTerrainWithQuadTreeShader->Initialize(mDirAmbLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/TerrainWithQuadTree.fx", "TerrainVertexShader", "TerrainPixelShader"),
 		L"Error", L"Could not initialize the terrain shader object.");
 
 	// Create point light shader object.
@@ -410,6 +425,12 @@ HRESULT GraphicsClass::InitializeShaders(HWND hwnd)
 	V_RETURN(mSkyDomeShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/SkyDomeShader.fx",  "SkyDomeVertexShader", "SkyDomePixelShader"),
 		L"Error", L"Could not initialize the sky dome shader object.");
 
+	// Create the sky plane shader object.
+	m_SkyPlaneShader = new SkyPlaneShader;
+	if(!m_SkyPlaneShader) { return false; }
+	V_RETURN(m_SkyPlaneShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/SkyPlaneShader.fx",  "SkyPlaneVertexShader", "SkyPlanePixelShader"),
+		L"Error", L"Could not initialize the sky plane shader object.");
+
 
 	Timer::GetInstance()->SetTimeB();
 	funcTime = Timer::GetInstance()->GetDeltaTime();
@@ -432,7 +453,7 @@ bool GraphicsClass::InitMaterials()
 	Timer::GetInstance()->SetTimeA();
 
 	// Create material "NormalWithSpec"
-	material = MaterialFactory::GetInstance()->CreateMaterial("NormalWithSpec"); // mMaterialFactory
+	material = MaterialFactory::GetInstance()->CreateMaterial("NormalWithSpec");
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone02.dds");
 	if(!result) { return false; }
 
@@ -445,21 +466,21 @@ bool GraphicsClass::InitMaterials()
 	material->SetMaterialShader(m_SpecMapShader);
 
 	// Create material "BlueFloor"
-	material = MaterialFactory::GetInstance()->CreateMaterial("BlueFloor"); // mMaterialFactory
+	material = MaterialFactory::GetInstance()->CreateMaterial("BlueFloor");
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/blue01.dds");
 	if(!result) { return false; }
 
 	material->SetMaterialShader(mDirSpecLightShader);
 
 	// Create material "TexturedFloor"
-	material = MaterialFactory::GetInstance()->CreateMaterial("TexturedFloor"); // mMaterialFactory
+	material = MaterialFactory::GetInstance()->CreateMaterial("TexturedFloor");
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone02.dds");
 	if(!result) { return false; }
 
 	material->SetMaterialShader(mDirAmbLightShader);
 
 	// Create normal map material for space compound
-	material = MaterialFactory::GetInstance()->CreateMaterial("spaceCompoundMaterial"); // mMaterialFactory
+	material = MaterialFactory::GetInstance()->CreateMaterial("spaceCompoundMaterial");
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone01.dds");
 	if(!result) { return false; }
 
@@ -588,7 +609,7 @@ void GraphicsClass::Shutdown()
 	}
 
 	// Release the quad tree object.
-//	SHUTDOWN_OBJ(mQuadTree);
+	SHUTDOWN_OBJ(mQuadTree);
 
 	// Release the terrain object.
 	SHUTDOWN_OBJ(mTerrain);
@@ -609,11 +630,14 @@ void GraphicsClass::Shutdown()
 	// Release the sky dome object.
 	SHUTDOWN_OBJ(mSkyDome);
 
-	ModelFactory::GetInstance()->Shutdown(); // mObjectFactory
-
-//	MaterialFactory::GetInstance()->Shutdown(); // mMaterialFactory
+	ModelFactory::GetInstance()->Shutdown();
 
 	SHUTDOWN_OBJ(mD3D);
+
+	SHUTDOWN_OBJ(m_SkyPlaneShader);
+
+	SHUTDOWN_OBJ(m_SkyPlane);
+
 	return;
 }
 
@@ -624,7 +648,9 @@ void GraphicsClass::ShutdownShaders()
 	// Release the fog shader object.
 	SHUTDOWN_OBJ(m_FogShader);
 	// Release the terrain shader object.
-	SHUTDOWN_OBJ(mTerrainShader);
+	SHUTDOWN_OBJ(mTerrainWithMaterialsShader);
+	// Release the terrain shader object.
+	SHUTDOWN_OBJ(mTerrainWithQuadTreeShader);
 	// Release the multitexture shader object.
 	SHUTDOWN_OBJ(m_MultiTextureShader);
 	// Release the directional specular light shader object.
@@ -664,6 +690,9 @@ bool GraphicsClass::Frame()
 
 	result = HandleInput(mTimer->GetTime());
 	if(!result) { return false; }
+
+	// Do the sky plane frame processing.
+	m_SkyPlane->Frame();
 
 	// Render the graphics scene.
 	result = Render();
@@ -805,14 +834,13 @@ bool GraphicsClass::Render()
 	position = mCamera->GetPosition();
 
 	// Get the height of the triangle that is directly underneath the given camera position.
-	/*
 	foundHeight =  mQuadTree->GetHeightAtPosition(position.x, position.z, height);
 	if(foundHeight)
 	{
 		// If there was a triangle under the camera then position the camera just above it by two units.
 		mCamera->SetPosition(position.x, height + 2.0f, position.z);
 	}
-	*/
+
 	//result = RenderToTextureFromReflectionView(); // TODO
 
 	// Render the entire scene to the texture first.
@@ -867,7 +895,7 @@ bool GraphicsClass::RenderScene()
 	m_Frustum->ConstructFrustum(SCREEN_DEPTH, projectionMatrix, viewMatrix);
 
 	// Get the number of models that will be rendered.
-	modelCount = ModelFactory::GetInstance()->GetModelCount(); // mObjectFactory
+	modelCount = ModelFactory::GetInstance()->GetModelCount();
 
 	// Initialize the count of models that have been rendered.
 	mNumObjectsRendered = 0;
@@ -912,6 +940,8 @@ bool GraphicsClass::RenderScene()
 	// Turn back face culling back on.
 	mD3D->TurnOnCulling();
 
+	RenderSkyPlane(worldMatrix, viewMatrix, projectionMatrix);
+
 	// Turn the Z buffer back on.
 	mD3D->TurnZBufferOn();
 
@@ -928,15 +958,38 @@ bool GraphicsClass::RenderScene()
 		SetFillMode(D3D11_FILL_SOLID);
 	}
 	
-	RenderTerrain(worldMatrix, viewMatrix, projectionMatrix);
+	RenderTerrainWithMaterials(worldMatrix, viewMatrix, projectionMatrix);
+	// RenderTerrainWithQuadTree(worldMatrix, viewMatrix, projectionMatrix);
 
-	ModelObject* modelObj = ModelFactory::GetInstance()->GetObjectByName("floor"); // mObjectFactory
+	ModelObject* modelObj = ModelFactory::GetInstance()->GetObjectByName("floor");
 //	SetPositionAboveTerrain(modelObj, 0.1f);
 	RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirAmbLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
 
 	RenderObjects(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
 
 	return true;
+}
+
+void GraphicsClass::RenderSkyPlane(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix)
+{
+	// Enable additive blending so the clouds blend with the sky dome color.
+	mD3D->EnableSecondBlendState();
+
+	// Render the sky plane using the sky plane shader.
+	m_SkyPlane->Render(mD3D->GetDeviceContext());
+
+	vector<ID3D11ShaderResourceView*> textureArray;
+	textureArray.push_back(m_SkyPlane->GetCloudTexture1());
+	textureArray.push_back(m_SkyPlane->GetCloudTexture2());
+
+	m_SkyPlaneShader->SetTextureArray(mD3D->GetDeviceContext(), textureArray);
+
+	m_SkyPlaneShader->SetSkyBuffer(mD3D->GetDeviceContext(), m_SkyPlane->GetTranslation(0), m_SkyPlane->GetTranslation(1), 
+								   m_SkyPlane->GetTranslation(2), m_SkyPlane->GetTranslation(3), m_SkyPlane->GetBrightness());
+
+	m_SkyPlaneShader->Render(mD3D->GetDeviceContext(), m_SkyPlane->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix);
+	// Turn off blending.
+	mD3D->TurnOffAlphaBlending();
 }
 
 HRESULT GraphicsClass::Render2D()
@@ -1071,26 +1124,40 @@ bool GraphicsClass::RenderToTextureFromReflectionView()
 	return true;
 }
 
-HRESULT GraphicsClass::RenderTerrain(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix)
+HRESULT GraphicsClass::RenderTerrainWithMaterials(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix)
 {
 	HRESULT result = true;
 	ID3D11DeviceContext* deviceContext = mD3D->GetDeviceContext();
 
 	// Render the terrain buffers.
 	vector<ID3D11ShaderResourceView*> texArr;
-//	texArr.push_back(mTerrain->GetTexture());
+
+	mTerrainWithMaterialsShader->SetLightSource(deviceContext, mDirAmbLight);
+	
+	result = mTerrainWithMaterialsShader->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, false);
+	if(FAILED(result)) { return result; }
+	
+	result = mTerrain->Render(deviceContext, mTerrainWithMaterialsShader, worldMatrix, viewMatrix, projectionMatrix);
+	return result;
+}
+
+HRESULT GraphicsClass::RenderTerrainWithQuadTree(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix)
+{
+	HRESULT result = true;
+	ID3D11DeviceContext* deviceContext = mD3D->GetDeviceContext();
+
+	// Render the terrain buffers.
+	vector<ID3D11ShaderResourceView*> texArr;
+	texArr.push_back(mTerrain->GetTexture());
 
 	// Render the terrain using the terrain shader.
-//	mTerrainShader->SetTextureArray(deviceContext, texArr, true);
-	mTerrainShader->SetLightSource(deviceContext, mDirAmbLight);
-	/*
-	result = mTerrainShader->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, false);
+	mTerrainWithQuadTreeShader->SetTextureArray(deviceContext, texArr, false);
+	mTerrainWithQuadTreeShader->SetLightSource(deviceContext, mDirAmbLight);
+	result = mTerrainWithQuadTreeShader->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, false);
 	if(FAILED(result)) { return result; }
-	*/
-	// Render the terrain using the quad tree and terrain shader.
-	//mQuadTree->Render(m_Frustum, deviceContext, mTerrainShader, mIsAllowToBBRender);
 
-	result = mTerrain->Render(deviceContext, mTerrainShader, worldMatrix, viewMatrix, projectionMatrix);
+	// Render the terrain using the quad tree and terrain shader.
+	mQuadTree->Render(m_Frustum, deviceContext, mTerrainWithQuadTreeShader, mIsAllowToBBRender);
 	return result;
 }
 
@@ -1108,7 +1175,7 @@ bool GraphicsClass::RenderObjects(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
 	ModelObject* modelObj;
 	D3DXVECTOR3 posVector;
 
-	vector<ModelObject*> listOfModels = ModelFactory::GetInstance()->GetVectorOfObjects(); // mObjectFactory
+	vector<ModelObject*> listOfModels = ModelFactory::GetInstance()->GetVectorOfObjects();
 	vector<ModelObject*>::iterator modelIt;
 	ID3D11DeviceContext* deviceContext = mD3D->GetDeviceContext();
 
@@ -1263,8 +1330,8 @@ HRESULT GraphicsClass::RenderObject(ModelObject* modelObj, ID3D11DeviceContext* 
 void GraphicsClass::SetPositionAboveTerrain(ModelObject* modelObject, float heightAbove)
 {
 	float height;
+
 	// Set psition above terrain
-	/*
 	bool foundHeight =  mQuadTree->GetHeightAtPosition(modelObject->GetPosition().x, modelObject->GetPosition().z, height);
 	if(foundHeight)
 	{
@@ -1272,7 +1339,6 @@ void GraphicsClass::SetPositionAboveTerrain(ModelObject* modelObject, float heig
 		D3DXVECTOR3 newPosition = D3DXVECTOR3(modelObject->GetPosition().x, height + heightAbove, modelObject->GetPosition().z);
 		modelObject->SetPosition(newPosition);
 	}
-	*/
 }
 
 HRESULT GraphicsClass::RenderText()
@@ -1325,7 +1391,7 @@ HRESULT GraphicsClass::RenderText()
 
 	mCameraMovement->GetPosition(posX, posY, posZ);
 	mCameraMovement->GetRotation(rotX, rotY, rotZ);
-//	terrinDrawCount = mQuadTree->GetDrawCount();
+	terrinDrawCount = mQuadTree->GetDrawCount();
 
 	// Truncate the position if it exceeds either 9999 or -9999.
 	if(posX > 9999) { posX = 9999; }
