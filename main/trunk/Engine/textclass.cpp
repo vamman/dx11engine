@@ -143,8 +143,8 @@ bool TextClass::InitializeSentence(SentenceType** sentence, int maxLength, ID3D1
 {
 	VertexType* vertices;
 	unsigned long* indices;
-	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
-	D3D11_SUBRESOURCE_DATA vertexData, indexData;
+	D3D11_BUFFER_DESC vertexBufferDesc;
+	D3D11_SUBRESOURCE_DATA vertexData;
 	HRESULT result;
 	int i;
 
@@ -206,26 +206,16 @@ bool TextClass::InitializeSentence(SentenceType** sentence, int maxLength, ID3D1
 
 	// Create the vertex buffer.
 	result = device->CreateBuffer(&vertexBufferDesc, &vertexData, &(*sentence)->vertexBuffer);
+	
+	
+	//result = BufferManager::GetInstance()->CreateVertexBuffer(device, sizeof(VertexType) * (*sentence)->vertexCount, vertices, &(*sentence)->vertexBuffer);
 	if(FAILED(result))
 	{
 		return false;
 	}
 
 	// Set up the description of the static index buffer.
-	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexBufferDesc.ByteWidth = sizeof(unsigned long) * (*sentence)->indexCount;
-	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.CPUAccessFlags = 0;
-	indexBufferDesc.MiscFlags = 0;
-	indexBufferDesc.StructureByteStride = 0;
-
-	// Give the subresource structure a pointer to the index data.
-	indexData.pSysMem = indices;
-	indexData.SysMemPitch = 0;
-	indexData.SysMemSlicePitch = 0;
-
-	// Create the index buffer.
-	result = device->CreateBuffer(&indexBufferDesc, &indexData, &(*sentence)->indexBuffer);
+	result = BufferManager::GetInstance()->CreateIndexBuffer(device, sizeof(unsigned long) * (*sentence)->indexCount, indices, &(*sentence)->indexBuffer);
 	if(FAILED(result))
 	{
 		return false;

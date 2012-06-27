@@ -11,6 +11,7 @@ const int MAX_TRIANGLES = 15000;
 #include "Log.h"
 #include "BoundingBox.h"
 #include "InputClass.h"
+#include "BufferManager.h"
 
 const float LINE_HEIGHT = 50.0f;
 

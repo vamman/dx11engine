@@ -14,8 +14,6 @@ BoundingBox::~BoundingBox(void)
 
 void BoundingBox::CreateBBBuffers(D3DXVECTOR3 centerPos, float sizeX, float sizeY, float sizeZ, ID3D11Device* device)
 {
-	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
-	D3D11_SUBRESOURCE_DATA vertexData, indexData;
 	VertexTypeLine* vertices;
 	const int NUM_VERTEXES = 8;
 	vertices = new VertexTypeLine[NUM_VERTEXES];
@@ -52,32 +50,10 @@ void BoundingBox::CreateBBBuffers(D3DXVECTOR3 centerPos, float sizeX, float size
 	};
 
 	// Set up the description of the vertex buffer.
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(VertexTypeLine) * NUM_VERTEXES;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
-	vertexBufferDesc.MiscFlags = 0;
-	vertexBufferDesc.StructureByteStride = sizeof(VertexTypeLine) * NUM_VERTEXES;
-	// Give the subresource structure a pointer to the vertex data.
-	vertexData.pSysMem = vertices;
-	vertexData.SysMemPitch = 0;
-	vertexData.SysMemSlicePitch = 0;
-	// Now finally create the vertex buffer.
-	device->CreateBuffer(&vertexBufferDesc, &vertexData, &mVertexBuffer);
+	BufferManager::GetInstance()->CreateVertexBuffer(device, sizeof(VertexTypeLine) * NUM_VERTEXES, vertices, &mVertexBuffer);
 
 	// Set up the description of the index buffer.
-	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexBufferDesc.ByteWidth = sizeof(unsigned long) * 24;
-	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.CPUAccessFlags = 0;
-	indexBufferDesc.MiscFlags = 0;
-	indexBufferDesc.StructureByteStride = 0;
-	// Give the subresource structure a pointer to the index data.
-	indexData.pSysMem = indices;
-	indexData.SysMemPitch = 0;
-	indexData.SysMemSlicePitch = 0;
-	// Create the index buffer.
-	device->CreateBuffer(&indexBufferDesc, &indexData, &mIndexBuffer);
+	BufferManager::GetInstance()->CreateVertexBuffer(device, sizeof(unsigned long) * 24, indices, &mIndexBuffer);
 
 	delete [] vertices;
 	vertices = 0;

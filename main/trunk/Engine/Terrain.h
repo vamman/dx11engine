@@ -14,6 +14,7 @@
 #include "timerclass.h"
 #include "shaders/TerrainShader.h"
 #include "Log.h"
+#include "BufferManager.h"
 
 const int TEXTURE_REPEAT = 16;
 
@@ -54,6 +55,15 @@ class Terrain
 			int vertexCount, indexCount;
 			VertexType* vertices;
 			unsigned long* indices;
+
+			MaterialGroupType() : textureIndex1(-1), textureIndex2(-1), alphaIndex(-1), red(-1), green(-1), blue(-1),
+					vertexCount(-1), indexCount(-1)
+			{
+				vertexBuffer = 0;
+				indexBuffer = 0;
+				vertices = 0;
+				indices = 0;
+			}
 		};
 
 	public:
@@ -61,8 +71,10 @@ class Terrain
 		Terrain(const Terrain&);
 		~Terrain();
 
-		bool Initialize(ID3D11Device* device, char* heightMapFileName, /* WCHAR* textureFilename,*/ 
-						char* materialsFilename, char* materialMapFilename, char* colorMapFilename);
+		bool InitializeWithQuadTree(ID3D11Device* device, char* heightMapFileName, WCHAR* textureFilename,
+									char* colorMapFilename);
+		bool InitializeWithMaterials(ID3D11Device* device, char* heightMapFileName, char* materialsFilename,
+									char* materialMapFilename, char* colorMapFilename);
 		void Shutdown();
 		ID3D11ShaderResourceView* GetTexture();
 		int GetVertexCount();
@@ -78,7 +90,7 @@ class Terrain
 
 		void CalculateTextureCoordinates();
 		bool LoadTexture(ID3D11Device*, WCHAR*);
-		bool LoadColorMap(char*);
+		HRESULT LoadColorMap(char*);
 		void ReleaseTexture();
 
 		bool InitializeBuffers(ID3D11Device*);

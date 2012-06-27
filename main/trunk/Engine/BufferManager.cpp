@@ -45,6 +45,10 @@ HRESULT BufferManager::CreateVertexBuffer(ID3D11Device* device, int bufferSize, 
 	{
 		return result;
 	}
+
+	string bufferName = string("test");
+	BufferInfo bufInfo = BufferInfo(bufferName, *vertexBuffer);
+	mVertexBufferList.push_back(bufInfo);
 	return result;
 }
 
@@ -76,6 +80,12 @@ HRESULT BufferManager::CreateIndexBuffer(ID3D11Device* device, int bufferSize, v
 	return result;
 }
 
+/*
+void BufferManager::SetBufferUsage()
+{
+
+}
+*/
 
 HRESULT BufferManager::CreateInstanceBuffer(ID3D11Device* device, int bufferSize, void * instances, ID3D11Buffer** instanceBuffer)
 {

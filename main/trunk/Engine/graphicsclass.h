@@ -25,11 +25,13 @@
 #include "Shaders/ReflectionShader.h"
 #include "Shaders/TerrainShader.h"
 #include "shaders/SkyDomeShader.h"
+#include "shaders/SkyPlaneShader.h"
 #include "Terrain.h"
 #include "QuadTree.h"
 #include "CameraMovement.h"
 #include "timerclass.h"
 #include "minimap.h"
+#include "SkyPlane.h"
 
 #include "textclass.h"
 #include "inputclass.h"
@@ -49,13 +51,32 @@ const bool VSYNC_ENABLED = false;
 const float SCREEN_DEPTH = 1000.0f;
 const float SCREEN_NEAR = 0.1f;
 
+#define ASSERT(statement, messageBody)								\
+{																	\
+	HRESULT hr = S_OK;												\
+	bool res = true;												\
+	hr = (statement);												\
+	if( FAILED(hr))													\
+	{																\
+		HWND hwnd = FindWindow(L"Engine", NULL);					\
+		MessageBox(hwnd, messageBody, L"ASSERT !", MB_OK);			\
+		return false;												\
+	}																\
+}
+	//HWND hwnd;
+	//HWND hwnd = FindWindow(L"Engine", NULL);
+
+	/*
+	Log::GetInstance()->WriteTextMessageToOutput(messageBody);	\
+	*/
+
 #define V_RETURN(statement, messageHeader, messageBody)			\
 {																\
 	HRESULT hr = (statement);									\
 	if( FAILED(hr) )											\
 	{															\
 		MessageBox(hwnd, messageBody, messageHeader, MB_OK);	\
-		return hr;												\
+		return false;											\
 	}															\
 }
 
@@ -119,8 +140,10 @@ class GraphicsClass
 		HRESULT RenderText();
 		bool RenderToTextureFromCameraView();
 		bool RenderToTextureFromReflectionView();
-		HRESULT RenderTerrain(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix);
+		HRESULT RenderTerrainWithMaterials(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix);
+		HRESULT RenderTerrainWithQuadTree(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix);
 		bool RenderScene();
+		void RenderSkyPlane(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix);
 		bool RenderObjects(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, float fogStart, float fogEnd);
 		void ShutdownShaders();
 		HRESULT Render2D();
@@ -150,8 +173,6 @@ class GraphicsClass
 			D3DXVECTOR3 position;
 		};
 
-		ModelFactory* mObjectFactory;
-		MaterialFactory* mMaterialFactory;
 		Terrain* mTerrain;
 		QuadTree* mQuadTree;
 		MiniMap* m_MiniMap;
@@ -178,7 +199,9 @@ class GraphicsClass
 		LightShader* mPointLightShader;
 		LightShader* mDirAmbLightShader;
 
-		TerrainShader* mTerrainShader;
+		TerrainShader* mTerrainWithMaterialsShader;
+		TerrainShader* mTerrainWithQuadTreeShader;
+
 		MultitextureShader* m_MultiTextureShader;
 		NormalMapShader* m_BumpMapShader;
 		SpecMapShader* m_SpecMapShader;
@@ -216,6 +239,9 @@ class GraphicsClass
 		bool mIsWireFrameModeOn;
 		SkyShape mSkyShape;
 		SkyPixelShaderType mSkyPixelShaderType;
+
+		SkyPlane *m_SkyPlane;
+		SkyPlaneShader* m_SkyPlaneShader;
 };
 
 #endif

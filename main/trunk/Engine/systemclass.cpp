@@ -47,6 +47,8 @@ HRESULT SystemClass::Initialize()
 		return result;
 	}
 
+
+	//MessageBox(m_hwnd, L"TEST", L"TEST", MB_OK);
 	// Initialize the graphics object.
 	result = m_Graphics->Initialize(screenWidth, screenHeight, m_hwnd);
 	if(FAILED(result))
