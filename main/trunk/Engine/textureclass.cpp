@@ -3,9 +3,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "textureclass.h"
 
-Texture::Texture()
+Texture::Texture() : m_Width(0), m_Height(0), m_ShaderResourceView(NULL)
 {
-	m_texture = 0;
 }
 
 
@@ -22,13 +21,17 @@ bool Texture::Initialize(ID3D11Device* device, WCHAR* filename)
 {
 	HRESULT result;
 
-
 	// Load the texture in.
-	result = D3DX11CreateShaderResourceViewFromFile(device, filename, NULL, NULL, &m_texture, NULL);
+	D3DX11_IMAGE_LOAD_INFO pImageInfo;
+	result = D3DX11CreateShaderResourceViewFromFile(device, filename, &pImageInfo, NULL, &m_ShaderResourceView, NULL);
 	if(FAILED(result))
 	{
 		return false;
 	}
+
+	m_Width = pImageInfo.Width;
+	m_Height = pImageInfo.Height;
+
 
 	return true;
 }
@@ -36,16 +39,21 @@ bool Texture::Initialize(ID3D11Device* device, WCHAR* filename)
 void Texture::Shutdown()
 {
 	// Release the texture resource.
-	if(m_texture)
+	if(m_ShaderResourceView)
 	{
-		m_texture->Release();
-		m_texture = 0;
+		m_ShaderResourceView->Release();
+		m_ShaderResourceView = 0;
 	}
 
 	return;
 }
 
-ID3D11ShaderResourceView* Texture::GetTexture()
+UINT Texture::GetWidth()
 {
-	return m_texture;
+	return m_Width;
+}
+
+UINT Texture::GetHeight()
+{
+	return m_Height;
 }

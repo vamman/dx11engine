@@ -3,6 +3,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "systemclass.h"
 
+#define RESOLUTION_X 1024
+#define RESOLUTION_Y 768
+
 SystemClass::SystemClass()
 {
 	m_Graphics = 0;
@@ -62,22 +65,6 @@ HRESULT SystemClass::Initialize()
 	// Initialize the cpu object.
 	CpuClass::GetInstance()->Initialize();
 
-	// Create the timer object.
-	/*
-	m_Timer = new Timer;
-	if(!m_Timer)
-	{
-		return result;
-	}
-
-	// Initialize the timer object.
-	result = m_Timer->Initialize();
-	if(FAILED(result))
-	{
-		MessageBox(m_hwnd, L"Could not initialize the Timer object.", L"Error", MB_OK);
-		return result;
-	}
-	*/
 	// Create the position object.
 	/*
 	m_Position = new PositionClass;
@@ -94,14 +81,13 @@ HRESULT SystemClass::Initialize()
 	}
 
 	// Initialize the sound object.
-	/*
 	result = m_Sound->Initialize(m_hwnd);
 	if(FAILED(result))
 	{
 		MessageBox(m_hwnd, L"Could not initialize Direct Sound.", L"Error", MB_OK);
 		return result;
 	}
-	*/
+
 	return result;
 }
 
@@ -133,14 +119,6 @@ void SystemClass::Shutdown()
 
 	InputClass::GetInstance()->Shutdown();
 
-	// Release the timer object.
-	/*
-	if(m_Timer)
-	{
-		delete m_Timer;
-		m_Timer = 0;
-	}
-	*/
 	// Release the cpu object.
 	CpuClass::GetInstance()->Shutdown();
 
@@ -231,9 +209,9 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
 	wc.hInstance = m_hinstance;
-	wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
+	wc.hIcon = LoadIcon(NULL, IDI_WINLOGO); // m_hinstance
 	wc.hIconSm = wc.hIcon;
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.hCursor = LoadCursor(NULL, IDC_CROSS); // m_hinstance
 	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
 	wc.lpszMenuName = NULL;
 	wc.lpszClassName = m_applicationName;
@@ -266,8 +244,8 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	else
 	{
 		// If windowed then set it to 800x600 resolution.
-		screenWidth  = 1280;
-		screenHeight = 960;
+		screenWidth  = RESOLUTION_X;
+		screenHeight = RESOLUTION_Y;
 
 		// Place the window in the middle of the screen.
 		posX = (GetSystemMetrics(SM_CXSCREEN) - screenWidth)  / 2;
@@ -276,7 +254,7 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 
 	// Create the window with the screen settings and get the handle to it.
 	m_hwnd = CreateWindowEx(WS_EX_APPWINDOW, m_applicationName, m_applicationName, 
-		WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
+		WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP | WS_CAPTION | WS_SYSMENU,
 		posX, posY, screenWidth, screenHeight, NULL, NULL, m_hinstance, NULL);
 
 	// Bring the window up on the screen and set it as main focus.
@@ -285,7 +263,7 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	SetFocus(m_hwnd);
 
 	// Hide the mouse cursor.
-	ShowCursor(false);
+	//ShowCursor(false);
 
 	return;
 }
@@ -293,7 +271,7 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 void SystemClass::ShutdownWindows()
 {
 	// Show the mouse cursor.
-	ShowCursor(true);
+	//ShowCursor(true);
 
 	// Fix the display settings if leaving full screen mode.
 	if(FULL_SCREEN)

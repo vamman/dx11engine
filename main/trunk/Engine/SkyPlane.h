@@ -17,7 +17,7 @@ class SkyPlane
 		SkyPlane();
 		~SkyPlane();
 
-		bool Initialize(ID3D11Device*, WCHAR*, WCHAR*);
+		bool Initialize(ID3D11Device*, char*, char*);
 		void Shutdown();
 		void Render(ID3D11DeviceContext*);
 		void Frame();
@@ -48,8 +48,6 @@ class SkyPlane
 		bool InitializeBuffers(ID3D11Device*, int);
 		void ShutdownBuffers();
 		void RenderBuffers(ID3D11DeviceContext*);
-
-		bool LoadTextures(ID3D11Device*, WCHAR*, WCHAR*);
 		void ReleaseTextures();
 
 	private:

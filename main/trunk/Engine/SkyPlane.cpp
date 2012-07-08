@@ -1,4 +1,5 @@
 #include "SkyPlane.h"
+#include "ResourceMgr.h"
 
 SkyPlane::SkyPlane()
 {
@@ -14,7 +15,7 @@ SkyPlane::~SkyPlane()
 {
 }
 
-bool SkyPlane::Initialize(ID3D11Device* device, WCHAR* textureFilename1, WCHAR* textureFilename2)
+bool SkyPlane::Initialize(ID3D11Device* device, char* textureFilename1, char* textureFilename2)
 {
 	int skyPlaneResolution, textureRepeat;
 	float skyPlaneWidth, skyPlaneTop, skyPlaneBottom;
@@ -56,12 +57,8 @@ bool SkyPlane::Initialize(ID3D11Device* device, WCHAR* textureFilename1, WCHAR* 
 		return false;
 	}
 
-	// Load the sky plane textures.
-	result = LoadTextures(device, textureFilename1, textureFilename2);
-	if(!result)
-	{
-		return false;
-	}
+	m_CloudTexture1 = reinterpret_cast<Texture*>( ResourceMgr::GetInstance()->GetResourceByName(textureFilename1, ResourceMgr::ResourceTypeTexture) );
+	m_CloudTexture2 = reinterpret_cast<Texture*>( ResourceMgr::GetInstance()->GetResourceByName(textureFilename2, ResourceMgr::ResourceTypeTexture) );
 
 	return true;
 }
@@ -111,12 +108,12 @@ int SkyPlane::GetIndexCount()
 
 ID3D11ShaderResourceView* SkyPlane::GetCloudTexture1()
 {
-	return m_CloudTexture1->GetTexture();
+	return m_CloudTexture1->GetShaderResourceView();
 }
 
 ID3D11ShaderResourceView* SkyPlane::GetCloudTexture2()
 {
-	return m_CloudTexture2->GetTexture();
+	return m_CloudTexture2->GetShaderResourceView();
 }
 
 float SkyPlane::GetBrightness()
@@ -370,41 +367,6 @@ void SkyPlane::RenderBuffers(ID3D11DeviceContext* deviceContext)
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	return;
-}
-
-bool SkyPlane::LoadTextures(ID3D11Device* device, WCHAR* textureFilename1, WCHAR* textureFilename2)
-{
-	bool result;
-
-	// Create the first cloud texture object.
-	m_CloudTexture1 = new Texture;
-	if(!m_CloudTexture1)
-	{
-		return false;
-	}
-
-	// Initialize the first cloud texture object.
-	result = m_CloudTexture1->Initialize(device, textureFilename1);
-	if(!result)
-	{
-		return false;
-	}
-
-	// Create the second cloud texture object.
-	m_CloudTexture2 = new Texture;
-	if(!m_CloudTexture2)
-	{
-		return false;
-	}
-
-	// Initialize the second cloud texture object.
-	result = m_CloudTexture2->Initialize(device, textureFilename2);
-	if(!result)
-	{
-		return false;
-	}
-
-	return true;
 }
 
 void SkyPlane::ReleaseTextures()

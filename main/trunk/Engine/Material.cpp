@@ -1,5 +1,5 @@
 #include "Material.h"
-
+#include "ResourceMgr.h"
 
 Material::Material()
 {
@@ -26,37 +26,13 @@ BasicShader* Material::GetMaterialShader()
 	return mShader;
 }
 
-bool Material::AppentTextureToMaterial(ID3D11Device* device, WCHAR* textureName)
-{
-	bool result;
-	// Load the textures for this model.
-	result = LoadTexture(device, textureName);
-	if(!result)
-	{
-		return false;
-	}
-	return true;
-}
-
-bool Material::LoadTexture(ID3D11Device* device, WCHAR* filename)
+bool Material::AppentTextureToMaterial(ID3D11Device* device, char* textureName)
 {
 	bool result;
 
-	// Create the texture object.
 	Texture* texture = new Texture;
-	if(!texture)
-	{
-		return false;
-	}
-
-	// Initialize the texture object.
-	result = texture->Initialize(device, filename);
-	if(!result)
-	{
-		return false;
-	}
-
-	mTextureVector.push_back(texture->GetTexture());
+	texture = reinterpret_cast<Texture* >(ResourceMgr::GetInstance()->GetResourceByName(textureName, ResourceMgr::ResourceTypeTexture));
+	mTextureVector.push_back(texture->GetShaderResourceView());
 
 	return true;
 }

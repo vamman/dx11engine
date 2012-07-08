@@ -24,7 +24,7 @@ class Material
 		Material();
 		Material(char* materialName);
 		~Material();
-		bool AppentTextureToMaterial(ID3D11Device* device, WCHAR* textureName);
+		bool AppentTextureToMaterial(ID3D11Device* device, char* textureName);
 		vector<ID3D11ShaderResourceView*>& GetTextureVector();
 		char* GetMaterialName();
 		void Shutdown();

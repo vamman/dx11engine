@@ -4,21 +4,33 @@
 #include "d3dclass.h"
 #include "inputclass.h"
 
-D3DClass::D3DClass()
+D3DClass* D3DClass::m_pInstance = NULL;
+
+D3DClass* D3DClass::GetInstance()
 {
-	m_swapChain = 0;
-	m_device = 0;
-	m_deviceContext = 0;
-	m_renderTargetView = 0;
-	m_depthStencilBuffer = 0;
-	m_depthStencilState = 0;
-	m_depthStencilView = 0;
-	m_rasterState = 0;
-	m_rasterStateNoCulling = 0;
-	m_depthDisabledStencilState = 0;
-	m_alphaEnableBlendingState = 0;
-	m_alphaDisableBlendingState = 0;
-	m_alphaBlendState2 = 0;
+	if (!m_pInstance)
+	{
+		m_pInstance = new D3DClass;
+	}
+	return m_pInstance;
+}
+
+D3DClass::D3DClass()
+	: m_swapChain(0)
+	, m_device(0)
+	, m_deviceContext(0)
+	, m_renderTargetView(0)
+	, m_depthStencilBuffer(0)
+	, m_depthStencilState(0)
+	, m_depthStencilView(0)
+	, m_rasterState(0)
+	, m_rasterStateNoCulling(0)
+	, m_depthDisabledStencilState(0)
+	, m_alphaEnableBlendingState(0)
+	, m_alphaDisableBlendingState(0)
+	, m_alphaBlendState2(0)
+{
+
 }
 
 

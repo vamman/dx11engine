@@ -35,7 +35,7 @@ class BitmapClass
 		BitmapClass(const BitmapClass&);
 		~BitmapClass();
 
-		bool Initialize(ID3D11Device*, int, int, WCHAR*, int, int);
+		bool Initialize(ID3D11Device*, int, int, char*);
 		void Shutdown();
 		HRESULT Render(ID3D11DeviceContext*, int, int);
 

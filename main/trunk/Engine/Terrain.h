@@ -28,7 +28,7 @@ class Terrain
 		struct VertexType
 		{
 			D3DXVECTOR3 position;
-			D3DXVECTOR2 texture;
+			D3DXVECTOR4 texture;
 			D3DXVECTOR3 normal;
 			D3DXVECTOR4 color;
 		};
@@ -71,16 +71,21 @@ class Terrain
 		Terrain(const Terrain&);
 		~Terrain();
 
-		bool InitializeWithQuadTree(ID3D11Device* device, char* heightMapFileName, WCHAR* textureFilename,
+		bool InitializeWithQuadTree(ID3D11Device* device, char* heightMapFileName, char* textureFilename,
 									char* colorMapFilename);
+
 		bool InitializeWithMaterials(ID3D11Device* device, char* heightMapFileName, char* materialsFilename,
-									char* materialMapFilename, char* colorMapFilename);
-		void Shutdown();
-		ID3D11ShaderResourceView* GetTexture();
-		int GetVertexCount();
-		void CopyVertexArray(void*);
-		void GetTerrainSize(int&, int&);
-		bool Render(ID3D11DeviceContext* deviceContext, TerrainShader* shader, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix);
+									char* materialMapFilename, char* colorMapFilename, char* detailMapFilename);
+
+		bool Render(ID3D11DeviceContext* deviceContext, TerrainShader* shader, D3DXMATRIX worldMatrix, 
+			D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix);
+
+		void						Shutdown();
+		ID3D11ShaderResourceView*	GetTexture();
+		ID3D11ShaderResourceView*	GetDetailMapTexture();
+		int							GetVertexCount();
+		void						CopyVertexArray(void*);
+		void						GetTerrainSize(int&, int&);
 
 	private:
 		bool LoadHeightMap(ID3D11Device* device, char* heightMapFileName);
@@ -101,12 +106,11 @@ class Terrain
 		bool LoadMaterialBuffers(ID3D11Device*);
 		void ReleaseMaterials();
 
-
 	private:
 		int m_terrainWidth, m_terrainHeight;
 		int m_vertexCount;
 		HeightMapType* m_heightMap;
-		Texture* m_Texture;
+		Texture* m_Texture, *m_DetailTexture;
 		VertexType* m_vertices;
 
 		int m_textureCount, m_materialCount;

@@ -1,6 +1,3 @@
-////////////////////////////////////////////////////////////////////////////////
-// Filename: d3dclass.h
-////////////////////////////////////////////////////////////////////////////////
 #ifndef _D3DCLASS_H_
 #define _D3DCLASS_H_
 
@@ -22,15 +19,11 @@
 #include "timerclass.h"
 #include "Log.h"
 
-////////////////////////////////////////////////////////////////////////////////
-// Class name: D3DClass
-////////////////////////////////////////////////////////////////////////////////
 class D3DClass
 {
 	public:
-		D3DClass();
-		D3DClass(const D3DClass&);
 		~D3DClass();
+		static D3DClass* GetInstance();
 
 		HRESULT Initialize(int, int, bool, HWND, bool, float, float);
 		void Shutdown();
@@ -62,6 +55,12 @@ class D3DClass
 		void EnableSecondBlendState();
 
 	private:
+		D3DClass();
+		D3DClass(const D3DClass&);
+
+	private:
+		static D3DClass* m_pInstance;
+
 		bool m_vsync_enabled;
 		int m_videoCardMemory;
 		char m_videoCardDescription[128];

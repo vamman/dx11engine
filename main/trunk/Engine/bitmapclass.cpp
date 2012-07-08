@@ -2,12 +2,19 @@
 // Filename: bitmapclass.cpp
 ////////////////////////////////////////////////////////////////////////////////
 #include "bitmapclass.h"
+#include "ResourceMgr.h"
 
 BitmapClass::BitmapClass()
+	: m_vertexBuffer(NULL)
+	, m_indexBuffer(NULL)
+	, m_Texture(NULL)
+	, m_screenWidth(-1)
+	, m_screenHeight(-1)
+	, m_bitmapWidth(-1)
+	, m_bitmapHeight(-1)
+	, m_previousPosX(-1)
+	, m_previousPosY(-1)
 {
-	m_vertexBuffer = 0;
-	m_indexBuffer = 0;
-	m_Texture = 0;
 }
 
 
@@ -20,23 +27,24 @@ BitmapClass::~BitmapClass()
 {
 }
 
-bool BitmapClass::Initialize(ID3D11Device* device, int screenWidth, int screenHeight, WCHAR* textureFilename, int bitmapWidth, int bitmapHeight)
+bool BitmapClass::Initialize(ID3D11Device* device, int screenWidth, int screenHeight, char* textureFilename)
 {
 	bool result;
+
+	m_Texture = reinterpret_cast<Texture* >(ResourceMgr::GetInstance()->GetResourceByName(textureFilename, ResourceMgr::ResourceTypeTexture));
 
 	// Store the screen size.
 	m_screenWidth = screenWidth;
 	m_screenHeight = screenHeight;
 
 	// Store the size in pixels that this bitmap should be rendered at.
-	m_bitmapWidth = bitmapWidth;
-	m_bitmapHeight = bitmapHeight;
+	m_bitmapWidth = m_Texture->GetWidth();
+	m_bitmapHeight = m_Texture->GetHeight();
 
 	// Initialize the previous rendering position to negative one.
 	m_previousPosX = -1;
 	m_previousPosY = -1;
 
- 
 	// Initialize the vertex and index buffers.
 	result = InitializeBuffers(device);
 	if(!result)
@@ -45,11 +53,13 @@ bool BitmapClass::Initialize(ID3D11Device* device, int screenWidth, int screenHe
 	}
 
 	// Load the texture for this model.
+	/*
 	result = LoadTexture(device, textureFilename);
 	if(!result)
 	{
 		return false;
 	}
+	*/
 
 	return true;
 }
@@ -91,7 +101,7 @@ int BitmapClass::GetVertexCount()
 
 ID3D11ShaderResourceView* BitmapClass::GetTexture()
 {
-	return m_Texture->GetTexture();
+	return m_Texture->GetShaderResourceView();
 }
 
 bool BitmapClass::InitializeBuffers(ID3D11Device* device)
