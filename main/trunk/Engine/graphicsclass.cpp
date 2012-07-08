@@ -1,5 +1,5 @@
 #include "graphicsclass.h"
-
+#include "ResourceMgr.h"
 
 GraphicsClass::GraphicsClass() : mIsAllowToBBRender(true), mIsAllowToCameraDisplayRender(true), mDirUp(true), 
 								 mDirDown(false), mIsWireFrameModeOn(true), mSkyShape((SkyShape)0), mSkyPixelShaderType((SkyPixelShaderType)0)
@@ -81,7 +81,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	Timer::GetInstance()->SetTimeA();
 
 	// Create the Direct3D object.
-	mD3D = new D3DClass;
+	mD3D = D3DClass::GetInstance(); // new D3DClass;
 	if(!mD3D)
 	{
 		return result;
@@ -97,6 +97,10 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 			 L"Could not initialize Direct3D");
 	*/
 	ID3D11Device* device = mD3D->GetDevice();
+
+	// Load ALL resources
+	ResourceMgr* resourceManager = ResourceMgr::GetInstance();
+	resourceManager->LoadResources();
 
 	// Create the camera object.
 	mCamera = new CameraClass;
@@ -182,7 +186,8 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		mPointLights[i]->SetDiffuseColor(color.x, color.y, color.z, color.w);
 		mPointLights[i]->SetPosition(position.x, position.y, position.z);
 
-		object = ModelFactory::GetInstance()->CreateOrdinaryModel(device, hwnd, resultName, string("Engine/data/models/sphere.txt"));
+		object = ModelFactory::GetInstance()->CreateOrdinaryModel(device, hwnd, resultName,
+																  string("Engine/data/models/sphere.txt"));
 		object->SetMaterial(MaterialFactory::GetInstance()->GetMaterialByName("BlueFloor"));
 		object->SetPosition(position);
 	}
@@ -193,14 +198,18 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	mTerrain = new Terrain;
 	if(!mTerrain) { return result; }
 	// heightmap01.bmp / heightmap513; materialmap01 / materialmap02; colorm01.bmp / colorm513
-	V_RETURN(mTerrain->InitializeWithMaterials(device, "Engine/data/textures/terrain/heightmap01.bmp", "Engine/data/textures/terrain/legend.txt", "Engine/data/textures/terrain/materialmap01.bmp", "Engine/data/textures/terrain/colorm01.bmp" ),
-		L"Error", L"Could not initialize the terrain object");
+//	V_RETURN(mTerrain->InitializeWithMaterials( device,	"Engine/data/textures/terrain/simple_hmap_512_24.bmp",
+//												"Engine/data/textures/terrain/legend.txt",
+//												"Engine/data/textures/terrain/materialmap02.bmp",
+//												"Engine/data/textures/terrain/colorm513.bmp", "detail001"),	L"Error",
+//												L"Could not initialize the terrain object" );
 	
 	// simple_hmap_512_24
-	/*
-	V_RETURN(mTerrain->InitializeWithQuadTree(device, "Engine/data/textures/terrain/simple_hmap_512_24.bmp", L"Engine/data/textures/terrain/dirt01.dds", "Engine/data/textures/terrain/colorm513.bmp" ),
-		L"Error", L"Could not initialize the terrain object");
-	*/
+	
+	V_RETURN(mTerrain->InitializeWithQuadTree(device, "Engine/data/textures/terrain/simple_hmap_512_24.bmp", 
+											  "dirt01", "Engine/data/textures/terrain/colorm513.bmp"),
+											  L"Error", L"Could not initialize the terrain object");
+	
 
 	// Create the quad tree object.
 	mQuadTree = new QuadTree;
@@ -222,7 +231,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the bitmap object.
-	V_RETURN(mBitmap->Initialize(device, mScreenWidth, mScreenHeight, L"Engine/data/textures/texture2.dds", 300, 225),
+	V_RETURN(mBitmap->Initialize(device, mScreenWidth, mScreenHeight, "texture2" /*, 300, 225 */),
 		L"Error", L"Could not initialize the bitmap object.");
 
 	// Create cursor bitmap
@@ -235,7 +244,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the cursor bitmap object.
-	V_RETURN(mCursor->Initialize(device, mScreenWidth, mScreenHeight, L"Engine/data/textures/SC2Cursor1.bmp", mCursorWidth / 2, mCursorHeight / 2),
+	V_RETURN(mCursor->Initialize(device, mScreenWidth, mScreenHeight, "SC2Cursor1" /* , mCursorWidth / 2, mCursorHeight / 2 */),
 		L"Error", L"Could not initialize cursor object.");
 
 	// Probably need to initialize another instance of Texture shader for minimap
@@ -268,9 +277,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// Create the sky plane object.
 	m_SkyPlane = new SkyPlane;
 	if(!m_SkyPlane)	{ return false;	}
-	V_RETURN(m_SkyPlane->Initialize(mD3D->GetDevice(), L"Engine/data/textures/cloud001.dds",
-									L"Engine/data/textures/cloud002.dds"),
-									L"Error",	L"Could not initialize the sky plane object");
+	V_RETURN(m_SkyPlane->Initialize(mD3D->GetDevice(), "cloud001", "cloud002"), L"Error", L"Could not initialize the sky plane object");
 	return result;
 }
 
@@ -454,37 +461,37 @@ bool GraphicsClass::InitMaterials()
 
 	// Create material "NormalWithSpec"
 	material = MaterialFactory::GetInstance()->CreateMaterial("NormalWithSpec");
-	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone02.dds");
+	material->AppentTextureToMaterial(mD3D->GetDevice(), "stone02");
 	if(!result) { return false; }
 
-	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/bump02.dds");
+	material->AppentTextureToMaterial(mD3D->GetDevice(), "bump02");
 	if(!result) { return false; }
 
-	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/spec02.dds");
+	material->AppentTextureToMaterial(mD3D->GetDevice(), "spec02");
 	if(!result) { return false; }
 
 	material->SetMaterialShader(m_SpecMapShader);
 
 	// Create material "BlueFloor"
 	material = MaterialFactory::GetInstance()->CreateMaterial("BlueFloor");
-	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/blue01.dds");
+	material->AppentTextureToMaterial(mD3D->GetDevice(), "blue01");
 	if(!result) { return false; }
 
 	material->SetMaterialShader(mDirSpecLightShader);
 
 	// Create material "TexturedFloor"
 	material = MaterialFactory::GetInstance()->CreateMaterial("TexturedFloor");
-	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone02.dds");
+	material->AppentTextureToMaterial(mD3D->GetDevice(), "stone02");
 	if(!result) { return false; }
 
 	material->SetMaterialShader(mDirAmbLightShader);
 
 	// Create normal map material for space compound
 	material = MaterialFactory::GetInstance()->CreateMaterial("spaceCompoundMaterial");
-	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/stone01.dds");
+	material->AppentTextureToMaterial(mD3D->GetDevice(), "stone01");
 	if(!result) { return false; }
 
-	material->AppentTextureToMaterial(mD3D->GetDevice(), L"Engine/data/textures/bump01.dds");
+	material->AppentTextureToMaterial(mD3D->GetDevice(), "bump01");
 	if(!result) { return false; }
 
 	material->SetMaterialShader(m_BumpMapShader);
@@ -958,8 +965,8 @@ bool GraphicsClass::RenderScene()
 		SetFillMode(D3D11_FILL_SOLID);
 	}
 	
-	RenderTerrainWithMaterials(worldMatrix, viewMatrix, projectionMatrix);
-	// RenderTerrainWithQuadTree(worldMatrix, viewMatrix, projectionMatrix);
+//	RenderTerrainWithMaterials(worldMatrix, viewMatrix, projectionMatrix);
+	RenderTerrainWithQuadTree(worldMatrix, viewMatrix, projectionMatrix);
 
 	ModelObject* modelObj = ModelFactory::GetInstance()->GetObjectByName("floor");
 //	SetPositionAboveTerrain(modelObj, 0.1f);

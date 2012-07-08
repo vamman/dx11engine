@@ -2,11 +2,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "Terrain.h"
 #include "graphicsclass.h"
+#include "ResourceMgr.h"
+#include "FileSystemHelper.h"
 
 Terrain::Terrain()
 {
 	m_heightMap = 0;
 	m_Texture = 0;
+	m_DetailTexture = 0;
 	m_vertices = 0;
 	m_Textures = 0;
 	m_Materials = 0;
@@ -20,7 +23,8 @@ Terrain::~Terrain()
 {
 }
 
-bool Terrain::InitializeWithQuadTree(ID3D11Device* device, char* heightMapFileName, WCHAR* textureFilename, char* colorMapFilename)
+bool Terrain::InitializeWithQuadTree(ID3D11Device* device, char* heightMapFileName, char* textureFilename,
+									 char* colorMapFilename)
 {
 	bool result;
 	DWORD funcTime = -1;
@@ -40,7 +44,9 @@ bool Terrain::InitializeWithQuadTree(ID3D11Device* device, char* heightMapFileNa
 	CalculateTextureCoordinates();
 
 	// Load the texture.
-	ASSERT(LoadTexture(device, textureFilename), L"Terrain::LoadTexture FAILED");
+	m_Texture = reinterpret_cast<Texture* >(ResourceMgr::GetInstance()->GetResourceByName(textureFilename, ResourceMgr::ResourceTypeTexture));
+
+	// ASSERT(LoadTexture(device, textureFilename), L"Terrain::LoadTexture FAILED");
 
 	// Load in the color map for the terrain.
 	ASSERT(LoadColorMap(colorMapFilename), L"Terrain::LoadColorMap FAILED");
@@ -60,7 +66,8 @@ bool Terrain::InitializeWithQuadTree(ID3D11Device* device, char* heightMapFileNa
 	return true;
 }
 
-bool Terrain::InitializeWithMaterials(ID3D11Device* device, char* heightMapFileName, /* WCHAR* textureFilename,*/ char* materialsFilename, char* materialMapFilename, char* colorMapFilename)
+bool Terrain::InitializeWithMaterials(ID3D11Device* device, char* heightMapFileName, char* materialsFilename,
+									  char* materialMapFilename, char* colorMapFilename, char* detailMapFilename)
 {
 	bool result;
 	DWORD funcTime = -1;
@@ -69,6 +76,12 @@ bool Terrain::InitializeWithMaterials(ID3D11Device* device, char* heightMapFileN
 
 	// Load in the height map for the terrain.
 	ASSERT(LoadHeightMap(device, heightMapFileName), L"Terrain::LoadHeightMap FAILED");
+
+	// Load detail map
+	m_DetailTexture = new Texture;
+	m_DetailTexture = reinterpret_cast<Texture* >(ResourceMgr::GetInstance()->GetResourceByName(detailMapFilename, ResourceMgr::ResourceTypeTexture));
+	
+	//ASSERT(m_DetailTexture->Initialize(device, detailMapFilename), L"m_DetailTexture initialization FAILED");
 
 	// Normalize the height of the height map.
 	NormalizeHeightMap();
@@ -116,7 +129,12 @@ void Terrain::Shutdown()
 
 ID3D11ShaderResourceView* Terrain::GetTexture()
 {
-	return m_Texture->GetTexture();
+	return m_Texture->GetShaderResourceView();
+}
+
+ID3D11ShaderResourceView* Terrain::GetDetailMapTexture()
+{
+	return m_DetailTexture->GetShaderResourceView();
 }
 
 // TODO: Each method more than 30 lines has be checked for result by assert
@@ -131,10 +149,11 @@ bool Terrain::LoadHeightMap(ID3D11Device* device, char* filename)
 	unsigned char* bitmapImage;
 	unsigned char height;
 
-	Texture* heighMapTexture = new Texture;
 	ID3D11ShaderResourceView* heightMapResourceView;
-	heighMapTexture->Initialize(device, (WCHAR*) filename);
-	heightMapResourceView = heighMapTexture->GetTexture();
+	Texture* heighMapTexture = new Texture;
+	heighMapTexture = reinterpret_cast<Texture* >(ResourceMgr::GetInstance()->GetResourceByName(GetFilenameWithoutExtension(filename), ResourceMgr::ResourceTypeTexture));
+	heightMapResourceView = heighMapTexture->GetShaderResourceView();
+
 
 	// Open the height map file in binary.
 	error = fopen_s(&filePtr, filename, "rb");
@@ -763,7 +782,6 @@ bool Terrain::LoadMaterialMap(char* filename)
 }
 
 // TODO: Each method more than 30 lines has be checked for result by assert
-// TODO: Fix bug: In m_heightMap rIndex, gIndex and bIndex are written incorrect
 bool Terrain::LoadMaterialBuffers(ID3D11Device* device)
 {
 	int maxVertexCount, maxIndexCount, i, j, index1, index2, index3, index4, redIndex, greenIndex, blueIndex, index, vIndex;
@@ -835,7 +853,7 @@ bool Terrain::LoadMaterialBuffers(ID3D11Device* device)
 
 			// Upper left.
 			m_Materials[index].vertices[vIndex].position = D3DXVECTOR3(m_heightMap[index3].x, m_heightMap[index3].y, m_heightMap[index3].z);
-			m_Materials[index].vertices[vIndex].texture = D3DXVECTOR2(0.0f, 0.0f);
+			m_Materials[index].vertices[vIndex].texture = D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f);
 			m_Materials[index].vertices[vIndex].normal = D3DXVECTOR3(m_heightMap[index3].nx, m_heightMap[index3].ny, m_heightMap[index3].nz);
 			m_Materials[index].vertices[vIndex].color = D3DXVECTOR4(m_heightMap[index3].r, m_heightMap[index3].g, m_heightMap[index3].b, 1.0f);
 			m_Materials[index].indices[vIndex] = vIndex;
@@ -852,7 +870,7 @@ bool Terrain::LoadMaterialBuffers(ID3D11Device* device)
 
 			// Upper right.
 			m_Materials[index].vertices[vIndex].position = D3DXVECTOR3(m_heightMap[index4].x, m_heightMap[index4].y, m_heightMap[index4].z);
-			m_Materials[index].vertices[vIndex].texture = D3DXVECTOR2(1.0f, 0.0f);
+			m_Materials[index].vertices[vIndex].texture = D3DXVECTOR4(1.0f, 0.0f, 1.0f, 0.0f);
 			m_Materials[index].vertices[vIndex].normal = D3DXVECTOR3(m_heightMap[index4].nx, m_heightMap[index4].ny, m_heightMap[index4].nz);
 			m_Materials[index].vertices[vIndex].color = D3DXVECTOR4(m_heightMap[index4].r, m_heightMap[index4].g, m_heightMap[index4].b, 1.0f);
 			m_Materials[index].indices[vIndex] = vIndex;
@@ -868,7 +886,7 @@ bool Terrain::LoadMaterialBuffers(ID3D11Device* device)
 
 			// Bottom left.
 			m_Materials[index].vertices[vIndex].position = D3DXVECTOR3(m_heightMap[index1].x, m_heightMap[index1].y, m_heightMap[index1].z);
-			m_Materials[index].vertices[vIndex].texture = D3DXVECTOR2(0.0f, 1.0f);
+			m_Materials[index].vertices[vIndex].texture = D3DXVECTOR4(0.0f, 1.0f, 0.0f, 1.0f);
 			m_Materials[index].vertices[vIndex].normal = D3DXVECTOR3(m_heightMap[index1].nx, m_heightMap[index1].ny, m_heightMap[index1].nz);
 			m_Materials[index].vertices[vIndex].color = D3DXVECTOR4(m_heightMap[index1].r, m_heightMap[index1].g, m_heightMap[index1].b, 1.0f);
 			m_Materials[index].indices[vIndex] = vIndex;
@@ -884,7 +902,7 @@ bool Terrain::LoadMaterialBuffers(ID3D11Device* device)
 
 			// Bottom left.
 			m_Materials[index].vertices[vIndex].position = D3DXVECTOR3(m_heightMap[index1].x, m_heightMap[index1].y, m_heightMap[index1].z);
-			m_Materials[index].vertices[vIndex].texture = D3DXVECTOR2(0.0f, 1.0f);
+			m_Materials[index].vertices[vIndex].texture = D3DXVECTOR4(0.0f, 1.0f, 0.0f, 1.0f);
 			m_Materials[index].vertices[vIndex].normal = D3DXVECTOR3(m_heightMap[index1].nx, m_heightMap[index1].ny, m_heightMap[index1].nz);
 			m_Materials[index].vertices[vIndex].color = D3DXVECTOR4(m_heightMap[index1].r, m_heightMap[index1].g, m_heightMap[index1].b, 1.0f);
 			m_Materials[index].indices[vIndex] = vIndex;
@@ -900,7 +918,7 @@ bool Terrain::LoadMaterialBuffers(ID3D11Device* device)
 
 			// Upper right.
 			m_Materials[index].vertices[vIndex].position = D3DXVECTOR3(m_heightMap[index4].x, m_heightMap[index4].y, m_heightMap[index4].z);
-			m_Materials[index].vertices[vIndex].texture = D3DXVECTOR2(1.0f, 0.0f);
+			m_Materials[index].vertices[vIndex].texture = D3DXVECTOR4(1.0f, 0.0f, 1.0f, 0.0f);
 			m_Materials[index].vertices[vIndex].normal = D3DXVECTOR3(m_heightMap[index4].nx, m_heightMap[index4].ny, m_heightMap[index4].nz);
 			m_Materials[index].vertices[vIndex].color = D3DXVECTOR4(m_heightMap[index4].r, m_heightMap[index4].g, m_heightMap[index4].b, 1.0f);
 			m_Materials[index].indices[vIndex] = vIndex;
@@ -916,7 +934,7 @@ bool Terrain::LoadMaterialBuffers(ID3D11Device* device)
 
 			// Bottom right.
 			m_Materials[index].vertices[vIndex].position = D3DXVECTOR3(m_heightMap[index2].x, m_heightMap[index2].y, m_heightMap[index2].z);
-			m_Materials[index].vertices[vIndex].texture = D3DXVECTOR2(1.0f, 1.0f);
+			m_Materials[index].vertices[vIndex].texture = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
 			m_Materials[index].vertices[vIndex].normal = D3DXVECTOR3(m_heightMap[index2].nx, m_heightMap[index2].ny, m_heightMap[index2].nz);
 			m_Materials[index].vertices[vIndex].color = D3DXVECTOR4(m_heightMap[index2].r, m_heightMap[index2].g, m_heightMap[index2].b, 1.0f);
 			m_Materials[index].indices[vIndex] = vIndex;
@@ -1025,6 +1043,14 @@ void Terrain::ReleaseTexture()
 		m_Texture = 0;
 	}
 
+	// Release the detail map texture object.
+	if(m_DetailTexture)
+	{
+		m_DetailTexture->Shutdown();
+		delete m_DetailTexture;
+		m_DetailTexture = 0;
+	}
+
 	return;
 }
 
@@ -1064,7 +1090,7 @@ bool Terrain::InitializeBuffers(ID3D11Device* device)
 			if(tv == 1.0f) { tv = 0.0f; }
 
 			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index3].x, m_heightMap[index3].y, m_heightMap[index3].z);
-			m_vertices[index].texture = D3DXVECTOR2(m_heightMap[index3].tu, tv);
+			m_vertices[index].texture = D3DXVECTOR4(m_heightMap[index3].tu, tv, 0.0f, 0.0f);
 			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index3].nx, m_heightMap[index3].ny, m_heightMap[index3].nz);
 			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index3].r, m_heightMap[index3].g, m_heightMap[index3].b, 1.0f);
 			index++;
@@ -1078,21 +1104,21 @@ bool Terrain::InitializeBuffers(ID3D11Device* device)
 			if(tv == 1.0f) { tv = 0.0f; }
 
 			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index4].x, m_heightMap[index4].y, m_heightMap[index4].z);
-			m_vertices[index].texture = D3DXVECTOR2(tu, tv);
+			m_vertices[index].texture = D3DXVECTOR4(tu, tv, 1.0f, 0.0f);
 			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index4].nx, m_heightMap[index4].ny, m_heightMap[index4].nz);
 			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index4].r, m_heightMap[index4].g, m_heightMap[index4].b, 1.0f);
 			index++;
 
 			// Bottom left.
 			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index1].x, m_heightMap[index1].y, m_heightMap[index1].z);
-			m_vertices[index].texture = D3DXVECTOR2(m_heightMap[index1].tu, m_heightMap[index1].tv);
+			m_vertices[index].texture = D3DXVECTOR4(m_heightMap[index1].tu, m_heightMap[index1].tv, 0.0f, 1.0f);
 			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index1].nx, m_heightMap[index1].ny, m_heightMap[index1].nz);
 			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index1].r, m_heightMap[index1].g, m_heightMap[index1].b, 1.0f);
 			index++;
 
 			// Bottom right.
 			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index1].x, m_heightMap[index1].y, m_heightMap[index1].z);
-			m_vertices[index].texture = D3DXVECTOR2(m_heightMap[index1].tu, m_heightMap[index1].tv);
+			m_vertices[index].texture = D3DXVECTOR4(m_heightMap[index1].tu, m_heightMap[index1].tv, 0.0f, 1.0f);
 			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index1].nx, m_heightMap[index1].ny, m_heightMap[index1].nz);
 			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index1].r, m_heightMap[index1].g, m_heightMap[index1].b, 1.0f);
 			index++;
@@ -1106,7 +1132,7 @@ bool Terrain::InitializeBuffers(ID3D11Device* device)
 			if(tv == 1.0f) { tv = 0.0f; }
 
 			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index4].x, m_heightMap[index4].y, m_heightMap[index4].z);
-			m_vertices[index].texture = D3DXVECTOR2(tu, tv);
+			m_vertices[index].texture = D3DXVECTOR4(tu, tv, 1.0f, 0.0f);
 			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index4].nx, m_heightMap[index4].ny, m_heightMap[index4].nz);
 			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index4].r, m_heightMap[index4].g, m_heightMap[index4].b, 1.0f);
 			index++;
@@ -1118,7 +1144,7 @@ bool Terrain::InitializeBuffers(ID3D11Device* device)
 			if(tu == 0.0f) { tu = 1.0f; }
 
 			m_vertices[index].position = D3DXVECTOR3(m_heightMap[index2].x, m_heightMap[index2].y, m_heightMap[index2].z);
-			m_vertices[index].texture = D3DXVECTOR2(tu, m_heightMap[index2].tv);
+			m_vertices[index].texture = D3DXVECTOR4(tu, m_heightMap[index2].tv, 1.0f, 1.0f);
 			m_vertices[index].normal = D3DXVECTOR3(m_heightMap[index2].nx, m_heightMap[index2].ny, m_heightMap[index2].nz);
 			m_vertices[index].color = D3DXVECTOR4(m_heightMap[index2].r, m_heightMap[index2].g, m_heightMap[index2].b, 1.0f);
 			index++;
@@ -1164,16 +1190,18 @@ bool Terrain::Render(ID3D11DeviceContext* deviceContext, TerrainShader* shader, 
 		vector<ID3D11ShaderResourceView*> textures;
 		if(m_Materials[i].textureIndex2 != -1)
 		{
-			textures.push_back(m_Textures[m_Materials[i].textureIndex1].GetTexture());
-			textures.push_back(m_Textures[m_Materials[i].textureIndex2].GetTexture());
-			textures.push_back(m_Textures[m_Materials[i].alphaIndex].GetTexture());
+			textures.push_back(m_Textures[m_Materials[i].textureIndex1].GetShaderResourceView());
+			textures.push_back(m_Textures[m_Materials[i].textureIndex2].GetShaderResourceView());
+			textures.push_back(m_Textures[m_Materials[i].alphaIndex].GetShaderResourceView());
+			textures.push_back(m_DetailTexture->GetShaderResourceView());
 			shader->SetTextureArray(deviceContext, textures, true);
 		}
 
 		// If not then it is just a single textured polygon.
 		else
 		{
-			textures.push_back(m_Textures[m_Materials[i].textureIndex1].GetTexture());
+			textures.push_back(m_Textures[m_Materials[i].textureIndex1].GetShaderResourceView());
+			textures.push_back(m_DetailTexture->GetShaderResourceView());
 			shader->SetTextureArray(deviceContext, textures, false);
 		}
 

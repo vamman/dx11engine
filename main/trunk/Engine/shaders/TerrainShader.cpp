@@ -18,10 +18,10 @@ HRESULT TerrainShader::Initialize(LightClass* lightSource, ID3D11Device* device,
 	D3D11_BUFFER_DESC textureInfoBufferDesc;
 	vector<char *> layouts;
 
-	layouts.push_back("POSITION");
-	layouts.push_back("TEXCOORD");
-	layouts.push_back("NORMAL");
-	layouts.push_back("COLOR");
+	layouts.push_back(LAYOUT_POSITION);
+	layouts.push_back(LAYOUT_TEXCOORD_NORMAL_DETAIL); // LAYOUT_TEXCOORD
+	layouts.push_back(LAYOUT_NORMAL);
+	layouts.push_back(LAYOUT_COLOR);
 
 	result = LightShader::InitializeShader(lightSource, device, hwnd, filename, VSname, PSname, layouts);
 	if (FAILED(result))
@@ -81,6 +81,35 @@ bool TerrainShader::SetTextureArray(ID3D11DeviceContext* deviceContext, vector<I
 	TextureInfoBufferType* dataPtr;
 	unsigned int bufferNumber;
 
+	vector<ID3D11ShaderResourceView*>::iterator it;
+
+	int count = 0;
+	for (it = textureArray.begin(); it != textureArray.end(); ++it)
+	{
+		if (count == 0)
+		{
+			deviceContext->PSSetShaderResources(0, 1, &textureArray[0]);
+		}
+		else if (count > 0 && count < 3)
+		{
+			// If this is a blended polygon then also set the second texture and the alpha map for blending.
+			if(useAlpha)
+			{
+				deviceContext->PSSetShaderResources(count, 1, &textureArray[count]);
+			}
+			else
+			{
+				deviceContext->PSSetShaderResources(count, 1, &textureArray[0]);
+			}
+		}
+		else
+		{
+			deviceContext->PSSetShaderResources(count, 1, &textureArray[count]);
+		}
+		++count;
+	}
+
+	/*
 	// Set shader texture resources in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &textureArray[0]);
 
@@ -95,6 +124,7 @@ bool TerrainShader::SetTextureArray(ID3D11DeviceContext* deviceContext, vector<I
 		deviceContext->PSSetShaderResources(1, 1, &textureArray[0]);
 		deviceContext->PSSetShaderResources(2, 1, &textureArray[0]);
 	}
+	*/
 
 	// Lock the texture info constant buffer so it can be written to.
 	result = deviceContext->Map(m_textureInfoBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);

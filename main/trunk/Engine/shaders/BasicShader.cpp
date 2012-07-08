@@ -1,4 +1,4 @@
-#include "BasicShader.h"
+#include "BasicShader.h"    
 
 BasicShader::BasicShader()
 {
@@ -159,7 +159,8 @@ vector<D3D11_INPUT_ELEMENT_DESC> BasicShader::CreateInputLayout(vector<char *>& 
 	for (it = layouts.begin(); it != layouts.end(); ++it)
 	{
 		D3D11_INPUT_ELEMENT_DESC currentLayout;
-		if ( *it == "POSITION")
+
+		if ( *it == LAYOUT_POSITION)
 		{
 			currentLayout.SemanticName = "POSITION";
 			currentLayout.SemanticIndex = 0;
@@ -169,7 +170,7 @@ vector<D3D11_INPUT_ELEMENT_DESC> BasicShader::CreateInputLayout(vector<char *>& 
 			currentLayout.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 			currentLayout.InstanceDataStepRate = 0;
 		}
-		else if ( *it == "COLOR")
+		else if ( *it == LAYOUT_COLOR)
 		{
 			currentLayout.SemanticName = "COLOR";
 			currentLayout.SemanticIndex = 0;
@@ -179,7 +180,7 @@ vector<D3D11_INPUT_ELEMENT_DESC> BasicShader::CreateInputLayout(vector<char *>& 
 			currentLayout.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 			currentLayout.InstanceDataStepRate = 0;
 		}
-		else if ( *it == "TEXCOORD")
+		else if ( *it == LAYOUT_TEXCOORD)
 		{
 			currentLayout.SemanticName = "TEXCOORD";
 			currentLayout.SemanticIndex = 0;
@@ -189,7 +190,17 @@ vector<D3D11_INPUT_ELEMENT_DESC> BasicShader::CreateInputLayout(vector<char *>& 
 			currentLayout.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 			currentLayout.InstanceDataStepRate = 0;
 		}
-		else if ( *it == "TEXCOORD_INST")
+		else if ( *it == LAYOUT_TEXCOORD_NORMAL_DETAIL)
+		{
+			currentLayout.SemanticName = "TEXCOORD";
+			currentLayout.SemanticIndex = 0;
+			currentLayout.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			currentLayout.InputSlot = 0;
+			currentLayout.AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+			currentLayout.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+			currentLayout.InstanceDataStepRate = 0;
+		}
+		else if ( *it == LAYOUT_TEXCOORD_INST)
 		{
 			currentLayout.SemanticName = "TEXCOORD";
 			currentLayout.SemanticIndex = 1;
@@ -199,7 +210,7 @@ vector<D3D11_INPUT_ELEMENT_DESC> BasicShader::CreateInputLayout(vector<char *>& 
 			currentLayout.InputSlotClass = D3D11_INPUT_PER_INSTANCE_DATA;
 			currentLayout.InstanceDataStepRate = 1;
 		}
-		else if ( *it == "NORMAL")
+		else if ( *it == LAYOUT_NORMAL)
 		{
 			currentLayout.SemanticName = "NORMAL";
 			currentLayout.SemanticIndex = 0;
@@ -209,7 +220,7 @@ vector<D3D11_INPUT_ELEMENT_DESC> BasicShader::CreateInputLayout(vector<char *>& 
 			currentLayout.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 			currentLayout.InstanceDataStepRate = 0;
 		}
-		else if ( *it == "TANGENT")
+		else if ( *it == LAYOUT_TANGENT)
 		{
 			currentLayout.SemanticName = "TANGENT";
 			currentLayout.SemanticIndex = 0;
@@ -219,7 +230,7 @@ vector<D3D11_INPUT_ELEMENT_DESC> BasicShader::CreateInputLayout(vector<char *>& 
 			currentLayout.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 			currentLayout.InstanceDataStepRate = 0;
 		}
-		else if ( *it == "BINORMAL")
+		else if ( *it == LAYOUT_BINORMAL)
 		{
 			currentLayout.SemanticName = "BINORMAL";
 			currentLayout.SemanticIndex = 0;
@@ -335,18 +346,20 @@ void BasicShader::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, 
 	return;
 }
 
+
 void BasicShader::SetTextureArray(ID3D11DeviceContext* deviceContext, vector<ID3D11ShaderResourceView*>& textureArray)
 {
 	
 }
 HRESULT BasicShader::SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType)
 {
-	return true;
+	return S_OK;
 }
 bool BasicShader::SetLightSource(ID3D11DeviceContext* deviceContext, LightClass* lightSource)
 {
 	return true;
 }
+
 
 HRESULT BasicShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, 
 	D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, bool isInstanced) const

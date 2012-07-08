@@ -13,7 +13,17 @@
 #include <fstream>
 #include <vector>
 #include "BaseShaderClass.h"
+
 using namespace std;
+
+#define LAYOUT_POSITION					"POSITION"
+#define LAYOUT_COLOR					"COLOR"
+#define LAYOUT_TEXCOORD					"TEXCOORD"
+#define LAYOUT_TEXCOORD_NORMAL_DETAIL	"TEXCOORD_NORMAL_DETAIL"
+#define LAYOUT_TEXCOORD_INST			"TEXCOORD_INST"
+#define LAYOUT_NORMAL					"NORMAL"
+#define LAYOUT_TANGENT					"TANGENT"
+#define LAYOUT_BINORMAL					"BINORMAL"  
 
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: BasicShader
@@ -21,16 +31,13 @@ using namespace std;
 class BasicShader: public BaseShaderClass
 {
 	public:
-
 		BasicShader(void);
 		BasicShader(const BasicShader&);
 		~BasicShader();
 		virtual HRESULT Initialize(ID3D11Device*, HWND, WCHAR*, LPCSTR, LPCSTR);
 		HRESULT InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
 							  LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts);
-		void OutputShaderErrorMessage(ID3D10Blob*, HWND, WCHAR*);
-
-		vector<D3D11_INPUT_ELEMENT_DESC> CreateInputLayout(vector<char *>& layouts);
+		// void OutputShaderErrorMessage(ID3D10Blob*, HWND, WCHAR*);
 		virtual void Shutdown();
 
 		virtual HRESULT RenderInstanced(ID3D11DeviceContext* deviceContext,
@@ -46,17 +53,20 @@ class BasicShader: public BaseShaderClass
 									 D3DXMATRIX viewMatrix,
 									 D3DXMATRIX projectionMatrix) const;
 
+		// Not implemented
 		virtual void SetTextureArray(ID3D11DeviceContext* deviceContext, vector<ID3D11ShaderResourceView*>& textureArray);
 		virtual HRESULT SetCameraPosition(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition, int lightType);
 		virtual bool SetLightSource(ID3D11DeviceContext* deviceContext, LightClass* lightSource);
-
+		
 		virtual HRESULT SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, bool isInstanced) const;
 
 		virtual void RenderShaderInstanced(ID3D11DeviceContext* deviceContext, int vertexCount, int instanceCount) const;
-
 		virtual void RenderShaderOrdinary(ID3D11DeviceContext* deviceContext, int indexCount) const;
 
 	private:
+		vector<D3D11_INPUT_ELEMENT_DESC> CreateInputLayout(vector<char *>& layouts);
+		void OutputShaderErrorMessage(ID3D10Blob*, HWND, WCHAR*);
+
 		struct MatrixBufferType
 		{
 			D3DXMATRIX world;

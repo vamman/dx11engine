@@ -17,6 +17,7 @@ using namespace std;
 #include "textureclass.h"
 #include "Log.h"
 #include "BufferManager.h"
+#include "BasicResource.h"
 
 
 enum ModelFileFormat
@@ -49,7 +50,7 @@ struct SurfaceMaterial
 	bool transparent;
 };
 
-class ModelClass
+class ModelClass : BasicResource
 {
 	private:
 		struct VertexTypeColor
@@ -112,12 +113,12 @@ class ModelClass
 	public:
 		ModelClass();
 		ModelClass(const ModelClass&);
-		~ModelClass();
+		virtual ~ModelClass();
 
 		bool InitializeInstanced(ID3D11Device* device, string filename, InstanceType* instances /* vector<InstanceType*> instancesVector */, int numModels);
 		bool InitializeOrdinary(ID3D11Device* device, string filename, ModelFileFormat fileFormat);
 
-		void Shutdown();
+		virtual void Shutdown();
 		void RenderInstanced(ID3D11DeviceContext* deviceContext);
 		void RenderOrdinary(ID3D11DeviceContext* deviceContext);
 

@@ -1,4 +1,5 @@
 #include "ModelFactory.h"
+#include "FileSystemHelper.h"
 
 ModelFactory* ModelFactory::m_pInstance = NULL;  
 
@@ -33,8 +34,7 @@ ModelObject* ModelFactory::CreateInstancedModel(ID3D11Device* device, HWND hwnd,
 	m_modelCount = numberOfModels;
 	vector<InstanceType*> instancesVector;
 
-	ModelClass* model = new ModelClass;
-	// Create the model object.
+	ModelClass* model = new ModelClass();
 	if(!model)
 	{
 		return false;
@@ -88,7 +88,8 @@ ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, 
 	int formatLength = 4;
 	D3DXVECTOR3 posVec;
 	ModelClass* model = new ModelClass;
-	string fileFormat = fileName.substr(fileName.length() - formatLength, formatLength);
+
+	FileExtensions fileFormat = GetFileExtension(fileName);
 
 	// Create the model object.
 	if(!model) { return false; }
@@ -107,11 +108,13 @@ ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, 
 		// Initialize the model.
 		ModelFileFormat FF = MODEL_FILE_TXT;
 		
-		if (fileFormat.compare(string(".txt")) == 0)
+		//if (fileFormat.compare(string(".txt")) == 0)
+		if (fileFormat == ExtensionTXT)
 		{
 			FF = MODEL_FILE_TXT;
 		}
-		else if (fileFormat.compare(string(".obj")) == 0)
+		// else if (fileFormat.compare(string(".obj")) == 0)
+		else if (fileFormat == ExtensionOBJ)
 		{
 			FF = MODEL_FILE_OBJ;
 		}

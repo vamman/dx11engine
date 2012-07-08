@@ -146,7 +146,7 @@ void FontClass::ReleaseTexture()
 
 ID3D11ShaderResourceView* FontClass::GetTexture()
 {
-	return m_Texture->GetTexture();
+	return m_Texture->GetShaderResourceView();
 }
 
 void FontClass::BuildVertexArray(void* vertices, char* sentence, float drawX, float drawY)
