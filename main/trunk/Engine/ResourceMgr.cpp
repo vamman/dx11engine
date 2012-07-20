@@ -1,6 +1,6 @@
 #include "ResourceMgr.h"
 #include "FileSystemHelper.h"
-#include "graphicsclass.h"
+#include "MacroHelper.h"
 
 #include "TextureLoader.h"
 #include "textureclass.h"
@@ -100,9 +100,13 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 												 D3DClass::GetInstance()->GetDeviceContext(),
 												 filePath.c_str(), &resource, &shaderResourceView);
 						*/
-
+						D3DX11_IMAGE_INFO imageInfo;
 						CreateShaderResourceViewFromFile(D3DClass::GetInstance()->GetDevice(),
-														 (WCHAR* )filePath.c_str(), newTexture->GetShaderView());
+														 (WCHAR* )filePath.c_str(), newTexture->GetShaderView(),
+														 &imageInfo);
+
+						newTexture->SetWidth(imageInfo.Width);
+						newTexture->SetHeight(imageInfo.Height);
 
 						newTexture->SetResourceName(resourceName.c_str());
 						m_Resources.push_back(newTexture);

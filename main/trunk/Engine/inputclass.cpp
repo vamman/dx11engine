@@ -255,19 +255,19 @@ void InputClass::GetMouseRotations(float& leftRight, float& upDown)
 	upDown = mUpDownRot;
 }
 
-bool InputClass::IsWireframeModeOn(bool& isWireFrameModeOn)
+bool InputClass::IsTAB_PressedAndUnpressed(bool& isWireFrameModeOn)
 {
 	IsBtnPressedAndUnpressed(DIK_TAB, isWireFrameModeOn);
 	return isWireFrameModeOn;
 }
 
-bool InputClass::IsAllowToBBRender()
+bool InputClass::IsHOME_PressedAndUnpressed()
 {
 	IsBtnPressedAndUnpressed(DIK_HOME, isAllowToBBRender);
 	return isAllowToBBRender;
 }
 
-bool InputClass::IsAllowToCameraDisplayRender()
+bool InputClass::IsEND_PressedAndUnpressed()
 {
 	IsBtnPressedAndUnpressed(DIK_END, isAllowToCameraDisplayRender);
 	return isAllowToCameraDisplayRender;

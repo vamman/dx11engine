@@ -17,6 +17,7 @@ Texture::~Texture()
 {
 }
 
+
 bool Texture::Initialize(ID3D11Device* device, WCHAR* filename)
 {
 	HRESULT result;
@@ -32,9 +33,9 @@ bool Texture::Initialize(ID3D11Device* device, WCHAR* filename)
 	m_Width = pImageInfo.Width;
 	m_Height = pImageInfo.Height;
 
-
 	return true;
 }
+
 
 void Texture::Shutdown()
 {
@@ -46,14 +47,4 @@ void Texture::Shutdown()
 	}
 
 	return;
-}
-
-UINT Texture::GetWidth()
-{
-	return m_Width;
-}
-
-UINT Texture::GetHeight()
-{
-	return m_Height;
 }

@@ -27,7 +27,8 @@ BitmapClass::~BitmapClass()
 {
 }
 
-bool BitmapClass::Initialize(ID3D11Device* device, int screenWidth, int screenHeight, char* textureFilename)
+bool BitmapClass::Initialize(ID3D11Device* device, int screenWidth, int screenHeight,
+							 char* textureFilename, int width, int heigh)
 {
 	bool result;
 
@@ -38,8 +39,9 @@ bool BitmapClass::Initialize(ID3D11Device* device, int screenWidth, int screenHe
 	m_screenHeight = screenHeight;
 
 	// Store the size in pixels that this bitmap should be rendered at.
-	m_bitmapWidth = m_Texture->GetWidth();
-	m_bitmapHeight = m_Texture->GetHeight();
+	
+	m_bitmapWidth = width == 0 ? m_Texture->GetWidth() : width;
+	m_bitmapHeight = heigh == 0 ? m_Texture->GetHeight() : heigh;
 
 	// Initialize the previous rendering position to negative one.
 	m_previousPosX = -1;
@@ -51,15 +53,6 @@ bool BitmapClass::Initialize(ID3D11Device* device, int screenWidth, int screenHe
 	{
 		return false;
 	}
-
-	// Load the texture for this model.
-	/*
-	result = LoadTexture(device, textureFilename);
-	if(!result)
-	{
-		return false;
-	}
-	*/
 
 	return true;
 }
@@ -140,7 +133,8 @@ bool BitmapClass::InitializeBuffers(ID3D11Device* device)
 		indices[i] = i;
 	}
 
-	result = BufferManager::GetInstance()->CreateVertexBuffer(device, sizeof(VertexType) * m_vertexCount, vertices, &m_vertexBuffer);
+	result = BufferManager::GetInstance()->CreateVertexBuffer(device, sizeof(VertexType) * m_vertexCount,
+					vertices, &m_vertexBuffer, D3D11_USAGE_DYNAMIC, D3D11_BIND_VERTEX_BUFFER, D3D11_CPU_ACCESS_WRITE);
 	if(FAILED(result))
 	{
 		return false;
@@ -284,27 +278,6 @@ void BitmapClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	return;
-}
-
-bool BitmapClass::LoadTexture(ID3D11Device* device, WCHAR* filename)
-{
-	bool result;
-
-	// Create the texture object.
-	m_Texture = new Texture;
-	if(!m_Texture)
-	{
-		return false;
-	}
-
-	// Initialize the texture object.
-	result = m_Texture->Initialize(device, filename);
-	if(!result)
-	{
-		return false;
-	}
-
-	return true;
 }
 
 void BitmapClass::ReleaseTexture()

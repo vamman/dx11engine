@@ -15,6 +15,7 @@
 #include "bitmapclass.h"
 #include "lightclass.h"
 
+// Shaders
 #include "Shaders/BasicShader.h"
 #include "Shaders/TextureShader.h"
 #include "Shaders/LightShader.h"
@@ -26,6 +27,8 @@
 #include "Shaders/TerrainShader.h"
 #include "shaders/SkyDomeShader.h"
 #include "shaders/SkyPlaneShader.h"
+#include "shaders/FireShader.h"
+
 #include "Terrain.h"
 #include "QuadTree.h"
 #include "CameraMovement.h"
@@ -51,69 +54,6 @@ const bool VSYNC_ENABLED = false;
 const float SCREEN_DEPTH = 1000.0f;
 const float SCREEN_NEAR = 0.1f;
 
-#define ASSERT(statement, messageBody)								\
-{																	\
-	HRESULT hr = S_OK;												\
-	bool res = true;												\
-	hr = (statement);												\
-	if( FAILED(hr))													\
-	{																\
-		HWND hwnd = FindWindow(L"Engine", NULL);					\
-		MessageBox(hwnd, messageBody, L"ASSERT !", MB_OK);			\
-		return false;												\
-	}																\
-}
-	//HWND hwnd;
-	//HWND hwnd = FindWindow(L"Engine", NULL);
-
-	/*
-	Log::GetInstance()->WriteTextMessageToOutput(messageBody);	\
-	*/
-
-#define V_RETURN(statement, messageHeader, messageBody)			\
-{																\
-	HRESULT hr = (statement);									\
-	if( FAILED(hr) )											\
-	{															\
-		MessageBox(hwnd, messageBody, messageHeader, MB_OK);	\
-		return false;											\
-	}															\
-}
-
-#define  CREATE_ORDINARY_OBJ_WITH_MAT(obj, objectNmae, objectFilePath, materialToAssign)					\
-{																											\
-	obj = ModelFactory::GetInstance()->CreateOrdinaryModel(mD3D->GetDevice(), hwnd, objectNmae, objectFilePath);			\
-	obj->SetMaterial(MaterialFactory::GetInstance()->GetMaterialByName(materialToAssign));								\
-}
-
-#define  CREATE_INSTANCED_OBJ_WITH_MAT(objectNmae, objectFilePath, materialToAssign, numberOfObjects)						\
-{																															\
-	ModelObject* object = new ModelObject();																				\
-	object = ModelFactory::GetInstance()->CreateInstancedModel(mD3D->GetDevice(), hwnd, objectNmae, objectFilePath, numberOfObjects);	\
-	object->SetMaterial(MaterialFactory::GetInstance()->GetMaterialByName(materialToAssign));												\
-}
-
-#define SHUTDOWN_OBJ(obj)	\
-{							\
-	if(obj)					\
-	{						\
-		obj->Shutdown();	\
-		delete obj;			\
-		obj = 0;			\
-	}						\
-}
-
-#define  WRITE_SENTENCE(D3D, numericValue, stringValue, posX, posY, colorR, colorG, colorB, sentenceNumber)		\
-{																												\
-	char tempString[10];																						\
-	char dataString[50];																						\
-	_itoa_s((int) numericValue, tempString, 10);																\
-	strcpy_s(dataString, stringValue);																			\
-	strcat_s(dataString, tempString);																			\
-	result = m_Text->AddSentence(D3D, dataString, posX, posY, colorR, colorG, colorB, sentenceNumber);			\
-	if(!result) { return false; }																				\
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: GraphicsClass
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +64,7 @@ class GraphicsClass
 		GraphicsClass(const GraphicsClass&);
 		~GraphicsClass();
 
-		HRESULT Initialize(int, int, HWND);
+		HRESULT Init(int, int, HWND);
 		void Shutdown();
 		bool Frame();
 		bool Render();
@@ -133,7 +73,7 @@ class GraphicsClass
 		bool HandleInput(float);
 		
 		bool InitLights();
-		HRESULT InitializeShaders(HWND hwnd);
+		HRESULT InitShaders(HWND hwnd);
 		bool InitMaterials();
 		bool InitObjects(HWND hwnd);
 
@@ -147,6 +87,7 @@ class GraphicsClass
 		bool RenderObjects(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, float fogStart, float fogEnd);
 		void ShutdownShaders();
 		HRESULT Render2D();
+		HRESULT RenderFire();
 		bool SetFillMode(D3D11_FILL_MODE mode);
 		HRESULT RenderObject(ModelObject* modelObj, ID3D11DeviceContext* deviceContext, D3DXMATRIX viewMatrix,
 						  D3DXMATRIX projectionMatrix, LightClass* lightSource, LightClass::LightTypes lightType, bool isInstanced);
@@ -189,25 +130,22 @@ class GraphicsClass
 		TextClass* m_Text;
 
 		// Shaders
-		BasicShader* mBasicShader;
-
-		TextureShader* mTextureShaderMiniMap;
-		TextureShader* mTextureShaderCamDisplay;
-		FontShader* mCursorShader;
-
-		LightShader* mDirSpecLightShader;
-		LightShader* mPointLightShader;
-		LightShader* mDirAmbLightShader;
-
-		TerrainShader* mTerrainWithMaterialsShader;
-		TerrainShader* mTerrainWithQuadTreeShader;
-
-		MultitextureShader* m_MultiTextureShader;
-		NormalMapShader* m_BumpMapShader;
-		SpecMapShader* m_SpecMapShader;
-		SpecMapShader* m_SpecMapShaderNonInstanced;
-		FogShader* m_FogShader;
-		SkyDomeShader* mSkyDomeShader;
+		BasicShader*		mBasicShader;
+		TextureShader*		mTextureShaderMiniMap;
+		TextureShader*		mTextureShaderCamDisplay;
+		FontShader*			mCursorShader;
+		LightShader*		mDirSpecLightShader;
+		LightShader*		mPointLightShader;
+		LightShader*		mDirAmbLightShader;
+		TerrainShader*		mTerrainWithMaterialsShader;
+		TerrainShader*		mTerrainWithQuadTreeShader;
+		MultitextureShader*	m_MultiTextureShader;
+		NormalMapShader*	m_BumpMapShader;
+		SpecMapShader*		m_SpecMapShader;
+		SpecMapShader*		m_SpecMapShaderNonInstanced;
+		FogShader*			m_FogShader;
+		SkyDomeShader*		mSkyDomeShader;
+		FireShader*			m_FireShader;
 		
 
 		int mNumObjectsRendered;

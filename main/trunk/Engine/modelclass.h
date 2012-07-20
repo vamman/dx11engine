@@ -18,6 +18,7 @@ using namespace std;
 #include "Log.h"
 #include "BufferManager.h"
 #include "BasicResource.h"
+#include "FileSystemHelper.h"
 
 
 enum ModelFileFormat
@@ -53,56 +54,53 @@ struct SurfaceMaterial
 class ModelClass : BasicResource
 {
 	private:
-		struct VertexTypeColor
+		struct BasicVertexType 
+		{
+			BasicVertexType(){}
+			BasicVertexType(float x, float y, float z) : position(x, y, z){}
+			D3DXVECTOR3 position;
+		};
+
+		struct VertexTypeColor : BasicVertexType
 		{
 			VertexTypeColor(){}
-			VertexTypeColor(float x, float y, float z, float r, float g, float b, float a) : position(x, y, z), color(r, g, b, a){}
-			D3DXVECTOR3 position;
+			VertexTypeColor(float x, float y, float z, float r, float g, float b, float a) : 
+													BasicVertexType(x, y, z), color(r, g, b, a){}
 			D3DXVECTOR4 color;
 		};
 
-		struct VertexTypeTexture
+		struct VertexTypeTexture : BasicVertexType
 		{
 			VertexTypeTexture(){}
-			VertexTypeTexture(float x, float y, float z, float u, float v) : position(x, y, z), texture(u, v){}
-			D3DXVECTOR3 position;
+			VertexTypeTexture(float x, float y, float z, float u, float v) :
+													BasicVertexType(x, y, z), texture(u, v){}
 			D3DXVECTOR2 texture;
 		};
 
-		struct VertexTypeLight
+		struct VertexTypeLight : VertexTypeTexture
 		{
 			VertexTypeLight(){}
 			VertexTypeLight(float x, float y, float z, float u, float v, float nx, float ny, float nz) : 
-																							position(x, y, z), texture(u, v), normal(nx, ny, nz){}
-			D3DXVECTOR3 position;
-			D3DXVECTOR2 texture;
+													VertexTypeTexture(x, y, z, u, v), normal(nx, ny, nz){}
 			D3DXVECTOR3 normal;
 		};
 
-		struct VertexTypeNormalMap
+		struct VertexTypeNormalMap : VertexTypeLight
 		{
 			VertexTypeNormalMap(){}
 			VertexTypeNormalMap(float x, float y, float z, float u, float v, float nx, float ny, float nz, float tx, float ty, float tz, float bx, float by, float bz) :
-																							position(x, y, z), texture(u, v), normal(nx, ny, nz), tangent(tx, ty, tz), binormal(bx, by, bz){}
-			D3DXVECTOR3 position;
-			D3DXVECTOR2 texture;
-			D3DXVECTOR3 normal;
+						VertexTypeLight(x, y, z, u, v, nx, ny, nz), tangent(tx, ty, tz), binormal(bx, by, bz){}
+
 			D3DXVECTOR3 tangent;
 			D3DXVECTOR3 binormal;
 		};
 
-		struct TempVertexType
+		struct TempVertexType : VertexTypeTexture
 		{
 			TempVertexType(){}
 			TempVertexType(float x, float y, float z, float u, float v, float nx, float ny, float nz) : 
-																							position(x, y, z), texture(u, v), normal(nx, ny, nz){}
-			D3DXVECTOR3 position;
-			D3DXVECTOR2 texture;
+							VertexTypeTexture(x, y, z, u, v), normal(nx, ny, nz){}
 			D3DXVECTOR3 normal;
-
-			// float x, y, z;
-			// float tu, tv;
-			// float nx, ny, nz;
 		};
 
 		struct VectorType
@@ -111,16 +109,30 @@ class ModelClass : BasicResource
 		};
 
 	public:
+		enum VertexTypes
+		{
+			ColorVertexType = 0,
+			TextureVertexType,
+			LightVertexType,
+			NormalMapVertexType,
+			VertexTypeTemp,
+
+			VertexTypeCount
+		};
+
 		ModelClass();
 		ModelClass(const ModelClass&);
 		virtual ~ModelClass();
 
 		bool InitializeInstanced(ID3D11Device* device, string filename, InstanceType* instances /* vector<InstanceType*> instancesVector */, int numModels);
-		bool InitializeOrdinary(ID3D11Device* device, string filename, ModelFileFormat fileFormat);
+		bool InitializeOrdinary(ID3D11Device* device, string filename, FileExtensions fileExtension, VertexTypes vertexType);
+
+		// TODO: Integrate in loading pipeline
+		bool InitializeSimple(ID3D11Device* device, char* modelFilename);
 
 		virtual void Shutdown();
-		void RenderInstanced(ID3D11DeviceContext* deviceContext);
-		void RenderOrdinary(ID3D11DeviceContext* deviceContext);
+		void RenderInstanced(ID3D11DeviceContext* deviceContext, VertexTypes vertexType);
+		void RenderOrdinary(ID3D11DeviceContext* deviceContext, VertexTypes vertexType);
 
 		void SetPosition(D3DXVECTOR3 posVector);
 		D3DXVECTOR3* GetPosition();
@@ -138,11 +150,19 @@ class ModelClass : BasicResource
 	private:
 		bool InitializeBuffersInstanced(ID3D11Device* device, InstanceType* instances /* vector<InstanceType*> instancesVector */, int numModels);
 		bool InitializeBuffersOrdinary(ID3D11Device* device);
+
+		// TODO: Integrate in loading pipeline
+		bool InitializeSimpleBuffers(ID3D11Device* device);
+
 		void ShutdownBuffers();
 
 		bool LoadModelFromTXT(string modelFilename);
 		bool LoadTXTModel(string modelFilename);
 		bool LoadModelFromOBJ(ID3D11Device* device, string modelFilename);
+
+		// TODO: Integrate in loading pipeline
+		bool LoadSimpleModel(char* filename);
+
 		bool CheckChar(ifstream& fileIn, wchar_t charToCheck);
 		void ReleaseModel();
 
@@ -150,9 +170,10 @@ class ModelClass : BasicResource
 		void CalculateTangentBinormal(TempVertexType, TempVertexType, TempVertexType, VectorType&, VectorType&);
 		void CalculateNormal(VectorType, VectorType, VectorType&);
 
-		void RenderBuffersInstanced(ID3D11DeviceContext* deviceContext);
-		void RenderBuffersOrdinaryForTXTFile(ID3D11DeviceContext* deviceContext);
-		void RenderBuffersOrdinaryForOBJFile(ID3D11DeviceContext* deviceContext);
+		void RenderBuffersInstanced(ID3D11DeviceContext* deviceContext, VertexTypes vertexType);
+		void RenderBuffersOrdinaryForTXTFile(ID3D11DeviceContext* deviceContext, VertexTypes vertexType);
+		void RenderBuffersOrdinaryForOBJFile(ID3D11DeviceContext* deviceContext, VertexTypes vertexType);
+		size_t GetVertexTypeSize(VertexTypes vertxtype);
 
 	private:
 		ID3D11Buffer *mVertexBuffer, *mInstanceBuffer, *mIndexBuffer;
@@ -164,6 +185,7 @@ class ModelClass : BasicResource
 		std::vector<std::wstring> textureNameArray;
 		ModelType* mModel;
 		char mModelFileName[50];
+		VertexTypes mVertexType;
 
 		//int meshSubsets;
 		//vector<int> meshSubsetIndexStart;
@@ -177,7 +199,7 @@ class ModelClass : BasicResource
 		vector<SurfaceMaterial> material;
 		//vector<std::wstring> textureNameArray;
 
-		ModelFileFormat mFileFormat;
+		FileExtensions mFileExtension;
 };
 
 #endif

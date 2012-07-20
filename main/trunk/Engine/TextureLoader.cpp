@@ -653,20 +653,18 @@ HRESULT CreateWICTextureFromFile(	_In_ ID3D11Device* d3dDevice,
 	return hr;
 }
 
-bool CreateShaderResourceViewFromFile(ID3D11Device* device, WCHAR* filename, ID3D11ShaderResourceView** shaderResourceView)
+bool CreateShaderResourceViewFromFile(ID3D11Device* device, WCHAR* filename,
+	ID3D11ShaderResourceView** shaderResourceView, D3DX11_IMAGE_INFO* imageInfo)
 {
 	HRESULT result;
 
-	// Load the texture in.
-	D3DX11_IMAGE_LOAD_INFO pImageInfo;
-	result = D3DX11CreateShaderResourceViewFromFile(device, filename, &pImageInfo, NULL, shaderResourceView, NULL);
+	result = D3DX11CreateShaderResourceViewFromFile(device, filename, NULL, NULL, shaderResourceView, NULL);
 	if(FAILED(result))
 	{
 		return false;
 	}
 
-	//m_Width = pImageInfo.Width;
-	//m_Height = pImageInfo.Height;
+	D3DX11GetImageInfoFromFile(filename, NULL, imageInfo, NULL);
 
 	return true;
 }

@@ -28,8 +28,10 @@ class TextureShader : public BasicShader
 							D3DXMATRIX viewMatrix, 
 							D3DXMATRIX projectionMatrix);
 
+		ID3D11SamplerState* m_sampleState;
+
 	private:
 
-		ID3D11SamplerState* m_sampleState;
+		// ID3D11SamplerState* m_sampleState;
 };
 

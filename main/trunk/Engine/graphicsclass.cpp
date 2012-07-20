@@ -1,49 +1,52 @@
 #include "graphicsclass.h"
 #include "ResourceMgr.h"
+#include "MacroHelper.h"
 
-GraphicsClass::GraphicsClass() : mIsAllowToBBRender(true), mIsAllowToCameraDisplayRender(true), mDirUp(true), 
-								 mDirDown(false), mIsWireFrameModeOn(true), mSkyShape((SkyShape)0), mSkyPixelShaderType((SkyPixelShaderType)0)
-{
-	mTerrain = 0;
-	mQuadTree = 0;
-	m_MiniMap = 0;
-
-	mD3D = 0;
-	mCamera = 0;
-	mCameraMovement = 0;
-
-	mBitmap = 0;
-	mCursor = 0;
-	m_RenderTexture = 0;
-
-	m_Text = 0;
-
-	m_Frustum = 0;
+GraphicsClass::GraphicsClass() 
+	: mIsAllowToBBRender(true)
+	, mIsAllowToCameraDisplayRender(true)
+	, mDirUp(true)
+	, mDirDown(false)
+	, mIsWireFrameModeOn(true)
+	, mSkyShape((SkyShape)0)
+	, mSkyPixelShaderType((SkyPixelShaderType)0)
+	, mTerrain(0)
+	, mQuadTree(0)
+	, m_MiniMap(0)
+	, mD3D(0)
+	, mCamera(0)
+	, mCameraMovement(0)
+	, mBitmap(0)
+	, mCursor(0)
+	, m_RenderTexture(0)
+	, m_Text(0)
+	, m_Frustum(0)
 
 	// Shaders
-	m_MultiTextureShader = 0;
-	m_BumpMapShader = 0;
-	m_SpecMapShader = 0;
-	m_SpecMapShaderNonInstanced = 0;
-	m_FogShader = 0;
-	m_ReflectionShader = 0;
-	mCursorShader = 0;
-	mBasicShader = 0;
-	mTextureShaderMiniMap = 0;
-	mTextureShaderCamDisplay = 0;
-	mDirSpecLightShader = 0;
-	mDirAmbLightShader = 0;
-	mPointLightShader = 0;
-	mDirSpecLight = 0;
-	mTerrainWithMaterialsShader = 0;
-	mTerrainWithQuadTreeShader = 0;
-	mSkyDomeShader = 0;
+	, m_MultiTextureShader(0)
+	, m_BumpMapShader(0)
+	, m_SpecMapShader(0)
+	, m_SpecMapShaderNonInstanced(0)
+	, m_FogShader(0)
+	, m_ReflectionShader(0)
+	, mCursorShader(0)
+	, mBasicShader(0)
+	, mTextureShaderMiniMap(0)
+	, mTextureShaderCamDisplay(0)
+	, mDirSpecLightShader (0)
+	, mDirAmbLightShader(0)
+	, mPointLightShader(0)
+	, mDirSpecLight(0)
+	, mTerrainWithMaterialsShader(0)
+	, mTerrainWithQuadTreeShader(0)
+	, mSkyDomeShader(0)
+	, m_FireShader(0)
+	, m_SkyPlaneShader(0)
 
-	mSkyDome = 0;
-
-	m_SkyPlane = 0;
-	m_SkyPlaneShader = 0;
-
+	, mSkyDome(0)
+	, m_SkyPlane(0)
+	, mNumObjectsRendered(0)
+{
 	for (int i = 0; i < 4; ++i)
 	{
 		mPointLights[i] = 0;
@@ -61,7 +64,7 @@ GraphicsClass::~GraphicsClass()
 }
 
 
-HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
+HRESULT GraphicsClass::Init(int screenWidth, int screenHeight, HWND hwnd)
 {
 	HRESULT result = S_FALSE;
 	ModelObject* object = new ModelObject();
@@ -81,7 +84,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	Timer::GetInstance()->SetTimeA();
 
 	// Create the Direct3D object.
-	mD3D = D3DClass::GetInstance(); // new D3DClass;
+	mD3D = D3DClass::GetInstance();
 	if(!mD3D)
 	{
 		return result;
@@ -89,13 +92,8 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	// Initialize the Direct3D object.
 	
-	ASSERT(mD3D->Initialize(mScreenWidth, mScreenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR),
+	ACTION_THROUGH_ASSERT(mD3D->Initialize(mScreenWidth, mScreenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR),
 		   L"Could not initialize Direct3D");
-	
-	/*
-	V_RETURN(mD3D->Initialize(mScreenWidth, mScreenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR), L"Error",
-			 L"Could not initialize Direct3D");
-	*/
 	ID3D11Device* device = mD3D->GetDevice();
 
 	// Load ALL resources
@@ -165,7 +163,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	InitLights();
-	InitializeShaders(hwnd);
+	InitShaders(hwnd);
 	InitMaterials();
 	
 	for (int i = 0; i < 4; ++i)
@@ -187,7 +185,8 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		mPointLights[i]->SetPosition(position.x, position.y, position.z);
 
 		object = ModelFactory::GetInstance()->CreateOrdinaryModel(device, hwnd, resultName,
-																  string("Engine/data/models/sphere.txt"));
+																  string("Engine/data/models/sphere.txt"),
+																  ModelClass::NormalMapVertexType);
 		object->SetMaterial(MaterialFactory::GetInstance()->GetMaterialByName("BlueFloor"));
 		object->SetPosition(position);
 	}
@@ -205,7 +204,6 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 //												L"Could not initialize the terrain object" );
 	
 	// simple_hmap_512_24
-	
 	V_RETURN(mTerrain->InitializeWithQuadTree(device, "Engine/data/textures/terrain/simple_hmap_512_24.bmp", 
 											  "dirt01", "Engine/data/textures/terrain/colorm513.bmp"),
 											  L"Error", L"Could not initialize the terrain object");
@@ -231,7 +229,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the bitmap object.
-	V_RETURN(mBitmap->Initialize(device, mScreenWidth, mScreenHeight, "texture2" /*, 300, 225 */),
+	V_RETURN(mBitmap->Initialize(device, mScreenWidth, mScreenHeight, "texture2" , 300, 225),
 		L"Error", L"Could not initialize the bitmap object.");
 
 	// Create cursor bitmap
@@ -244,7 +242,7 @@ HRESULT GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the cursor bitmap object.
-	V_RETURN(mCursor->Initialize(device, mScreenWidth, mScreenHeight, "SC2Cursor1" /* , mCursorWidth / 2, mCursorHeight / 2 */),
+	V_RETURN(mCursor->Initialize(device, mScreenWidth, mScreenHeight, "SC2Cursor1" , mCursorWidth / 2, mCursorHeight / 2),
 		L"Error", L"Could not initialize cursor object.");
 
 	// Probably need to initialize another instance of Texture shader for minimap
@@ -327,7 +325,7 @@ bool GraphicsClass::InitLights()
 	return true;
 }
 
-HRESULT GraphicsClass::InitializeShaders(HWND hwnd)
+HRESULT GraphicsClass::InitShaders(HWND hwnd)
 {
 	HRESULT result = S_FALSE;
 	DWORD funcTime = -1;
@@ -336,106 +334,94 @@ HRESULT GraphicsClass::InitializeShaders(HWND hwnd)
 
 	// Create basic shader
 	mBasicShader = new BasicShader;
-	if(!mBasicShader) { return result; }
 	V_RETURN(mBasicShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/BasicShader.fx", "BasicVertexShader", "BasicPixelShader"),
 			 L"Error", L"Could not initialize the basic shader object.");
 
 	// Create the texture shader object for mini map.
 	mTextureShaderMiniMap = new TextureShader;
-	if(!mTextureShaderMiniMap) { return result; }
 	V_RETURN(mTextureShaderMiniMap->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/TextureShaderNonInstanced.fx", "TextureVertexShader", "TexturePixelShader"),
 			 L"Error", L"Could not initialize the texture shader object.");
 
 	// Create the texture shader object for camera display.
 	mTextureShaderCamDisplay = new TextureShader;
-	if(!mTextureShaderCamDisplay) { return result; }
 	V_RETURN(mTextureShaderCamDisplay->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/TextureShaderNonInstanced.fx", "TextureVertexShader", "TexturePixelShader"),
 		L"Error", L"Could not initialize the texture shader object.");
 
 	// Create directional specular light shader object.
 	mDirSpecLightShader = new LightShader;
-	if(!mDirSpecLightShader) { return result; }
 	V_RETURN(mDirSpecLightShader->Initialize(mDirSpecLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/SpecularLight.fx","LightVertexShader", "LightPixelShader"),
 		L"Error", L"Could not initialize the light shader object.");
 
 	// Create directional ambient light shader object.
 	mDirAmbLightShader = new LightShader;
-	if(!mDirAmbLightShader) { return result; }
 	V_RETURN(mDirAmbLightShader->Initialize(mDirAmbLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/AmbientLight.fx", "LightVertexShader", "LightPixelShader"),
 		L"Error", L"Could not initialize the light shader object.");
 
 	// Create terrain shader for terrain with materials
 	mTerrainWithMaterialsShader = new TerrainShader;
-	if(!mTerrainWithMaterialsShader)	{ return result; }
 	V_RETURN(mTerrainWithMaterialsShader->Initialize(mDirAmbLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/TerrainWithMaterials.fx", "TerrainVertexShader", "TerrainPixelShader"),
 		L"Error", L"Could not initialize the terrain shader object.");
 
 	// Create terrain shader for terrain with quad tree
 	mTerrainWithQuadTreeShader = new TerrainShader;
-	if(!mTerrainWithQuadTreeShader)	{ return result; }
 	V_RETURN(mTerrainWithQuadTreeShader->Initialize(mDirAmbLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/TerrainWithQuadTree.fx", "TerrainVertexShader", "TerrainPixelShader"),
 		L"Error", L"Could not initialize the terrain shader object.");
 
 	// Create point light shader object.
 	/*
 	mPointLightShader = new LightShader;
-	if(!mDirSpecLightShader) { return result; }
 	V_RETURN(mPointLightShader->Initialize(mPointLights[0], mD3D->GetDevice(), hwnd, L"Engine/data/shaders/PointLight.fx", "LightVertexShader", "LightPixelShader"),
 		L"Error", L"Could not initialize the point light shader object.");
 	*/
 
 	// Create the multitexture shader object.
 	m_MultiTextureShader = new MultitextureShader;
-	if(!m_MultiTextureShader) { return result; }
 	V_RETURN(m_MultiTextureShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/LightmapShader.fx", "LightMapVertexShader", "LightMapPixelShader"),
 		L"Error", L"Could not initialize the multitexture shader object.");
 
 	// Create the bump map shader object.
 	m_BumpMapShader = new NormalMapShader;
-	if(!m_BumpMapShader) { return result; }
 	V_RETURN(m_BumpMapShader->Initialize(mDirAmbLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/NormalMapShader.fx", "BumpMapVertexShader", "BumpMapPixelShader"),
 		L"Error", L"Could not initialize the bump map shader object.");
 
 	// Create the specular map shader object.
 	m_SpecMapShader = new SpecMapShader;
-	if(!m_SpecMapShader) { return result; }
 	V_RETURN(m_SpecMapShader->Initialize(mDirSpecLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/SpecMapShader.fx", "SpecMapVertexShader", "SpecMapPixelShader"),
 		L"Error", L"Could not initialize the specular map instanced shader object.");
 
 	// Create the specular map shader object.
 	m_SpecMapShaderNonInstanced = new SpecMapShader();
-	if(!m_SpecMapShader) { return result; }
 	V_RETURN(m_SpecMapShaderNonInstanced->Initialize(mDirSpecLight, mD3D->GetDevice(), hwnd, L"Engine/data/shaders/SpecMapShaderNonInstanced.fx", "SpecMapVertexShader", "SpecMapPixelShader"),
 		L"Error", L"Could not initialize the specular map non inctansed shader object.");
 	
 	// Create the fog shader object.
 	m_FogShader = new FogShader;
-	if(!m_FogShader) { return result; }
 	V_RETURN(m_FogShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/FogShader.fx", "FogVertexShader", "FogPixelShader"),
 		L"Error", L"Could not initialize the fog shader object.");
 
 	// Create the reflection shader object.
 	m_ReflectionShader = new ReflectionShader;
-	if(!m_ReflectionShader) { return result; }
 	V_RETURN(m_ReflectionShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/ReflectionShader.fx", "ReflectionVertexShader", "ReflectionPixelShader"),
 		L"Error", L"Could not initialize the reflection shader object.");
 
 	// Create cursor shader object
 	mCursorShader = new FontShader;
-	if(!mCursorShader) { return result; }
 	V_RETURN(mCursorShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/CursorShader.fx",  "CursorVertexShader", "CursorPixelShader"),
 		L"Error", L"Could not initialize the cursor shader object.");
 
 	// Create the sky dome shader object.
 	mSkyDomeShader = new SkyDomeShader;
-	if(!mSkyDomeShader) { return false; }
 	V_RETURN(mSkyDomeShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/SkyDomeShader.fx",  "SkyDomeVertexShader", "SkyDomePixelShader"),
 		L"Error", L"Could not initialize the sky dome shader object.");
 
 	// Create the sky plane shader object.
 	m_SkyPlaneShader = new SkyPlaneShader;
-	if(!m_SkyPlaneShader) { return false; }
 	V_RETURN(m_SkyPlaneShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/SkyPlaneShader.fx",  "SkyPlaneVertexShader", "SkyPlanePixelShader"),
+		L"Error", L"Could not initialize the sky plane shader object.");
+
+	// Create the fire shader.
+	m_FireShader = new FireShader;
+	V_RETURN(m_FireShader->Initialize(mD3D->GetDevice(), hwnd, L"Engine/data/shaders/FireShader.fx",  "FireVertexShader", "FirePixelShader"),
 		L"Error", L"Could not initialize the sky plane shader object.");
 
 
@@ -496,6 +482,19 @@ bool GraphicsClass::InitMaterials()
 
 	material->SetMaterialShader(m_BumpMapShader);
 
+	// Create fire material
+	material = MaterialFactory::GetInstance()->CreateMaterial("fireMaterial");
+	material->AppentTextureToMaterial(mD3D->GetDevice(), "fire01");
+	if(!result) { return false; }
+
+	material->AppentTextureToMaterial(mD3D->GetDevice(), "noise01");
+	if(!result) { return false; }
+
+	material->AppentTextureToMaterial(mD3D->GetDevice(), "alpha01");
+	if(!result) { return false; }
+
+	material->SetMaterialShader(m_FireShader);
+
 	Timer::GetInstance()->SetTimeB();
 	funcTime = Timer::GetInstance()->GetDeltaTime();
 
@@ -519,8 +518,8 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 	CREATE_INSTANCED_OBJ_WITH_MAT("instancedSphere", string("Engine/data/models/sphere.txt"), "NormalWithSpec", 5)
 
 	// Create floor
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "floor", string("Engine/data/models/floor.txt"), "TexturedFloor");
-	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 132.0f)); 
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, "floor", string("Engine/data/models/floor.txt"), "TexturedFloor", ModelClass::NormalMapVertexType);
+	object->SetPosition(D3DXVECTOR3(130.0f, 1.0f, 132.0f)); 
 
 	// Create 10 ordinary spheres
 	for (int i = 0; i < 5; ++i)
@@ -531,7 +530,7 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 		_itoa_s(i, number, 10);
 		sprintf_s(resultName, "%s%s", prefix, number);
 
-		CREATE_ORDINARY_OBJ_WITH_MAT(object, resultName, string("Engine/data/models/sphere.txt"), "NormalWithSpec");
+		CREATE_ORDINARY_OBJ_WITH_MAT(object, resultName, string("Engine/data/models/sphere.txt"), "NormalWithSpec", ModelClass::NormalMapVertexType);
 
 		// Generate a random position in front of the viewer for the mode.
 		float positionX = 130.0f; // 130.0f;
@@ -550,14 +549,12 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 	}
 
 	// Create cube
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "cube", string("Engine/data/models/cube.txt"), "NormalWithSpec");
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, "cube", string("Engine/data/models/cube.txt"), "NormalWithSpec", ModelClass::NormalMapVertexType);
 	object->SetPosition(D3DXVECTOR3(130.0f, 1.0f, 130.0f));
 
 	// Create space compound from TXT
-	/*
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "spaceCompound", string("Engine/data/models/spaceCompound.txt"), "spaceCompoundMaterial");
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, "spaceCompound", string("Engine/data/models/spaceCompound.txt"), "spaceCompoundMaterial", ModelClass::NormalMapVertexType);
 	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 132.0f));
-	*/
 
 	// Create space compound from OBJ
 	/*
@@ -565,8 +562,20 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 132.0f));
 	*/
 
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "cubeObj", string("Engine/data/models/cube.obj"), "NormalWithSpec");
-	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 125.0f)); 
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, "cubeObj", string("Engine/data/models/cube.obj"), "NormalWithSpec", ModelClass::NormalMapVertexType);
+	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 125.0f));
+
+	// Create fire object
+	/*
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, "fireObj", string("Engine/data/models/square.txt"), "fireMaterial"); // square
+	object->SetPosition(D3DXVECTOR3(135.0f, 1.0f, 125.0f));
+	*/
+
+	object = ModelFactory::GetInstance()->CreateSimpleModel(mD3D->GetDevice(), hwnd, "fireObj",
+		string("Engine/data/models/square.txt"));
+	object->SetMaterial(MaterialFactory::GetInstance()->GetMaterialByName("fireMaterial"));
+
+	object->SetPosition(D3DXVECTOR3(135.0f, 1.0f, 125.0f));
 
 	Timer::GetInstance()->SetTimeB();
 	funcTime = Timer::GetInstance()->GetDeltaTime();
@@ -714,7 +723,7 @@ bool GraphicsClass::HandleInput(float frameTime)
 	float posX, posY, posZ, rotX, rotY, rotZ;
 	D3DXVECTOR3 normalCameraDirectionVector, normalCameraRightVector;
 
-	if (InputClass::GetInstance()->IsWireframeModeOn(mIsWireFrameModeOn))
+	if (InputClass::GetInstance()->IsTAB_PressedAndUnpressed(mIsWireFrameModeOn))
 	{
 		SetFillMode(D3D11_FILL_WIREFRAME);
 		mSkyDome->SetFillMode(mD3D, D3D11_FILL_WIREFRAME);
@@ -820,7 +829,7 @@ bool GraphicsClass::Render()
 {
 	bool result;
 	float  fogColor, fogStart, fogEnd;
-	mIsAllowToBBRender = InputClass::GetInstance()->IsAllowToBBRender();
+	mIsAllowToBBRender = InputClass::GetInstance()->IsHOME_PressedAndUnpressed();
 
 	// Set the color of the fog.
 	fogColor = 0.5f;
@@ -851,7 +860,7 @@ bool GraphicsClass::Render()
 	//result = RenderToTextureFromReflectionView(); // TODO
 
 	// Render the entire scene to the texture first.
-	mIsAllowToCameraDisplayRender = InputClass::GetInstance()->IsAllowToCameraDisplayRender();
+	mIsAllowToCameraDisplayRender = InputClass::GetInstance()->IsEND_PressedAndUnpressed();
 	if (mIsAllowToCameraDisplayRender)
 	{
 		result = RenderToTextureFromCameraView();
@@ -929,7 +938,6 @@ bool GraphicsClass::RenderScene()
 	// Turn off the Z buffer.
 	mD3D->TurnZBufferOff();
  
-	
 	if (mIsWireFrameModeOn)
 	{
 		mSkyDome->SetFillMode(mD3D, D3D11_FILL_WIREFRAME);
@@ -946,7 +954,7 @@ bool GraphicsClass::RenderScene()
 
 	// Turn back face culling back on.
 	mD3D->TurnOnCulling();
-
+	
 	RenderSkyPlane(worldMatrix, viewMatrix, projectionMatrix);
 
 	// Turn the Z buffer back on.
@@ -965,11 +973,13 @@ bool GraphicsClass::RenderScene()
 		SetFillMode(D3D11_FILL_SOLID);
 	}
 	
+	RenderFire();
+
 //	RenderTerrainWithMaterials(worldMatrix, viewMatrix, projectionMatrix);
 	RenderTerrainWithQuadTree(worldMatrix, viewMatrix, projectionMatrix);
 
 	ModelObject* modelObj = ModelFactory::GetInstance()->GetObjectByName("floor");
-//	SetPositionAboveTerrain(modelObj, 0.1f);
+	SetPositionAboveTerrain(modelObj, 0.1f);
 	RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirAmbLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
 
 	RenderObjects(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
@@ -1031,10 +1041,10 @@ HRESULT GraphicsClass::Render2D()
 		// Render the bitmap with the texture shader.
 		mTextureShaderCamDisplay->SetTextureArray(deviceContext, textureArray);
 		result = mTextureShaderCamDisplay->RenderOrdinary(deviceContext,
-			mBitmap->GetIndexCount(),
-			worldMatrix,
-			mBaseViewMatrix, 
-			orthoMatrix);
+														  mBitmap->GetIndexCount(),
+														  worldMatrix,
+														  mBaseViewMatrix, 
+														  orthoMatrix);
 		if(FAILED(result)) { return result; }
 	}
 
@@ -1073,6 +1083,61 @@ HRESULT GraphicsClass::Render2D()
 	mD3D->TurnOffAlphaBlending();
 	// Turn the Z buffer back on now that all 2D rendering has completed.
 	mD3D->TurnZBufferOn();
+
+	return result;
+}
+
+HRESULT GraphicsClass::RenderFire()
+{
+	D3DXMATRIX worldMatrix, viewMatrix, projectionMatrix;
+	HRESULT result;
+	D3DXVECTOR3 scrollSpeeds, scales;
+	D3DXVECTOR2 distortion1, distortion2, distortion3;
+	float distortionScale, distortionBias;
+	static float frameTime = 0.0f;
+
+	// Increment the frame time counter.
+	frameTime += 0.01f;
+	if(frameTime > 1000.0f)
+	{
+		frameTime = 0.0f;
+	}
+
+	// Set the three scrolling speeds for the three different noise textures.
+	scrollSpeeds = D3DXVECTOR3(1.3f, 2.1f, 2.3f);
+
+	// Set the three scales which will be used to create the three different noise octave textures.
+	scales = D3DXVECTOR3(1.0f, 2.0f, 3.0f);
+
+	// Set the three different x and y distortion factors for the three different noise textures.
+	distortion1 = D3DXVECTOR2(0.1f, 0.2f);
+	distortion2 = D3DXVECTOR2(0.1f, 0.3f);
+	distortion3 = D3DXVECTOR2(0.1f, 0.1f);
+
+	// The the scale and bias of the texture coordinate sampling perturbation.
+	distortionScale = 0.8f;
+	distortionBias = 0.5f;
+
+	// Get the world, view, and projection matrices from the camera and d3d objects.
+	mCamera->GetViewMatrix(viewMatrix);
+	mD3D->GetProjectionMatrix(projectionMatrix);
+
+	// Turn on alpha blending for the fire transparency.
+	mD3D->TurnOnAlphaBlending();
+
+	ModelObject* modelObj = ModelFactory::GetInstance()->GetObjectByName("fireObj");
+	modelObj->GetModel()->RenderOrdinary(mD3D->GetDeviceContext(), ModelClass::TextureVertexType);
+	worldMatrix = modelObj->GetWorldMatrix();
+
+	vector<ID3D11ShaderResourceView*> textureArray;
+	Material* material = MaterialFactory::GetInstance()->GetMaterialByName("fireMaterial");
+	m_FireShader->SetTextureArray(mD3D->GetDeviceContext(), material->GetTextureVector());
+
+	result = m_FireShader->RenderOrdinary(mD3D->GetDeviceContext(), modelObj->GetModel()->GetIndexCount(), worldMatrix,
+										  viewMatrix, projectionMatrix, frameTime, scrollSpeeds, scales, distortion1, 
+										  distortion2, distortion3, distortionScale, distortionBias);
+	// Turn off alpha blending.
+	mD3D->TurnOffAlphaBlending();
 
 	return result;
 }
@@ -1122,8 +1187,6 @@ bool GraphicsClass::RenderToTextureFromReflectionView()
 	mD3D->GetProjectionMatrix(projectionMatrix);
 
 	mCamera->GetViewMatrix(viewMatrix);
-
-	//RenderModel(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
 
 	// Reset the render target back to the original back buffer and not the render to texture anymore.
 	mD3D->SetBackBufferRenderTarget();
@@ -1233,18 +1296,16 @@ bool GraphicsClass::RenderObjects(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
 				RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
 			}
 			// Draw spaceCompound
+			/*
 			else if (strcmp(modelObj->GetModelName(), "spaceCompound") == 0)
 			{
-				/*
 				// Turn back face culling back off.
 				mD3D->TurnOffCulling();
 				RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirAmbLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
 				// Turn back face culling back on.
 				mD3D->TurnOnCulling();
-				*/
 			}
-			
-
+			*/
 			// Draw cubeObj
 			if (strcmp(modelObj->GetModelName(), "cubeObj") == 0)
 			{
@@ -1254,6 +1315,7 @@ bool GraphicsClass::RenderObjects(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
 				// Turn back face culling back on.
 				mD3D->TurnOnCulling();
 			}
+
 			else if (strcmp(modelObj->GetModelName(), "floor") != 0) // ordinary created spheras
 			{
 				string objName(modelObj->GetModelName());
@@ -1312,7 +1374,7 @@ HRESULT GraphicsClass::RenderObject(ModelObject* modelObj, ID3D11DeviceContext* 
 
 	if (!isInstanced)
 	{
-		model->RenderOrdinary(deviceContext);
+		model->RenderOrdinary(deviceContext, ModelClass::NormalMapVertexType);
 		result = materialShader->RenderOrdinary(deviceContext,
 			model->GetIndexCount(),
 			worldMatrix,
@@ -1322,7 +1384,7 @@ HRESULT GraphicsClass::RenderObject(ModelObject* modelObj, ID3D11DeviceContext* 
 	}
 	else
 	{
-		model->RenderInstanced(deviceContext);
+		model->RenderInstanced(deviceContext, ModelClass::NormalMapVertexType);
 		result = materialShader->RenderInstanced(deviceContext,
 			model->GetVertexCount(),
 			model->GetInstanceCount(),

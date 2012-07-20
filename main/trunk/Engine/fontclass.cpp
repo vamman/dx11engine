@@ -2,6 +2,7 @@
 // Filename: fontclass.cpp
 ///////////////////////////////////////////////////////////////////////////////
 #include "fontclass.h"
+#include "ResourceMgr.h"
 
 FontClass::FontClass()
 {
@@ -19,7 +20,7 @@ FontClass::~FontClass()
 {
 }
 
-bool FontClass::Initialize(ID3D11Device* device, char* fontFilename, WCHAR* textureFilename)
+bool FontClass::Initialize(ID3D11Device* device, char* fontFilename, char* textureFilename)
 {
 	bool result;
 
@@ -32,11 +33,8 @@ bool FontClass::Initialize(ID3D11Device* device, char* fontFilename, WCHAR* text
 	}
 
 	// Load the texture that has the font characters on it.
-	result = LoadTexture(device, textureFilename);
-	if(!result)
-	{
-		return false;
-	}
+	m_Texture = new Texture;
+	m_Texture = reinterpret_cast<Texture* >(ResourceMgr::GetInstance()->GetResourceByName(textureFilename, ResourceMgr::ResourceTypeTexture));
 
 	return true;
 }
@@ -107,28 +105,6 @@ void FontClass::ReleaseFontData()
 	}
 
 	return;
-}
-
-bool FontClass::LoadTexture(ID3D11Device* device, WCHAR* filename)
-{
-	bool result;
-
-
-	// Create the texture object.
-	m_Texture = new Texture;
-	if(!m_Texture)
-	{
-		return false;
-	}
-
-	// Initialize the texture object.
-	result = m_Texture->Initialize(device, filename);
-	if(!result)
-	{
-		return false;
-	}
-
-	return true;
 }
 
 void FontClass::ReleaseTexture()

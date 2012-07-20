@@ -63,6 +63,11 @@ class BasicShader: public BaseShaderClass
 		virtual void RenderShaderInstanced(ID3D11DeviceContext* deviceContext, int vertexCount, int instanceCount) const;
 		virtual void RenderShaderOrdinary(ID3D11DeviceContext* deviceContext, int indexCount) const;
 
+		// TODO: Temprory
+		ID3D11VertexShader* m_vertexShader;
+		ID3D11PixelShader* m_pixelShader;
+		ID3D11InputLayout* m_layout;
+
 	private:
 		vector<D3D11_INPUT_ELEMENT_DESC> CreateInputLayout(vector<char *>& layouts);
 		void OutputShaderErrorMessage(ID3D10Blob*, HWND, WCHAR*);
@@ -74,9 +79,9 @@ class BasicShader: public BaseShaderClass
 			D3DXMATRIX projection;
 			bool isInstanced;
 		};
-		ID3D11VertexShader* m_vertexShader;
+		/*ID3D11VertexShader* m_vertexShader;
 		ID3D11PixelShader* m_pixelShader;
-		ID3D11InputLayout* m_layout;
+		ID3D11InputLayout* m_layout;*/
 		ID3D11Buffer* m_matrixBuffer;
 };
 

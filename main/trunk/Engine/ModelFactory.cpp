@@ -82,17 +82,13 @@ ModelObject* ModelFactory::CreateInstancedModel(ID3D11Device* device, HWND hwnd,
 	return modelObject;
 }
 
-ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, const char* modelName, string fileName)
+ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, const char* modelName, string fileName, ModelClass::VertexTypes vertexType)
 {
 	bool result;
-	int formatLength = 4;
 	D3DXVECTOR3 posVec;
 	ModelClass* model = new ModelClass;
 
 	FileExtensions fileFormat = GetFileExtension(fileName);
-
-	// Create the model object.
-	if(!model) { return false; }
 
 	int existingIndex = GetExistingModelIndex((char *)fileName.c_str(), false);
 	// If this model was already loaded before
@@ -106,20 +102,7 @@ ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, 
 	else
 	{
 		// Initialize the model.
-		ModelFileFormat FF = MODEL_FILE_TXT;
-		
-		//if (fileFormat.compare(string(".txt")) == 0)
-		if (fileFormat == ExtensionTXT)
-		{
-			FF = MODEL_FILE_TXT;
-		}
-		// else if (fileFormat.compare(string(".obj")) == 0)
-		else if (fileFormat == ExtensionOBJ)
-		{
-			FF = MODEL_FILE_OBJ;
-		}
-
-		result = model->InitializeOrdinary(device, fileName, FF);
+		result = model->InitializeOrdinary(device, fileName, fileFormat, vertexType);
 		if(!result)
 		{
 			MessageBox(hwnd, L"Could not initialize an ordinary model object.", L"Error", MB_OK);
@@ -132,6 +115,40 @@ ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, 
 
 	ModelObject* modelObject = new ModelObject(posVec, model, modelName);
 
+	mVectorOfObjects.push_back(modelObject);
+
+	return modelObject;
+}
+
+// TODO: Integrate in loading pipeline
+ModelObject* ModelFactory::CreateSimpleModel(ID3D11Device* device, HWND hwnd, char* modelName, string fileName)
+{
+	bool result;
+	D3DXVECTOR3 posVec;
+	ModelClass* model = new ModelClass;
+
+	int existingIndex = GetExistingModelIndex((char *)fileName.c_str(), false);
+	// If this model was already loaded before
+	if (existingIndex != -1)
+	{
+		model = mVectorOfObjects[existingIndex]->GetModel();
+		// Copy the model
+		model = new ModelClass(*model);
+	}
+	// Else load it
+	else
+	{
+		result = model->InitializeSimple(device, (char*) fileName.c_str());
+		if(!result)
+		{
+			MessageBox(hwnd, L"Could not initialize simple model object.", L"Error", MB_OK);
+			return false;
+		}
+	}
+
+	// Set default position
+	posVec = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	ModelObject* modelObject = new ModelObject(posVec, model, modelName);
 	mVectorOfObjects.push_back(modelObject);
 
 	return modelObject;

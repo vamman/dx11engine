@@ -1,7 +1,7 @@
 // Filename: terrainclass.cpp
 ////////////////////////////////////////////////////////////////////////////////
 #include "Terrain.h"
-#include "graphicsclass.h"
+#include "MacroHelper.h"
 #include "ResourceMgr.h"
 #include "FileSystemHelper.h"
 
@@ -32,13 +32,13 @@ bool Terrain::InitializeWithQuadTree(ID3D11Device* device, char* heightMapFileNa
 	Timer::GetInstance()->SetTimeA();
 
 	// Load in the height map for the terrain.
-	ASSERT(LoadHeightMap(device, heightMapFileName), L"Terrain::LoadHeightMap FAILED");
+	ACTION_THROUGH_ASSERT(LoadHeightMap(device, heightMapFileName), L"Terrain::LoadHeightMap FAILED");
 
 	// Normalize the height of the height map.
 	NormalizeHeightMap();
 
 	// Calculate the normals for the terrain data.
-	ASSERT(CalculateNormals(), L"Terrain::CalculateNormals FAILED");
+	ACTION_THROUGH_ASSERT(CalculateNormals(), L"Terrain::CalculateNormals FAILED");
 
 	// Calculate the texture coordinates.
 	CalculateTextureCoordinates();
@@ -46,13 +46,11 @@ bool Terrain::InitializeWithQuadTree(ID3D11Device* device, char* heightMapFileNa
 	// Load the texture.
 	m_Texture = reinterpret_cast<Texture* >(ResourceMgr::GetInstance()->GetResourceByName(textureFilename, ResourceMgr::ResourceTypeTexture));
 
-	// ASSERT(LoadTexture(device, textureFilename), L"Terrain::LoadTexture FAILED");
-
 	// Load in the color map for the terrain.
-	ASSERT(LoadColorMap(colorMapFilename), L"Terrain::LoadColorMap FAILED");
+	ACTION_THROUGH_ASSERT(LoadColorMap(colorMapFilename), L"Terrain::LoadColorMap FAILED");
 
 	// Initialize the vertex and index buffer that hold the geometry for the terrain.
-	ASSERT(InitializeBuffers(device), L"Terrain::InitializeBuffers FAILED");
+	ACTION_THROUGH_ASSERT(InitializeBuffers(device), L"Terrain::InitializeBuffers FAILED");
 
 	Timer::GetInstance()->SetTimeB();
 	funcTime = Timer::GetInstance()->GetDeltaTime();
@@ -75,7 +73,7 @@ bool Terrain::InitializeWithMaterials(ID3D11Device* device, char* heightMapFileN
 	Timer::GetInstance()->SetTimeA();
 
 	// Load in the height map for the terrain.
-	ASSERT(LoadHeightMap(device, heightMapFileName), L"Terrain::LoadHeightMap FAILED");
+	ACTION_THROUGH_ASSERT(LoadHeightMap(device, heightMapFileName), L"Terrain::LoadHeightMap FAILED");
 
 	// Load detail map
 	m_DetailTexture = new Texture;
@@ -87,16 +85,16 @@ bool Terrain::InitializeWithMaterials(ID3D11Device* device, char* heightMapFileN
 	NormalizeHeightMap();
 
 	// Calculate the normals for the terrain data.
-	ASSERT(CalculateNormals(), L"Terrain::CalculateNormals FAILED");
+	ACTION_THROUGH_ASSERT(CalculateNormals(), L"Terrain::CalculateNormals FAILED");
 
 	// Load in the color map for the terrain.
-	ASSERT(LoadColorMap(colorMapFilename), L"Terrain::LoadColorMap FAILED");
+	ACTION_THROUGH_ASSERT(LoadColorMap(colorMapFilename), L"Terrain::LoadColorMap FAILED");
 
 	// Initialize the vertex and index buffer that hold the geometry for the terrain.
-	ASSERT(InitializeBuffers(device), L"Terrain::InitializeBuffers FAILED");
+	ACTION_THROUGH_ASSERT(InitializeBuffers(device), L"Terrain::InitializeBuffers FAILED");
 
 	// Initialize the material groups for the terrain.
-	ASSERT(LoadMaterialFile(materialsFilename, materialMapFilename, device), L"Terrain::LoadMaterialFile FAILED");
+	ACTION_THROUGH_ASSERT(LoadMaterialFile(materialsFilename, materialMapFilename, device), L"Terrain::LoadMaterialFile FAILED");
 
 	Timer::GetInstance()->SetTimeB();
 	funcTime = Timer::GetInstance()->GetDeltaTime();
@@ -463,28 +461,6 @@ void Terrain::CalculateTextureCoordinates()
 	return;
 }
 
-bool Terrain::LoadTexture(ID3D11Device* device, WCHAR* filename)
-{
-	bool result;
-
-
-	// Create the texture object.
-	m_Texture = new Texture;
-	if(!m_Texture)
-	{
-		return false;
-	}
-
-	// Initialize the texture object.
-	result = m_Texture->Initialize(device, filename);
-	if(!result)
-	{
-		return false;
-	}
-
-	return true;
-}
-
 // TODO: Each method more than 30 lines has be checked for result by assert
 HRESULT Terrain::LoadColorMap(char* filename)
 {
@@ -608,10 +584,6 @@ bool Terrain::LoadMaterialFile(char* filename, char* materialMapFilename, ID3D11
 
 	// Create the texture object array.
 	m_Textures = new Texture[m_textureCount];
-	if(!m_Textures)
-	{
-		return false;
-	}
 
 	// Load each of the textures in.
 	for(i=0; i<m_textureCount; i++)
@@ -632,11 +604,12 @@ bool Terrain::LoadMaterialFile(char* filename, char* materialMapFilename, ID3D11
 		}
 
 		// Load the texture or alpha map.
-		result = m_Textures[i].Initialize(device, textureFilename);
-		if(!result)
-		{
-			return false;
-		}
+		CHAR buf[200] = "This is some UTF8 string.";
+		int num = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)textureFilename, strlen(buf) + 1, NULL, 0);
+
+		Texture* newTexture = new Texture();
+		newTexture = reinterpret_cast<Texture* >(ResourceMgr::GetInstance()->GetResourceByName(GetFilenameWithoutExtension(buf), ResourceMgr::ResourceTypeTexture));
+		m_Textures[i].Initialize(device, textureFilename);
 	}
 
 	// Read up to the value of the material count.

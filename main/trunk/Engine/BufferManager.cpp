@@ -20,17 +20,18 @@ BufferManager* BufferManager::GetInstance()
 	return m_pInstance;
 }
 
-HRESULT BufferManager::CreateVertexBuffer(ID3D11Device* device, int bufferSize, void * vertices, ID3D11Buffer** vertexBuffer)
+HRESULT BufferManager::CreateVertexBuffer(ID3D11Device* device, int bufferSize, void * vertices,
+										  ID3D11Buffer** vertexBuffer, D3D11_USAGE useage, UINT bindFlag, UINT cpuAccessFlag)
 {
 	D3D11_BUFFER_DESC vertexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData;
 	HRESULT result = S_FALSE;
 
 	// Set up the description of the static vertex buffer.
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexBufferDesc.Usage = (useage == D3D11_USAGE_DEFAULT ? D3D11_USAGE_DEFAULT : useage);
 	vertexBufferDesc.ByteWidth = bufferSize;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
+	vertexBufferDesc.BindFlags = (bindFlag == D3D11_BIND_VERTEX_BUFFER ? D3D11_BIND_VERTEX_BUFFER : bindFlag);
+	vertexBufferDesc.CPUAccessFlags = (cpuAccessFlag == 0 ? 0 : cpuAccessFlag);
 	vertexBufferDesc.MiscFlags = 0;
 	vertexBufferDesc.StructureByteStride = 0;
 

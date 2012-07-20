@@ -39,7 +39,7 @@ public:
 	FontClass(const FontClass&);
 	~FontClass();
 
-	bool Initialize(ID3D11Device*, char*, WCHAR*);
+	bool Initialize(ID3D11Device*, char*, char*);
 	void Shutdown();
 
 	ID3D11ShaderResourceView* GetTexture();
