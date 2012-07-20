@@ -22,6 +22,7 @@ class Texture : public BasicResource
 		Texture();
 		Texture(const Texture&);
 		~Texture();
+
 		bool						Initialize(ID3D11Device*, WCHAR*);
 		virtual void				Shutdown();
 
@@ -34,6 +35,8 @@ class Texture : public BasicResource
 
 		UINT						GetWidth();
 		UINT						GetHeight();
+		void						SetWidth(UINT width);
+		void						SetHeight(UINT height);
 
 	private:
 		ID3D11ShaderResourceView*	m_ShaderResourceView;
@@ -66,5 +69,26 @@ inline void	Texture::SetResource(ID3D11Resource* srv)
 {
 	m_Resource = srv;
 }
+
+inline UINT Texture::GetWidth()
+{
+	return m_Width;
+}
+
+inline UINT Texture::GetHeight()
+{
+	return m_Height;
+}
+
+inline void Texture::SetWidth(UINT width)
+{
+	m_Width = width;
+}
+
+inline void Texture::SetHeight(UINT height)
+{
+	m_Height = height;
+}
+
 
 #endif

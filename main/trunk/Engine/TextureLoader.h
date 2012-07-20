@@ -9,7 +9,8 @@
 #include <assert.h>
 #include <wincodec.h>
 
-bool CreateShaderResourceViewFromFile(ID3D11Device* device, WCHAR* filename, ID3D11ShaderResourceView** shaderResourceView);
+bool CreateShaderResourceViewFromFile(ID3D11Device* device, WCHAR* filename,
+									  ID3D11ShaderResourceView** shaderResourceView, D3DX11_IMAGE_INFO* imageInfo);
 
 HRESULT CreateWICTextureFromMemory( _In_ ID3D11Device* d3dDevice,
 									_In_opt_ ID3D11DeviceContext* d3dContext,

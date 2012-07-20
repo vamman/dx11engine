@@ -59,9 +59,9 @@ class InputClass
 		bool IsNumPad1Pressed();
 
 		// Press/Unpress functions
-		bool IsWireframeModeOn(bool& isWireFrameModeOn);
-		bool IsAllowToBBRender();
-		bool IsAllowToCameraDisplayRender();
+		bool IsTAB_PressedAndUnpressed(bool& isWireFrameModeOn);
+		bool IsHOME_PressedAndUnpressed();
+		bool IsEND_PressedAndUnpressed();
 
 		void GetMouseRotations(float& leftRight, float& upDown);
 

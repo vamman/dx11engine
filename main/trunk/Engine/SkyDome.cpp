@@ -21,8 +21,8 @@ bool SkyDome::Initialize(ID3D11Device* device, HWND hwnd)
 	mSkyDomeSphere = new ModelObject;
 
 	// Load in the sky dome model.
-	mSkyDomeSphere = mModelFactory->CreateOrdinaryModel(device, hwnd, "skyDomeSphere", string("Engine/data/models/sphere.txt"));
-	mSkyDomeCube = mModelFactory->CreateOrdinaryModel(device, hwnd, "skyDomeCube", string("Engine/data/models/cube.txt"));
+	mSkyDomeSphere = mModelFactory->CreateOrdinaryModel(device, hwnd, "skyDomeSphere", string("Engine/data/models/sphere.txt"), ModelClass::NormalMapVertexType);
+	mSkyDomeCube = mModelFactory->CreateOrdinaryModel(device, hwnd, "skyDomeCube", string("Engine/data/models/cube.txt"), ModelClass::NormalMapVertexType);
 
 	// Set the color at the top of the sky dome.
 	m_apexColor = D3DXVECTOR4(0.15f, 0.26f, 0.78f, 1.0f); // 0.0f, 0.15f, 0.66f, 1.0f
@@ -100,11 +100,11 @@ void SkyDome::Render(ID3D11DeviceContext* deviceContext, int shapeType)
 	deviceContext->PSSetSamplers( 0, 1, &CubesTexSamplerState);
 	if (shapeType == 0)
 	{
-		mSkyDomeSphere->GetModel()->RenderOrdinary(deviceContext);
+		mSkyDomeSphere->GetModel()->RenderOrdinary(deviceContext, ModelClass::NormalMapVertexType);
 	}
 	else
 	{
-		mSkyDomeCube->GetModel()->RenderOrdinary(deviceContext);
+		mSkyDomeCube->GetModel()->RenderOrdinary(deviceContext, ModelClass::NormalMapVertexType);
 	}
 	return;
 }

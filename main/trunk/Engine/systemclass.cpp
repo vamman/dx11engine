@@ -53,7 +53,7 @@ HRESULT SystemClass::Initialize()
 
 	//MessageBox(m_hwnd, L"TEST", L"TEST", MB_OK);
 	// Initialize the graphics object.
-	result = m_Graphics->Initialize(screenWidth, screenHeight, m_hwnd);
+	result = m_Graphics->Init(screenWidth, screenHeight, m_hwnd);
 	if(FAILED(result))
 	{
 		return result;
@@ -74,33 +74,30 @@ HRESULT SystemClass::Initialize()
 	}
 	*/
 	// Create the sound object.
+	/*
 	m_Sound = new SoundClass;
-	if(!m_Sound)
-	{
-		return result;
-	}
 
-	// Initialize the sound object.
 	result = m_Sound->Initialize(m_hwnd);
 	if(FAILED(result))
 	{
 		MessageBox(m_hwnd, L"Could not initialize Direct Sound.", L"Error", MB_OK);
 		return result;
 	}
-
+	*/
 	return result;
 }
 
 void SystemClass::Shutdown()
 {
 	// Release the sound object.
+	/*
 	if(m_Sound)
 	{
 		m_Sound->Shutdown();
 		delete m_Sound;
 		m_Sound = 0;
 	}
-
+	*/
 	// Release the position object.
 	/*
 	if(m_Position)

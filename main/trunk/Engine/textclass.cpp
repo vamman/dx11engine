@@ -44,7 +44,7 @@ HRESULT TextClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceC
 	}
 
 	// Initialize the font object.
-	result = m_Font->Initialize(device, "Engine/data/fonts/fontdata.txt", L"Engine/data/fonts/font.dds");
+	result = m_Font->Initialize(device, "Engine/data/fonts/fontdata.txt", "font");
 	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the font object.", L"Error", MB_OK);

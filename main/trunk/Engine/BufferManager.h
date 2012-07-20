@@ -29,7 +29,9 @@ class BufferManager
 	public:
 		static BufferManager* GetInstance();
 		~BufferManager(void);
-		HRESULT CreateVertexBuffer(ID3D11Device* device, int bufferSize, void * vertices, ID3D11Buffer** vertexBuffer);
+		HRESULT CreateVertexBuffer(ID3D11Device* device, int bufferSize, void * vertices,
+								   ID3D11Buffer** vertexBuffer, D3D11_USAGE useage = D3D11_USAGE_DEFAULT,
+								   UINT bindFlag = D3D11_BIND_VERTEX_BUFFER, UINT cpuAccessFlag = 0);
 		HRESULT CreateIndexBuffer(ID3D11Device* device, int bufferSize, void * indices, ID3D11Buffer** indexBuffer);
 		HRESULT CreateInstanceBuffer(ID3D11Device* device, int bufferSize, void * instances, ID3D11Buffer** instanceBuffer);
 
