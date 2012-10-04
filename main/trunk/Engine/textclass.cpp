@@ -44,7 +44,7 @@ HRESULT TextClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceC
 	}
 
 	// Initialize the font object.
-	result = m_Font->Initialize(device, "Engine/data/fonts/fontdata.txt", "font");
+	result = m_Font->Initialize(device, FileSystemHelper::GetResourcePath(L"/fonts/fontdata.txt").c_str(), L"font");
 	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the font object.", L"Error", MB_OK);
@@ -59,7 +59,7 @@ HRESULT TextClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceC
 	}
 
 	// Initialize the font shader object.
-	result = m_FontShader->Initialize(device, hwnd, L"Engine/data/shaders/FontShader.fx",
+	result = m_FontShader->Initialize(device, hwnd, const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/FontShader.fx").c_str()),
 		"FontVertexShader", "FontPixelShader");
 	if(FAILED(result))
 	{

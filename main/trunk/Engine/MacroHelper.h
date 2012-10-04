@@ -24,14 +24,14 @@
 	}																\
 }
 
-#define V_RETURN(statement, messageHeader, messageBody)			\
-{																\
-	HRESULT hr = (statement);									\
-	if( FAILED(hr) )											\
-	{															\
-	MessageBox(hwnd, messageBody, messageHeader, MB_OK);		\
-	return false;												\
-	}															\
+#define V_RETURN(statement, messageHeader, messageBody)				\
+{																	\
+	HRESULT hr = (statement);										\
+	if( FAILED(hr) )												\
+	{																\
+		MessageBox(hwnd, messageBody, messageHeader, MB_OK);		\
+		return false;												\
+	}																\
 }
 
 #define  CREATE_ORDINARY_OBJ_WITH_MAT(obj, objectNmae, objectFilePath, materialToAssign, vertexType)												\
@@ -47,14 +47,14 @@
 	object->SetMaterial(MaterialFactory::GetInstance()->GetMaterialByName(materialToAssign));											\
 }
 
-#define SHUTDOWN_OBJ(obj)	\
-{							\
-	if(obj)					\
-	{						\
-	obj->Shutdown();		\
-	delete obj;				\
-	obj = 0;				\
-	}						\
+#define SHUTDOWN_OBJ(obj)		\
+{								\
+	if(obj)						\
+	{							\
+		obj->Shutdown();		\
+		delete obj;				\
+		obj = 0;				\
+	}							\
 }
 
 #define  WRITE_SENTENCE(D3D, numericValue, stringValue, posX, posY, colorR, colorG, colorB, sentenceNumber)		\

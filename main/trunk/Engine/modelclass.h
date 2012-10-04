@@ -12,7 +12,6 @@
 #include <time.h>
 #include <vector>
 #include <sstream>
-using namespace std;
 
 #include "textureclass.h"
 #include "Log.h"
@@ -20,6 +19,7 @@ using namespace std;
 #include "BasicResource.h"
 #include "FileSystemHelper.h"
 
+using namespace std;
 
 enum ModelFileFormat
 {
@@ -124,11 +124,8 @@ class ModelClass : BasicResource
 		ModelClass(const ModelClass&);
 		virtual ~ModelClass();
 
-		bool InitializeInstanced(ID3D11Device* device, string filename, InstanceType* instances /* vector<InstanceType*> instancesVector */, int numModels);
-		bool InitializeOrdinary(ID3D11Device* device, string filename, FileExtensions fileExtension, VertexTypes vertexType);
-
-		// TODO: Integrate in loading pipeline
-		bool InitializeSimple(ID3D11Device* device, char* modelFilename);
+		bool InitializeInstanced(ID3D11Device* device, wstring filename, InstanceType* instances /* vector<InstanceType*> instancesVector */, int numModels);
+		bool InitializeOrdinary(ID3D11Device* device, wstring filename, FileSystemHelper::FileExtensions fileExtension, VertexTypes vertexType);
 
 		virtual void Shutdown();
 		void RenderInstanced(ID3D11DeviceContext* deviceContext, VertexTypes vertexType);
@@ -150,18 +147,13 @@ class ModelClass : BasicResource
 	private:
 		bool InitializeBuffersInstanced(ID3D11Device* device, InstanceType* instances /* vector<InstanceType*> instancesVector */, int numModels);
 		bool InitializeBuffersOrdinary(ID3D11Device* device);
-
-		// TODO: Integrate in loading pipeline
-		bool InitializeSimpleBuffers(ID3D11Device* device);
+		bool CreateVertexBuffer(ID3D11Device* device, size_t size, void* vertices, ID3D11Buffer** buffer);
 
 		void ShutdownBuffers();
 
-		bool LoadModelFromTXT(string modelFilename);
-		bool LoadTXTModel(string modelFilename);
-		bool LoadModelFromOBJ(ID3D11Device* device, string modelFilename);
-
-		// TODO: Integrate in loading pipeline
-		bool LoadSimpleModel(char* filename);
+		bool LoadModelFromTXT(wstring modelFilename);
+		bool LoadTXTModel(wstring modelFilename);
+		bool LoadModelFromOBJ(ID3D11Device* device, wstring modelFilename);
 
 		bool CheckChar(ifstream& fileIn, wchar_t charToCheck);
 		void ReleaseModel();
@@ -199,7 +191,7 @@ class ModelClass : BasicResource
 		vector<SurfaceMaterial> material;
 		//vector<std::wstring> textureNameArray;
 
-		FileExtensions mFileExtension;
+		FileSystemHelper::FileExtensions mFileExtension;
 };
 
 #endif

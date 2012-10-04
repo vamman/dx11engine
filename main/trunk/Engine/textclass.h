@@ -12,6 +12,7 @@
 #include "Log.h"
 #include "d3dclass.h"
 #include "BufferManager.h"
+#include "FileSystemHelper.h"
 
 const int MAX_LENGTH = 35;
 

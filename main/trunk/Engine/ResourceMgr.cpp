@@ -34,8 +34,7 @@ ResourceMgr::~ResourceMgr(void)
 bool ResourceMgr::LoadResources()
 {
 	vector<wstring> files;
-
-	bool result = ListFiles(GetResourceFolder(), L"*", files);
+	bool result = ListFiles(FileSystemHelper::GetResourceFolder(), L"*", files);
 	return result;
 }
 
@@ -78,13 +77,13 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 					WideCharToMultiByte(CP_ACP, 0, ffd.cFileName, -1, fileNameChars, 260, NULL, NULL);
 					string fileNameString(fileNameChars);
 
-					string resourceName = GetFilenameWithoutExtension(fileNameString);
-					FileExtensions fileExtension = GetFileExtension(fileNameString);
+					wstring resourceName = FileSystemHelper::GetFilenameWithoutExtension(FileSystemHelper::ConvertStringToWString(fileNameString));
+					FileSystemHelper::FileExtensions fileExtension = FileSystemHelper::GetFileExtension(FileSystemHelper::ConvertStringToWString(fileNameString));
 
 					// Load all texures
-					if (fileExtension == ExtensionDDS || fileExtension == ExtensionJPG || 
-						fileExtension == ExtensionPNG || fileExtension == ExtensionRAW || 
-						fileExtension == ExtensionBMP)
+					if (fileExtension == FileSystemHelper::ExtensionDDS || fileExtension == FileSystemHelper::ExtensionJPG || 
+						fileExtension == FileSystemHelper::ExtensionPNG || fileExtension == FileSystemHelper::ExtensionRAW || 
+						fileExtension == FileSystemHelper::ExtensionBMP)
 					{
 						// Set first index for textures
 						if (m_TextureFirstIndex == -1)
@@ -95,11 +94,6 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 						Texture* newTexture = new Texture();
 						wstring filePath = path + wstring(L"/") + ffd.cFileName;
 
-						/*
-						CreateWICTextureFromFile(D3DClass::GetInstance()->GetDevice(),
-												 D3DClass::GetInstance()->GetDeviceContext(),
-												 filePath.c_str(), &resource, &shaderResourceView);
-						*/
 						D3DX11_IMAGE_INFO imageInfo;
 						CreateShaderResourceViewFromFile(D3DClass::GetInstance()->GetDevice(),
 														 (WCHAR* )filePath.c_str(), newTexture->GetShaderView(),
@@ -108,12 +102,12 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 						newTexture->SetWidth(imageInfo.Width);
 						newTexture->SetHeight(imageInfo.Height);
 
-						newTexture->SetResourceName(resourceName.c_str());
+						newTexture->SetResourceName(FileSystemHelper::ConvertWStringToString(resourceName).c_str());
 						m_Resources.push_back(newTexture);
 					}
 
 					// Load all models
-					if (fileExtension == ExtensionOBJ)
+					if (fileExtension == FileSystemHelper::ExtensionOBJ)
 					{
 						if (m_TextureFirstIndex != -1 && m_TextureLastIndex == -1)
 						{
@@ -122,7 +116,7 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 					}
 
 					// Load all shaders
-					if (fileExtension == ExtensionFX)
+					if (fileExtension == FileSystemHelper::ExtensionFX)
 					{
 						if (m_TextureFirstIndex != -1 && m_TextureLastIndex == -1)
 						{
@@ -131,7 +125,7 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 					}
 
 					// Load all audio
-					if (fileExtension == ExtensionWAV)
+					if (fileExtension == FileSystemHelper::ExtensionWAV)
 					{
 						if (m_TextureFirstIndex != -1 && m_TextureLastIndex == -1)
 						{
@@ -158,7 +152,7 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 	return true;
 }
 
-BasicResource* ResourceMgr::GetResourceByName(string name, ResourceType resourceType)
+BasicResource* ResourceMgr::GetResourceByName(wstring name, ResourceType resourceType)
 {
 	switch (resourceType)
 	{
@@ -172,11 +166,11 @@ BasicResource* ResourceMgr::GetResourceByName(string name, ResourceType resource
 	}
 }
 
-BasicResource* ResourceMgr::FindResourceByName(string name, int firstIndex, int lastIndex)
+BasicResource* ResourceMgr::FindResourceByName(wstring name, int firstIndex, int lastIndex)
 {
 	for (int i = firstIndex; i < lastIndex; ++i)
 	{
-		if (strcmp(m_Resources[i]->GetResourceName(), name.c_str()) == 0)
+		if (strcmp(m_Resources[i]->GetResourceName(), FileSystemHelper::ConvertWStringToString(name).c_str()) == 0)
 		{
 			return m_Resources[i];
 		}

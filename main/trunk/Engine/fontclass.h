@@ -16,6 +16,7 @@ using namespace std;
 // MY CLASS INCLUDES //
 ///////////////////////
 #include "textureclass.h"
+#include "FileSystemHelper.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: FontClass
@@ -39,7 +40,7 @@ public:
 	FontClass(const FontClass&);
 	~FontClass();
 
-	bool Initialize(ID3D11Device*, char*, char*);
+	bool Initialize(ID3D11Device*, const wchar_t*, const wchar_t*);
 	void Shutdown();
 
 	ID3D11ShaderResourceView* GetTexture();
@@ -47,7 +48,7 @@ public:
 	void BuildVertexArray(void*, char*, float, float);
 
 private:
-	bool LoadFontData(char*);
+	bool LoadFontData(const wchar_t*);
 	void ReleaseFontData();
 	bool LoadTexture(ID3D11Device*, WCHAR*);
 	void ReleaseTexture();

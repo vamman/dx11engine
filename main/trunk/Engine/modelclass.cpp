@@ -8,7 +8,7 @@ ModelClass::ModelClass()
 	, mVertexCount(-1)
 	, mIndexCount(-1)
 	, meshSubsets(0)
-	, mFileExtension(FileExtensions::ExtensionTXT)
+	, mFileExtension(FileSystemHelper::FileExtensions::ExtensionTXT)
 	, mVertexBuffer(0)
 	, mIndexBuffer(0)
 	, mInstanceBuffer(0)
@@ -35,7 +35,7 @@ ModelClass::~ModelClass()
 {
 }
 
-bool ModelClass::InitializeInstanced(ID3D11Device* device, string modelFilename, InstanceType* instances, int numModels)
+bool ModelClass::InitializeInstanced(ID3D11Device* device, wstring modelFilename, InstanceType* instances, int numModels)
 {
 	bool result;
 
@@ -51,38 +51,7 @@ bool ModelClass::InitializeInstanced(ID3D11Device* device, string modelFilename,
 	return true;
 }
 
-
-bool ModelClass::InitializeSimple(ID3D11Device* device, char* modelFilename)
-{
-	bool result;
-
-	// Load in the model data,
-	result = LoadSimpleModel(modelFilename);
-	if(!result)
-	{
-		return false;
-	}
-
-	// Initialize the vertex and index buffers.
-	result = InitializeSimpleBuffers(device);
-	if(!result)
-	{
-		return false;
-	}
-
-	// Load the textures for this model.
-	/*
-	result = LoadTextures(device, textureFilename1, textureFilename2, textureFilename3);
-	if(!result)
-	{
-		return false;
-	}
-	*/
-
-	return true;
-}
-
-bool ModelClass::InitializeOrdinary(ID3D11Device* device, string modelFilename, FileExtensions fileExtension, VertexTypes vertexType)
+bool ModelClass::InitializeOrdinary(ID3D11Device* device, wstring modelFilename, FileSystemHelper::FileExtensions fileExtension, VertexTypes vertexType)
 {
 	bool result;
 	D3D11_BLEND_DESC blendDesc;
@@ -97,7 +66,7 @@ bool ModelClass::InitializeOrdinary(ID3D11Device* device, string modelFilename, 
 
 	switch (mFileExtension)
 	{
-		case FileExtensions::ExtensionTXT:
+		case FileSystemHelper::FileExtensions::ExtensionTXT:
 		{
 			result = LoadTXTModel(modelFilename.c_str());
 			// Initialize the vertex and index buffer that hold the geometry for the triangle.
@@ -105,7 +74,7 @@ bool ModelClass::InitializeOrdinary(ID3D11Device* device, string modelFilename, 
 			if(!result) { return false; }
 			break;
 		}
-		case FileExtensions::ExtensionOBJ:
+		case FileSystemHelper::FileExtensions::ExtensionOBJ:
 		{
 			result = LoadModelFromOBJ(device, modelFilename);
 			if(!result) { return false; }
@@ -130,14 +99,14 @@ bool ModelClass::InitializeOrdinary(ID3D11Device* device, string modelFilename, 
 	return true;
 }
 
-bool ModelClass::LoadTXTModel(string modelFilename)
+bool ModelClass::LoadTXTModel(wstring modelFilename)
 {
 	bool result;
 	// char* stringPath = "";
 	// char* stringPath = (char *)malloc( 100 );
 
 	//wcstombs(stringPath, modelFilename.c_str(), 100);
-	strcpy_s(mModelFileName, modelFilename.c_str());
+	strcpy_s(mModelFileName, FileSystemHelper::ConvertWStringToString(modelFilename).c_str());
 
 	// Load in the model data,
 	result = LoadModelFromTXT(modelFilename);
@@ -270,104 +239,97 @@ bool ModelClass::InitializeBuffersInstanced(ID3D11Device* device, InstanceType* 
 
 bool ModelClass::InitializeBuffersOrdinary(ID3D11Device* device)
 {
-	BasicVertexType* vertices; // = new BasicVertexType[mVertexCount];
 	unsigned long* indices;
 	HRESULT result;
+
+	// Create the index array.
+	indices = new unsigned long[mIndexCount];
 
 	// Create the vertex array.
 	switch (mVertexType)
 	{
 		case ColorVertexType:
 		{
-			vertices = new VertexTypeColor[mVertexCount];
+			VertexTypeColor* vertices = new VertexTypeColor[mVertexCount];
+			for(int i=0; i < mVertexCount; i++)
+			{
+				vertices[i].position = D3DXVECTOR3(mModel[i].x, mModel[i].y, mModel[i].z);
+				vertices[i].color = D3DXVECTOR4(0.5f, 0.5f, 0.5f, 1.0f);
+				indices[i] = i;
+			}
+			CreateVertexBuffer(device, GetVertexTypeSize(mVertexType) * mVertexCount, vertices, &mVertexBuffer);
 			break;
 		}
 		case TextureVertexType:
 		{
-			vertices = new VertexTypeTexture[mVertexCount];
+			VertexTypeTexture* vertices = new VertexTypeTexture[mVertexCount];
+			for(int i=0; i < mVertexCount; i++)
+			{
+				vertices[i].position = D3DXVECTOR3(mModel[i].x, mModel[i].y, mModel[i].z);
+				vertices[i].texture = D3DXVECTOR2(mModel[i].tu, mModel[i].tv);
+				indices[i] = i;
+			}
+			CreateVertexBuffer(device, GetVertexTypeSize(mVertexType) * mVertexCount, vertices, &mVertexBuffer);
 			break;
 		}
 		case LightVertexType:
 		{
-			vertices = new VertexTypeLight[mVertexCount];
+			VertexTypeLight* vertices = new VertexTypeLight[mVertexCount];
+			for(int i=0; i < mVertexCount; i++)
+			{
+				vertices[i].position = D3DXVECTOR3(mModel[i].x, mModel[i].y, mModel[i].z);
+				vertices[i].texture = D3DXVECTOR2(mModel[i].tu, mModel[i].tv);
+				vertices[i].normal = D3DXVECTOR3(mModel[i].nx, mModel[i].ny, mModel[i].nz);
+				indices[i] = i;
+			}
+			CreateVertexBuffer(device, GetVertexTypeSize(mVertexType) * mVertexCount, vertices, &mVertexBuffer);
 			break;
 		}
 		case NormalMapVertexType:
 		{
-			vertices = new VertexTypeNormalMap[mVertexCount];
+			VertexTypeNormalMap* vertices = new VertexTypeNormalMap[mVertexCount];
+			for(int i=0; i < mVertexCount; i++)
+			{
+				vertices[i].position = D3DXVECTOR3(mModel[i].x, mModel[i].y, mModel[i].z);
+				vertices[i].texture = D3DXVECTOR2(mModel[i].tu, mModel[i].tv);
+				vertices[i].normal = D3DXVECTOR3(mModel[i].nx, mModel[i].ny, mModel[i].nz);
+				vertices[i].tangent = D3DXVECTOR3(mModel[i].tx, mModel[i].ty, mModel[i].tz);
+				vertices[i].binormal = D3DXVECTOR3(mModel[i].bx, mModel[i].by, mModel[i].bz);
+				indices[i] = i;
+			}
+			CreateVertexBuffer(device, GetVertexTypeSize(mVertexType) * mVertexCount, vertices, &mVertexBuffer);
 			break;
 		}
 		case VertexTypeTemp:
 		{
-			vertices = new TempVertexType[mVertexCount];
+			TempVertexType* vertices = new TempVertexType[mVertexCount];
+			for(int i=0; i < mVertexCount; i++)
+			{
+				vertices[i].position = D3DXVECTOR3(mModel[i].x, mModel[i].y, mModel[i].z);
+				vertices[i].texture = D3DXVECTOR2(mModel[i].tu, mModel[i].tv);
+				vertices[i].normal = D3DXVECTOR3(mModel[i].nx, mModel[i].ny, mModel[i].nz);
+				indices[i] = i;
+			}
+			CreateVertexBuffer(device, GetVertexTypeSize(mVertexType) * mVertexCount, vertices, &mVertexBuffer);
 			break;
 		}
 	}
-	
-	//vertices = new VertexTypeNormalMap[mVertexCount];
 
-	// Create the index array.
-	indices = new unsigned long[mIndexCount];
-	if(!indices)
+	result = BufferManager::GetInstance()->CreateIndexBuffer(device, sizeof(unsigned long) * mIndexCount, indices, &mIndexBuffer);
+	if(FAILED(result))
 	{
 		return false;
 	}
 
-	// Load the vertex array and index array with data.
-	for(int i=0; i < mVertexCount; i++)
-	{
-		switch (mVertexType)
-		{
-			case ColorVertexType:
-			{
-				VertexTypeColor advVertex;
-				advVertex.position = D3DXVECTOR3(mModel[i].x, mModel[i].y, mModel[i].z);
-				advVertex.color = D3DXVECTOR4(0.5f, 0.5f, 0.5f, 1.0f);
-				vertices[i] = advVertex;
-				break;
-			}
-			case TextureVertexType:
-			{
-				VertexTypeTexture advVertex;
-				advVertex.position = D3DXVECTOR3(mModel[i].x, mModel[i].y, mModel[i].z);
-				advVertex.texture = D3DXVECTOR2(mModel[i].tu, mModel[i].tv);
-				vertices[i] = advVertex;
-				break;
-			}
-			case LightVertexType:
-			{
-				VertexTypeLight advVertex;
-				advVertex.position = D3DXVECTOR3(mModel[i].x, mModel[i].y, mModel[i].z);
-				advVertex.texture = D3DXVECTOR2(mModel[i].tu, mModel[i].tv);
-				advVertex.normal = D3DXVECTOR3(mModel[i].nx, mModel[i].ny, mModel[i].nz);
-				vertices[i] = advVertex;
-				break;
-			}
-			case NormalMapVertexType:
-			{
-				VertexTypeNormalMap advVertex;
-				advVertex.position = D3DXVECTOR3(mModel[i].x, mModel[i].y, mModel[i].z);
-				advVertex.texture = D3DXVECTOR2(mModel[i].tu, mModel[i].tv);
-				advVertex.normal = D3DXVECTOR3(mModel[i].nx, mModel[i].ny, mModel[i].nz);
-				advVertex.tangent = D3DXVECTOR3(mModel[i].tx, mModel[i].ty, mModel[i].tz);
-				advVertex.binormal = D3DXVECTOR3(mModel[i].bx, mModel[i].by, mModel[i].bz);
-				vertices[i] = advVertex;
-				break;
-			}
-			case VertexTypeTemp:
-			{
-				TempVertexType advVertex;
-				advVertex.position = D3DXVECTOR3(mModel[i].x, mModel[i].y, mModel[i].z);
-				advVertex.texture = D3DXVECTOR2(mModel[i].tu, mModel[i].tv);
-				advVertex.normal = D3DXVECTOR3(mModel[i].nx, mModel[i].ny, mModel[i].nz);
-				vertices[i] = advVertex;
-				break;
-			}
-		}
+	delete [] indices;
+	indices = 0;
 
-		indices[i] = i;
-	}
+	return true;
+}
 
+bool ModelClass::CreateVertexBuffer(ID3D11Device* device, size_t size, void* vertices, ID3D11Buffer** buffer)
+{
+	HRESULT result;
 	result = BufferManager::GetInstance()->CreateVertexBuffer(device, GetVertexTypeSize(mVertexType) * mVertexCount, vertices, &mVertexBuffer);
 	if(FAILED(result))
 	{
@@ -377,158 +339,6 @@ bool ModelClass::InitializeBuffersOrdinary(ID3D11Device* device)
 	// Release the arrays now that the vertex and index buffers have been created and loaded.
 	delete [] vertices;
 	vertices = 0;
-
-	result = BufferManager::GetInstance()->CreateIndexBuffer(device, sizeof(unsigned long) * mIndexCount, indices, &mIndexBuffer);
-	if(FAILED(result))
-	{
-		return false;
-	}
-	
-
-	delete [] indices;
-	indices = 0;
-
-	return true;
-}
-
-// TODO: Integrate in loading pipeline
-bool ModelClass::LoadSimpleModel(char* filename)
-{
-	ifstream fin;
-	char input;
-	int i;
-
-
-	// Open the model file.  If it could not open the file then exit.
-	fin.open(filename);
-	if(fin.fail())
-	{
-		return false;
-	}
-
-	// Read up to the value of vertex count.
-	fin.get(input);
-	while(input != ':')
-	{
-		fin.get(input);
-	}
-
-	// Read in the vertex count.
-	fin >> mVertexCount;
-
-	// Set the number of indices to be the same as the vertex count.
-	mIndexCount = mVertexCount;
-
-	// Create the model using the vertex count that was read in.
-	mModel = new ModelType[mVertexCount];
-	if(!mModel)
-	{
-		return false;
-	}
-
-	// Read up to the beginning of the data.
-	fin.get(input);
-	while(input != ':')
-	{
-		fin.get(input);
-	}
-	fin.get(input);
-	fin.get(input);
-
-	// Read in the vertex data.
-	for(i=0; i<mVertexCount; i++)
-	{
-		fin >> mModel[i].x >> mModel[i].y >> mModel[i].z;
-		fin >> mModel[i].tu >> mModel[i].tv;
-		fin >> mModel[i].nx >> mModel[i].ny >> mModel[i].nz;
-	}
-
-	// Close the model file.
-	fin.close();
-
-	return true;
-}
-
-// TODO: Integrate in loading pipeline
-bool ModelClass::InitializeSimpleBuffers(ID3D11Device* device)
-{
-	VertexTypeTexture* vertices;
-	unsigned long* indices;
-	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
-	D3D11_SUBRESOURCE_DATA vertexData, indexData;
-	HRESULT result;
-	int i;
-
-
-	// Create the vertex array.
-	vertices = new VertexTypeTexture[mVertexCount];
-	if(!vertices)
-	{
-		return false;
-	}
-
-	// Create the index array.
-	indices = new unsigned long[mIndexCount];
-	if(!indices)
-	{
-		return false;
-	}
-
-	// Load the vertex array and index array with data.
-	for(i=0; i<mVertexCount; i++)
-	{
-		vertices[i].position = D3DXVECTOR3(mModel[i].x, mModel[i].y, mModel[i].z);
-		vertices[i].texture = D3DXVECTOR2(mModel[i].tu, mModel[i].tv);
-		indices[i] = i;
-	}
-
-	// Set up the description of the static vertex buffer.
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(VertexTypeTexture) * mVertexCount;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
-	vertexBufferDesc.MiscFlags = 0;
-	vertexBufferDesc.StructureByteStride = 0;
-
-	// Give the subresource structure a pointer to the vertex data.
-	vertexData.pSysMem = vertices;
-	vertexData.SysMemPitch = 0;
-	vertexData.SysMemSlicePitch = 0;
-
-	// Now create the vertex buffer.
-	result = device->CreateBuffer(&vertexBufferDesc, &vertexData, &mVertexBuffer);
-	if(FAILED(result))
-	{
-		return false;
-	}
-
-	// Set up the description of the static index buffer.
-	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexBufferDesc.ByteWidth = sizeof(unsigned long) * mIndexCount;
-	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.CPUAccessFlags = 0;
-	indexBufferDesc.MiscFlags = 0;
-	indexBufferDesc.StructureByteStride = 0;
-
-	// Give the subresource structure a pointer to the index data.
-	indexData.pSysMem = indices;
-	indexData.SysMemPitch = 0;
-	indexData.SysMemSlicePitch = 0;
-
-	// Create the index buffer.
-	result = device->CreateBuffer(&indexBufferDesc, &indexData, &mIndexBuffer);
-	if(FAILED(result))
-	{
-		return false;
-	}
-
-	// Release the arrays now that the vertex and index buffers have been created and loaded.
-	delete [] vertices;
-	vertices = 0;
-
-	delete [] indices;
-	indices = 0;
-
 	return true;
 }
 
@@ -543,11 +353,11 @@ D3DXVECTOR3* ModelClass::GetPosition()
 	return posVector;
 }
 
-bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, string filename)
+bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, wstring filename)
 {
 	HRESULT hr = 0;
 
-	ifstream fileIn(filename.c_str());	//Open file
+	ifstream fileIn(FileSystemHelper::ConvertWStringToString(filename).c_str());	//Open file
 	string meshMatLib;					//String to hold our obj material library filename
 
 	//Arrays to store our model's information
@@ -584,7 +394,7 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, string filename)
 
 	//Check to see if the file was opened
 	char headerStr[100];
-	sprintf_s(headerStr, 100, "	OBJ vertexes for %s are :", filename.c_str());
+	sprintf_s(headerStr, 100, "	OBJ vertexes for %s are :", FileSystemHelper::ConvertWStringToString(filename).c_str());
 	Log::GetInstance()->WriteTextMessageToFile(headerStr);
 	if (fileIn)
 	{
@@ -967,7 +777,7 @@ bool ModelClass::LoadModelFromOBJ(ID3D11Device* device, string filename)
 	{
 		//create message
 		string message = "Could not open: ";
-		message += filename;
+		message += FileSystemHelper::ConvertWStringToString(filename);
 
 		MessageBox(0, (LPCWSTR) message.c_str(), L"Error", MB_OK);
 
@@ -1378,14 +1188,14 @@ bool ModelClass::CheckChar(ifstream& fileIn, wchar_t charToCheck)
 	return checkChar == charToCheck;
 }
 
-bool ModelClass::LoadModelFromTXT(string filename)
+bool ModelClass::LoadModelFromTXT(wstring filename)
 {
 	ifstream fin;
 	char input;
 	int i;
 
 	// Open the model file.
-	fin.open(filename.c_str());
+	fin.open(FileSystemHelper::ConvertWStringToString(filename).c_str());
 
 	// If it could not open the file then exit.
 	if(fin.fail())
@@ -1424,7 +1234,7 @@ bool ModelClass::LoadModelFromTXT(string filename)
 
 	// Read in the vertex data.
 	char headerStr[100];
-	sprintf_s(headerStr, 100, "	TXT vertexes for %s are :", filename.c_str());
+	sprintf_s(headerStr, 100, "	TXT vertexes for %s are :", FileSystemHelper::ConvertWStringToString(filename).c_str());
 	Log::GetInstance()->WriteTextMessageToFile(headerStr);
 	for(i=0; i<mVertexCount; i++)
 	{

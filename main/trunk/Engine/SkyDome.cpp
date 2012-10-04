@@ -21,8 +21,8 @@ bool SkyDome::Initialize(ID3D11Device* device, HWND hwnd)
 	mSkyDomeSphere = new ModelObject;
 
 	// Load in the sky dome model.
-	mSkyDomeSphere = mModelFactory->CreateOrdinaryModel(device, hwnd, "skyDomeSphere", string("Engine/data/models/sphere.txt"), ModelClass::NormalMapVertexType);
-	mSkyDomeCube = mModelFactory->CreateOrdinaryModel(device, hwnd, "skyDomeCube", string("Engine/data/models/cube.txt"), ModelClass::NormalMapVertexType);
+	mSkyDomeSphere = mModelFactory->CreateOrdinaryModel(device, hwnd, "skyDomeSphere", FileSystemHelper::GetResourcePath(L"/models/sphere.txt"), ModelClass::NormalMapVertexType);
+	mSkyDomeCube = mModelFactory->CreateOrdinaryModel(device, hwnd, "skyDomeCube", FileSystemHelper::GetResourcePath(L"/models/cube.txt"), ModelClass::NormalMapVertexType);
 
 	// Set the color at the top of the sky dome.
 	m_apexColor = D3DXVECTOR4(0.15f, 0.26f, 0.78f, 1.0f); // 0.0f, 0.15f, 0.66f, 1.0f
@@ -42,7 +42,7 @@ HRESULT SkyDome::CreateCubeTexture(ID3D11Device* device)
 
 	//Load the texture
 	ID3D11Texture2D* SMTexture = 0;
-	result = D3DX11CreateTextureFromFile(device, L"Engine/data/textures/CubeMapAutumn.dds", &loadSMInfo, 0, (ID3D11Resource**)&SMTexture, 0);
+	result = D3DX11CreateTextureFromFile(device, FileSystemHelper::GetResourcePath(L"/textures/CubeMapAutumn.dds").c_str(), &loadSMInfo, 0, (ID3D11Resource**)&SMTexture, 0);
 	if (FAILED(result))
 	{
 		return result;

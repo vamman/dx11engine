@@ -14,15 +14,19 @@
 //////////////
 // INCLUDES //
 //////////////
+#include "FileSystemHelper.h"
 #include <windows.h>
 #include <mmsystem.h>
 #include <dsound.h>
 #include <stdio.h>
+#include <string>
+#include <fstream>
 
+using namespace std;
 
-	///////////////////////////////////////////////////////////////////////////////
-	// Class name: SoundClass
-	///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// Class name: SoundClass
+///////////////////////////////////////////////////////////////////////////////
 class SoundClass
 {
 	private:
@@ -55,7 +59,7 @@ class SoundClass
 		bool InitializeDirectSound(HWND);
 		void ShutdownDirectSound();
 
-		bool LoadWaveFile(char*, IDirectSoundBuffer8**);
+		bool LoadWaveFile(wstring, IDirectSoundBuffer8**);
 		void ShutdownWaveFile(IDirectSoundBuffer8**);
 
 		bool PlayWaveFile();

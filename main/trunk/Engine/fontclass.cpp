@@ -20,7 +20,7 @@ FontClass::~FontClass()
 {
 }
 
-bool FontClass::Initialize(ID3D11Device* device, char* fontFilename, char* textureFilename)
+bool FontClass::Initialize(ID3D11Device* device, const wchar_t* fontFilename, const wchar_t* textureFilename)
 {
 	bool result;
 
@@ -50,7 +50,7 @@ void FontClass::Shutdown()
 	return;
 }
 
-bool FontClass::LoadFontData(char* filename)
+bool FontClass::LoadFontData(const wchar_t* filename)
 {
 	ifstream fin;
 	int i;
@@ -64,7 +64,7 @@ bool FontClass::LoadFontData(char* filename)
 	}
 
 	// Read in the font size and spacing between chars.
-	fin.open(filename);
+	fin.open(FileSystemHelper::ConvertWStringToString(filename).c_str());
 	if(fin.fail())
 	{
 		return false;
