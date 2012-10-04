@@ -26,7 +26,7 @@ BasicShader* Material::GetMaterialShader()
 	return mShader;
 }
 
-bool Material::AppentTextureToMaterial(ID3D11Device* device, char* textureName)
+bool Material::AppentTextureToMaterial(ID3D11Device* device, wchar_t* textureName)
 {
 	bool result;
 

@@ -17,7 +17,7 @@ class SkyPlane
 		SkyPlane();
 		~SkyPlane();
 
-		bool Initialize(ID3D11Device*, char*, char*);
+		bool Initialize(ID3D11Device*, wchar_t*, wchar_t*);
 		void Shutdown();
 		void Render(ID3D11DeviceContext*);
 		void Frame();

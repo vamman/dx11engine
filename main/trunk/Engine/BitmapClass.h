@@ -36,7 +36,7 @@ class BitmapClass
 		~BitmapClass();
 
 		bool Initialize(ID3D11Device* device, int screenWidth, int screenHeight,
-						char* textureFilename, int width = 0, int heigh = 0);
+						wchar_t* textureFilename, int width = 0, int heigh = 0);
 		void Shutdown();
 		HRESULT Render(ID3D11DeviceContext*, int, int);
 

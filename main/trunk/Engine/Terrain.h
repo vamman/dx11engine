@@ -71,11 +71,11 @@ class Terrain
 		Terrain(const Terrain&);
 		~Terrain();
 
-		bool InitializeWithQuadTree(ID3D11Device* device, char* heightMapFileName, char* textureFilename,
-									char* colorMapFilename);
+		bool InitializeWithQuadTree(ID3D11Device* device, const wchar_t* heightMapFileName, wchar_t* textureFilename,
+									const wchar_t* colorMapFilename);
 
-		bool InitializeWithMaterials(ID3D11Device* device, char* heightMapFileName, char* materialsFilename,
-									char* materialMapFilename, char* colorMapFilename, char* detailMapFilename);
+		bool InitializeWithMaterials(ID3D11Device* device, wchar_t* heightMapFileName, char* materialsFilename,
+									char* materialMapFilename, wchar_t* colorMapFilename, wchar_t* detailMapFilename);
 
 		bool Render(ID3D11DeviceContext* deviceContext, TerrainShader* shader, D3DXMATRIX worldMatrix, 
 			D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix);
@@ -88,14 +88,14 @@ class Terrain
 		void						GetTerrainSize(int&, int&);
 
 	private:
-		bool LoadHeightMap(ID3D11Device* device, char* heightMapFileName);
+		bool LoadHeightMap(ID3D11Device* device, const wchar_t* heightMapFileName);
 		void NormalizeHeightMap();
 		bool CalculateNormals();
 		void ShutdownHeightMap();
 
 		void CalculateTextureCoordinates();
 		bool LoadTexture(ID3D11Device*, WCHAR*);
-		HRESULT LoadColorMap(char*);
+		HRESULT LoadColorMap(const wchar_t*);
 		void ReleaseTexture();
 
 		bool InitializeBuffers(ID3D11Device*);

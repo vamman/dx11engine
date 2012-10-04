@@ -28,7 +28,7 @@ BitmapClass::~BitmapClass()
 }
 
 bool BitmapClass::Initialize(ID3D11Device* device, int screenWidth, int screenHeight,
-							 char* textureFilename, int width, int heigh)
+							 wchar_t* textureFilename, int width, int heigh)
 {
 	bool result;
 

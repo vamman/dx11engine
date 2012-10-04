@@ -15,7 +15,7 @@ SkyPlane::~SkyPlane()
 {
 }
 
-bool SkyPlane::Initialize(ID3D11Device* device, char* textureFilename1, char* textureFilename2)
+bool SkyPlane::Initialize(ID3D11Device* device, wchar_t* textureFilename1, wchar_t* textureFilename2)
 {
 	int skyPlaneResolution, textureRepeat;
 	float skyPlaneWidth, skyPlaneTop, skyPlaneBottom;

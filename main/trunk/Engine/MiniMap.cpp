@@ -1,5 +1,5 @@
 #include "MiniMap.h"
-
+#include "FileSystemHelper.h"
 
 MiniMap::MiniMap(void)
 {
@@ -44,7 +44,7 @@ HRESULT MiniMap::Initialize(ID3D11Device* device, HWND hwnd, int screenWidth, in
 	}
 
 	// Initialize the mini-map bitmap object.
-	result = m_MiniMapBitmap->Initialize(device, screenWidth, screenHeight, "colorm01"/* , 150, 150 */);
+	result = m_MiniMapBitmap->Initialize(device, screenWidth, screenHeight, L"colorm01"/* , 150, 150 */);
 	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the mini-map object.", L"Error", MB_OK);
@@ -59,7 +59,7 @@ HRESULT MiniMap::Initialize(ID3D11Device* device, HWND hwnd, int screenWidth, in
 	}
 
 	// Initialize the border bitmap object.
-	result = m_Border->Initialize(device, screenWidth, screenHeight, "border01" /* , 154, 154 */ );
+	result = m_Border->Initialize(device, screenWidth, screenHeight, L"border01" /* , 154, 154 */ );
 	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the border object.", L"Error", MB_OK);
@@ -74,7 +74,7 @@ HRESULT MiniMap::Initialize(ID3D11Device* device, HWND hwnd, int screenWidth, in
 	}
 
 	// Initialize the point bitmap object.
-	result = mPlayerView->Initialize(device, screenWidth, screenHeight, "PlayerView" /* , mPlayerViewImageWidth, mPlayerViewImageHeight */ );
+	result = mPlayerView->Initialize(device, screenWidth, screenHeight, L"PlayerView" /* , mPlayerViewImageWidth, mPlayerViewImageHeight */ );
 	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the point object.", L"Error", MB_OK);
@@ -89,7 +89,7 @@ HRESULT MiniMap::Initialize(ID3D11Device* device, HWND hwnd, int screenWidth, in
 	}
 
 	// Initialize the cursor shader object.
-	result = mPlayerViewShader->Initialize(device, hwnd, L"Engine/data/shaders/CursorShader.fx", 
+	result = mPlayerViewShader->Initialize(device, hwnd, const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/CursorShader.fx").c_str()), 
 		"CursorVertexShader", "CursorPixelShader");
 	if(FAILED(result))
 	{

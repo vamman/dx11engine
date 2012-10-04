@@ -29,7 +29,7 @@ bool SoundClass::Initialize(HWND hwnd)
 	}
 
 	// Load a wave audio file onto a secondary buffer.
-	result = LoadWaveFile("Engine/data/Sound/sound01.wav", &m_secondaryBuffer1);
+	result = LoadWaveFile(FileSystemHelper::GetResourcePath(L"/Sound/sound01.wav"), &m_secondaryBuffer1);
 	if(!result)
 	{
 		return false;
@@ -131,7 +131,7 @@ void SoundClass::ShutdownDirectSound()
 	return;
 }
 
-bool SoundClass::LoadWaveFile(char* filename, IDirectSoundBuffer8** secondaryBuffer)
+bool SoundClass::LoadWaveFile(wstring filename, IDirectSoundBuffer8** secondaryBuffer)
 {
 	int error;
 	FILE* filePtr;
@@ -146,7 +146,7 @@ bool SoundClass::LoadWaveFile(char* filename, IDirectSoundBuffer8** secondaryBuf
 	unsigned long bufferSize;
 
 	// Open the wave file in binary.
-	error = fopen_s(&filePtr, filename, "rb");
+	error = fopen_s(&filePtr, FileSystemHelper::ConvertWStringToString(filename).c_str(), "rb");
 	if(error != 0)
 	{
 		return false;

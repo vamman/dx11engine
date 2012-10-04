@@ -32,11 +32,11 @@ class ResourceMgr
 
 		static ResourceMgr* GetInstance();
 		bool LoadResources();
-		BasicResource* GetResourceByName(string name, ResourceType resourceType);
+		BasicResource* GetResourceByName(wstring name, ResourceType resourceType);
 
 	private:
 		ResourceMgr(void);
-		BasicResource* FindResourceByName(string name, int firstIndex, int lastIndex);
+		BasicResource* FindResourceByName(wstring name, int firstIndex, int lastIndex);
 		bool ListFiles(wstring path, wstring mask, vector<wstring>& files);
 
 	private:

@@ -23,8 +23,8 @@ Terrain::~Terrain()
 {
 }
 
-bool Terrain::InitializeWithQuadTree(ID3D11Device* device, char* heightMapFileName, char* textureFilename,
-									 char* colorMapFilename)
+bool Terrain::InitializeWithQuadTree(ID3D11Device* device, const wchar_t* heightMapFileName, wchar_t* textureFilename,
+									 const wchar_t* colorMapFilename)
 {
 	bool result;
 	DWORD funcTime = -1;
@@ -64,8 +64,8 @@ bool Terrain::InitializeWithQuadTree(ID3D11Device* device, char* heightMapFileNa
 	return true;
 }
 
-bool Terrain::InitializeWithMaterials(ID3D11Device* device, char* heightMapFileName, char* materialsFilename,
-									  char* materialMapFilename, char* colorMapFilename, char* detailMapFilename)
+bool Terrain::InitializeWithMaterials(ID3D11Device* device, wchar_t* heightMapFileName, char* materialsFilename,
+									  char* materialMapFilename, wchar_t* colorMapFilename, wchar_t* detailMapFilename)
 {
 	bool result;
 	DWORD funcTime = -1;
@@ -136,7 +136,7 @@ ID3D11ShaderResourceView* Terrain::GetDetailMapTexture()
 }
 
 // TODO: Each method more than 30 lines has be checked for result by assert
-bool Terrain::LoadHeightMap(ID3D11Device* device, char* filename)
+bool Terrain::LoadHeightMap(ID3D11Device* device, const wchar_t* filename)
 {
 	FILE* filePtr;
 	int error;
@@ -149,12 +149,13 @@ bool Terrain::LoadHeightMap(ID3D11Device* device, char* filename)
 
 	ID3D11ShaderResourceView* heightMapResourceView;
 	Texture* heighMapTexture = new Texture;
-	heighMapTexture = reinterpret_cast<Texture* >(ResourceMgr::GetInstance()->GetResourceByName(GetFilenameWithoutExtension(filename), ResourceMgr::ResourceTypeTexture));
+	heighMapTexture = 
+	reinterpret_cast<Texture* >(ResourceMgr::GetInstance()->GetResourceByName(FileSystemHelper::GetFilenameWithoutExtension(filename), ResourceMgr::ResourceTypeTexture));
 	heightMapResourceView = heighMapTexture->GetShaderResourceView();
 
 
 	// Open the height map file in binary.
-	error = fopen_s(&filePtr, filename, "rb");
+	error = fopen_s(&filePtr, FileSystemHelper::ConvertWStringToString(filename).c_str(), "rb");
 	if(error != 0)
 	{
 		return false;
@@ -462,7 +463,7 @@ void Terrain::CalculateTextureCoordinates()
 }
 
 // TODO: Each method more than 30 lines has be checked for result by assert
-HRESULT Terrain::LoadColorMap(char* filename)
+HRESULT Terrain::LoadColorMap(const wchar_t* filename)
 {
 	int error, imageSize, i, j, k, index, colorMapWidth, colorMapHeight;
 	FILE* filePtr;
@@ -473,7 +474,7 @@ HRESULT Terrain::LoadColorMap(char* filename)
 
 
 	// Open the color map file in binary.
-	error = fopen_s(&filePtr, filename, "rb");
+	error = fopen_s(&filePtr, FileSystemHelper::ConvertWStringToString(filename).c_str(), "rb");
 	if(error != 0)
 	{
 		return E_FAIL;
@@ -604,11 +605,11 @@ bool Terrain::LoadMaterialFile(char* filename, char* materialMapFilename, ID3D11
 		}
 
 		// Load the texture or alpha map.
-		CHAR buf[200] = "This is some UTF8 string.";
-		int num = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)textureFilename, strlen(buf) + 1, NULL, 0);
+		WCHAR buf[200] = L"This is some UTF8 string.";
+		int num = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)textureFilename, strlen(FileSystemHelper::ConvertWStringToString(buf).c_str()) + 1, NULL, 0);
 
 		Texture* newTexture = new Texture();
-		newTexture = reinterpret_cast<Texture* >(ResourceMgr::GetInstance()->GetResourceByName(GetFilenameWithoutExtension(buf), ResourceMgr::ResourceTypeTexture));
+		newTexture = reinterpret_cast<Texture* >(ResourceMgr::GetInstance()->GetResourceByName(FileSystemHelper::GetFilenameWithoutExtension(buf), ResourceMgr::ResourceTypeTexture));
 		m_Textures[i].Initialize(device, textureFilename);
 	}
 
