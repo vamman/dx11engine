@@ -1,5 +1,6 @@
 #include "MiniMap.h"
 #include "FileSystemHelper.h"
+#include "systemclass.h"
 
 MiniMap::MiniMap(void)
 {
@@ -19,12 +20,12 @@ HRESULT MiniMap::Initialize(ID3D11Device* device, HWND hwnd, int screenWidth, in
 	HRESULT result = S_FALSE;
 
 	// Initialize the location of the mini-map on the screen.
-	m_mapLocationX = 302;
-	m_mapLocationY = 73;
+	m_mapLocationX = RESOLUTION_X / 40;
+	m_mapLocationY = RESOLUTION_Y / 40;
 
 	// Set the size of the mini-map.
-	m_mapSizeX = 150.0f;
-	m_mapSizeY = 150.0f;
+	m_mapSizeX = RESOLUTION_X / 5;
+	m_mapSizeY = RESOLUTION_X / 5;
 
 	mPlayerViewImageWidth = 50;
 	mPlayerViewImageHeight = 50;
@@ -44,7 +45,7 @@ HRESULT MiniMap::Initialize(ID3D11Device* device, HWND hwnd, int screenWidth, in
 	}
 
 	// Initialize the mini-map bitmap object.
-	result = m_MiniMapBitmap->Initialize(device, screenWidth, screenHeight, L"colorm01"/* , 150, 150 */);
+	result = m_MiniMapBitmap->Initialize(device, screenWidth, screenHeight, L"colorm01", m_mapSizeX, m_mapSizeY);
 	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the mini-map object.", L"Error", MB_OK);
@@ -59,7 +60,7 @@ HRESULT MiniMap::Initialize(ID3D11Device* device, HWND hwnd, int screenWidth, in
 	}
 
 	// Initialize the border bitmap object.
-	result = m_Border->Initialize(device, screenWidth, screenHeight, L"border01" /* , 154, 154 */ );
+	result = m_Border->Initialize(device, screenWidth, screenHeight, L"border01", m_mapSizeX + 4, m_mapSizeY + 4);
 	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the border object.", L"Error", MB_OK);
@@ -162,9 +163,9 @@ HRESULT MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatr
 	textureShader->RenderOrdinary(deviceContext, m_MiniMapBitmap->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
 
 	
-	// Put the point bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
-	int screenWidth = 1280;
-	int screenHeight = 960;
+	// Put the player view bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	int screenWidth = RESOLUTION_X;
+	int screenHeight = RESOLUTION_Y;
 	int offsetX = screenWidth / 2 - mPlayerViewImageWidth / 2;
 	int offsetY = screenHeight / 2 - mPlayerViewImageHeight;
 	result = mPlayerView->Render(deviceContext, offsetX,  offsetY);

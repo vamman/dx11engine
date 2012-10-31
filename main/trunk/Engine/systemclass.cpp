@@ -3,9 +3,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "systemclass.h"
 
-#define RESOLUTION_X 1600
-#define RESOLUTION_Y 900
-
 SystemClass::SystemClass()
 {
 	m_Graphics = 0;

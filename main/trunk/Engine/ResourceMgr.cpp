@@ -106,7 +106,19 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 						m_Resources.push_back(newTexture);
 					}
 
-					// Load all models
+					// TODO: Load all shaders
+					if (fileExtension == FileSystemHelper::ExtensionFX)
+					{
+						if (m_TextureFirstIndex != -1 && m_TextureLastIndex == -1)
+						{
+							m_TextureLastIndex =  m_Resources.size();
+						}
+
+						wstring filePath = path + wstring(L"/") + ffd.cFileName;
+
+					}
+
+					// TODO: Load all models
 					if (fileExtension == FileSystemHelper::ExtensionOBJ)
 					{
 						if (m_TextureFirstIndex != -1 && m_TextureLastIndex == -1)
@@ -115,16 +127,7 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 						}
 					}
 
-					// Load all shaders
-					if (fileExtension == FileSystemHelper::ExtensionFX)
-					{
-						if (m_TextureFirstIndex != -1 && m_TextureLastIndex == -1)
-						{
-							m_TextureLastIndex =  m_Resources.size();
-						}
-					}
-
-					// Load all audio
+					// TODO: Load all audio
 					if (fileExtension == FileSystemHelper::ExtensionWAV)
 					{
 						if (m_TextureFirstIndex != -1 && m_TextureLastIndex == -1)
