@@ -2,6 +2,7 @@
 #include "ResourceMgr.h"
 #include "MacroHelper.h"
 #include "FileSystemHelper.h"
+#include "systemclass.h"
 
 GraphicsClass::GraphicsClass() 
 	: mIsAllowToBBRender(true)
@@ -1435,6 +1436,9 @@ HRESULT GraphicsClass::RenderText()
 
 	int sentenceNumber = 0;
 
+	int textPosX = RESOLUTION_X - RESOLUTION_X / 10;
+	int textPosY = RESOLUTION_Y / 10;
+
 	// SetFillMode(D3D11_FILL_SOLID);
 
 	// Generate the view matrix based on the camera's position.
@@ -1444,7 +1448,7 @@ HRESULT GraphicsClass::RenderText()
 	staticWorldMatrix = worldMatrix;
 
 	// Convert the fps integer to string format.
-	WRITE_SENTENCE(mD3D, FpsClass::GetInstance()->GetFps(), "FPS: ", 800, 100, 0.0f, 0.0f, 1.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, FpsClass::GetInstance()->GetFps(), "FPS: ", textPosX, textPosY, 0.0f, 0.0f, 1.0f, sentenceNumber);
 	++sentenceNumber;
 
 	// Convert the cpu integer to string format.
@@ -1455,11 +1459,11 @@ HRESULT GraphicsClass::RenderText()
 	strcat_s(cpuString, tempString);
 	strcat_s(cpuString, "%");
 
-	result = m_Text->AddSentence(mD3D, cpuString, 800, 100 + 20, 1.0f, 0.0f, 1.0f, sentenceNumber);
+	result = m_Text->AddSentence(mD3D, cpuString, textPosX, textPosY + 20, 1.0f, 0.0f, 1.0f, sentenceNumber);
 	++sentenceNumber;
 
 	// Convert the count integer to string format.
-	WRITE_SENTENCE(mD3D, mNumObjectsRendered, "Render Count: ", 800, 100 + 20 * 5, 1.0f, 0.0f, 0.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, mNumObjectsRendered, "Render Count: ", textPosX, textPosY + 20 * 5, 1.0f, 0.0f, 0.0f, sentenceNumber);
 	++sentenceNumber;
 
 	// Convert the mouseX integer to string format.
@@ -1484,22 +1488,22 @@ HRESULT GraphicsClass::RenderText()
 	if(posY < -9999) { posY = -9999; }
 	if(posZ < -9999) { posZ = -9999; }
 
-	WRITE_SENTENCE(mD3D, posX, "X: ", 800, 240, 1.0f, 0.0f, 1.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, posX, "X: ", textPosX, textPosY + 120, 1.0f, 0.0f, 1.0f, sentenceNumber);
 	++sentenceNumber;
 
-	WRITE_SENTENCE(mD3D, posY, "Y: ", 800, 260, 1.0f, 0.0f, 1.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, posY, "Y: ", textPosX, textPosY + 160, 1.0f, 0.0f, 1.0f, sentenceNumber);
 	++sentenceNumber;
 
-	WRITE_SENTENCE(mD3D, posZ, "Z: ", 800, 280, 1.0f, 0.0f, 1.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, posZ, "Z: ", textPosX, textPosY + 200, 1.0f, 0.0f, 1.0f, sentenceNumber);
 	++sentenceNumber;
 
-	WRITE_SENTENCE(mD3D, rotX, "rX: ", 800, 320, 0.0f, 1.0f, 1.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, rotX, "rX: ", textPosX, textPosY + 240, 0.0f, 1.0f, 1.0f, sentenceNumber);
 	++sentenceNumber;
 
-	WRITE_SENTENCE(mD3D, rotY, "rY: ", 800, 340, 0.0f, 1.0f, 1.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, rotY, "rY: ", textPosX, textPosY + 280, 0.0f, 1.0f, 1.0f, sentenceNumber);
 	++sentenceNumber;
 
-	WRITE_SENTENCE(mD3D, rotZ, "rZ: ", 800, 360, 0.0f, 1.0f, 1.0f, sentenceNumber);
+	WRITE_SENTENCE(mD3D, rotZ, "rZ: ", textPosX, textPosY + 320, 0.0f, 1.0f, 1.0f, sentenceNumber);
 	++sentenceNumber;
 
 //	WRITE_SENTENCE(mD3D, terrinDrawCount, "terrain draw count: ", 800, 400, 0.0f, 1.0f, 1.0f, sentenceNumber);
@@ -1507,7 +1511,7 @@ HRESULT GraphicsClass::RenderText()
 
 	if (mDrawFuncTime != -1)
 	{
-		WRITE_SENTENCE(mD3D, mDrawFuncTime, "draw time: ", 800, 440, 0.0f, 1.0f, 1.0f, sentenceNumber);
+		WRITE_SENTENCE(mD3D, mDrawFuncTime, "draw time: ", textPosX, textPosY + 360, 0.0f, 1.0f, 1.0f, sentenceNumber);
 		++sentenceNumber;
 	}
 
