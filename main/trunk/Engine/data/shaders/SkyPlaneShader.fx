@@ -17,18 +17,16 @@ struct PixelInputType
     float2 tex : TEXCOORD0;
 };
 
-Texture2D cloudTexture1 : register(t0);
-Texture2D cloudTexture2 : register(t1);
+Texture2D cloudTexture : register(t0);
+Texture2D perturbTexture : register(t1);
 SamplerState SampleType;
 
 cbuffer SkyBuffer
 {
-    float firstTranslationX;
-    float firstTranslationZ;
-    float secondTranslationX;
-    float secondTranslationZ;
+    float translation;
+    float scale;
     float brightness;
-    float3 padding;
+    float padding;
 };
 
 PixelInputType SkyPlaneVertexShader(VertexInputType input)
@@ -50,29 +48,26 @@ PixelInputType SkyPlaneVertexShader(VertexInputType input)
 
 float4 SkyPlanePixelShader(PixelInputType input) : SV_TARGET
 {
-    float2 sampleLocation;
-    float4 textureColor1;
-    float4 textureColor2;
-    float4 finalColor;
+    float4 perturbValue;
+    float4 cloudColor;
+	
+	// Translate the texture coordinate sampling location by the translation value.
+    input.tex.x = input.tex.x + translation;
+	
+	// Sample the texture value from the perturb texture using the translated texture coordinates.
+    perturbValue = perturbTexture.Sample(SampleType, input.tex);
+	
+	// Multiply the perturb value by the perturb scale.
+    perturbValue = perturbValue * scale;
+	
+	// Add the texture coordinates as well as the translation value to get the perturbed texture coordinate sampling location.
+    perturbValue.xy = perturbValue.xy + input.tex.xy + translation;
+	
+	// Now sample the color from the cloud texture using the perturbed sampling coordinates.
+    cloudColor = cloudTexture.Sample(SampleType, perturbValue.xy);
+	
+	// Reduce the color cloud by the brightness value.
+    cloudColor = cloudColor * brightness;
 
-    // Translate the position where we sample the pixel from using the first texture translation values.
-    sampleLocation.x = input.tex.x + firstTranslationX;
-    sampleLocation.y = input.tex.y + firstTranslationZ;
-
-    // Sample the pixel color from the first cloud texture using the sampler at this texture coordinate location.
-    textureColor1 = cloudTexture1.Sample(SampleType, sampleLocation);
-
-    // Translate the position where we sample the pixel from using the second texture translation values.
-    sampleLocation.x = input.tex.x + secondTranslationX;
-    sampleLocation.y = input.tex.y + secondTranslationZ;
-
-    // Sample the pixel color from the second cloud texture using the sampler at this texture coordinate location.
-    textureColor2 = cloudTexture2.Sample(SampleType, sampleLocation);
-
-    // Combine the two cloud textures evenly.
-    finalColor = lerp(textureColor1, textureColor2, 0.5f);
-
-    // Reduce brightness of the combined cloud textures by the input brightness value.
-    finalColor = finalColor * brightness;
-    return finalColor;
+    return cloudColor;
 }

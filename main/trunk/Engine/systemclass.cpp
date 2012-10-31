@@ -3,14 +3,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "systemclass.h"
 
-#define RESOLUTION_X 1024
-#define RESOLUTION_Y 768
+#define RESOLUTION_X 1600
+#define RESOLUTION_Y 900
 
 SystemClass::SystemClass()
 {
 	m_Graphics = 0;
-//	m_Timer = 0;
-//	m_Position = 0;
 	m_Sound = 0;
 }
 

@@ -133,8 +133,7 @@ void SkyPlaneShader::SetTextureArray(ID3D11DeviceContext* deviceContext, vector<
 	deviceContext->PSSetShaderResources(0, textureArray.size(), &textureArray[0]);
 }
 
-HRESULT SkyPlaneShader::SetSkyBuffer(ID3D11DeviceContext* deviceContext, float firstTranslationX, float firstTranslationZ,
-								  float secondTranslationX, float secondTranslationZ, float brightness)
+HRESULT SkyPlaneShader::SetSkyBuffer(ID3D11DeviceContext* deviceContext, float translation, float scale, float brightness)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -152,12 +151,10 @@ HRESULT SkyPlaneShader::SetSkyBuffer(ID3D11DeviceContext* deviceContext, float f
 	dataPtr2 = (SkyBufferType*)mappedResource.pData;
 
 	// Copy the sky variables into the constant buffer.
-	dataPtr2->firstTranslationX = firstTranslationX;
-	dataPtr2->firstTranslationZ = firstTranslationZ;
-	dataPtr2->secondTranslationX = secondTranslationX;
-	dataPtr2->secondTranslationZ = secondTranslationZ;
+	dataPtr2->translation = translation;
+	dataPtr2->scale = scale;
 	dataPtr2->brightness = brightness;
-	dataPtr2->padding = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	dataPtr2->padding = 0.0f; // D3DXVECTOR3(0.0f, 0.0f, 0.0f)
 
 	// Unlock the constant buffer.
 	deviceContext->Unmap(m_skyBuffer, 0);
