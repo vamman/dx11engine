@@ -6,8 +6,8 @@ SkyPlane::SkyPlane()
 	m_skyPlane = 0;
 	m_vertexBuffer = 0;
 	m_indexBuffer = 0;
-	m_CloudTexture1 = 0;
-	m_CloudTexture2 = 0;
+	m_CloudTexture = 0;
+	m_PerturbTexture = 0;
 }
 
 
@@ -15,33 +15,25 @@ SkyPlane::~SkyPlane()
 {
 }
 
-bool SkyPlane::Initialize(ID3D11Device* device, wchar_t* textureFilename1, wchar_t* textureFilename2)
+bool SkyPlane::Initialize(ID3D11Device* device, wchar_t* cloudTextureFilename, wchar_t* perturbTextureFilename)
 {
 	int skyPlaneResolution, textureRepeat;
 	float skyPlaneWidth, skyPlaneTop, skyPlaneBottom;
 	bool result;
 
 	// Set the sky plane parameters.
-	skyPlaneResolution = 10;
+	skyPlaneResolution = 50;
 	skyPlaneWidth = 10.0f;
 	skyPlaneTop = 0.5f;
 	skyPlaneBottom = 0.0f;
-	textureRepeat = 4;
+	textureRepeat = 2;
 
 	// Set the brightness of the clouds.
-	m_brightness = 0.65f;
+	m_brightness = 0.5f;
+	m_scale = 0.5f;
 
 	// Setup the cloud translation speed increments.
-	m_translationSpeed[0] = 0.0003f;   // First texture X translation speed.
-	m_translationSpeed[1] = 0.0f;      // First texture Z translation speed.
-	m_translationSpeed[2] = 0.00015f;  // Second texture X translation speed.
-	m_translationSpeed[3] = 0.0f;      // Second texture Z translation speed.
-
-	// Initialize the texture translation values.
-	m_textureTranslation[0] = 0.0f;
-	m_textureTranslation[1] = 0.0f;
-	m_textureTranslation[2] = 0.0f;
-	m_textureTranslation[3] = 0.0f;
+	m_translation = 0.0f;
 
 	// Create the sky plane.
 	result = InitializeSkyPlane(skyPlaneResolution, skyPlaneWidth, skyPlaneTop, skyPlaneBottom, textureRepeat);
@@ -57,8 +49,8 @@ bool SkyPlane::Initialize(ID3D11Device* device, wchar_t* textureFilename1, wchar
 		return false;
 	}
 
-	m_CloudTexture1 = reinterpret_cast<Texture*>( ResourceMgr::GetInstance()->GetResourceByName(textureFilename1, ResourceMgr::ResourceTypeTexture) );
-	m_CloudTexture2 = reinterpret_cast<Texture*>( ResourceMgr::GetInstance()->GetResourceByName(textureFilename2, ResourceMgr::ResourceTypeTexture) );
+	m_CloudTexture	 = reinterpret_cast<Texture*>( ResourceMgr::GetInstance()->GetResourceByName(cloudTextureFilename, ResourceMgr::ResourceTypeTexture) );
+	m_PerturbTexture = reinterpret_cast<Texture*>( ResourceMgr::GetInstance()->GetResourceByName(perturbTextureFilename, ResourceMgr::ResourceTypeTexture) );
 
 	return true;
 }
@@ -73,32 +65,22 @@ void SkyPlane::Shutdown()
 
 	// Release the sky plane array.
 	ShutdownSkyPlane();
-
-	return;
 }
 
 void SkyPlane::Render(ID3D11DeviceContext* deviceContext)
 {
 	// Render the sky plane.
 	RenderBuffers(deviceContext);
-	return;
 }
 
 void SkyPlane::Frame()
 {
-	// Increment the translation values to simulate the moving clouds.
-	m_textureTranslation[0] += m_translationSpeed[0];
-	m_textureTranslation[1] += m_translationSpeed[1];
-	m_textureTranslation[2] += m_translationSpeed[2];
-	m_textureTranslation[3] += m_translationSpeed[3];
-
-	// Keep the values in the zero to one range.
-	if(m_textureTranslation[0] > 1.0f)  {  m_textureTranslation[0] -= 1.0f;  }
-	if(m_textureTranslation[1] > 1.0f)  {  m_textureTranslation[1] -= 1.0f;  }
-	if(m_textureTranslation[2] > 1.0f)  {  m_textureTranslation[2] -= 1.0f;  }
-	if(m_textureTranslation[3] > 1.0f)  {  m_textureTranslation[3] -= 1.0f;  }
-
-	return;
+	// Increment the texture translation value each frame.
+	m_translation += 0.00001f;
+	if(m_translation > 1.0f)
+	{
+		m_translation -= 1.0f;
+	}
 }
 
 int SkyPlane::GetIndexCount()
@@ -106,14 +88,19 @@ int SkyPlane::GetIndexCount()
 	return m_indexCount;
 }
 
-ID3D11ShaderResourceView* SkyPlane::GetCloudTexture1()
+ID3D11ShaderResourceView* SkyPlane::GetCloudTexture()
 {
-	return m_CloudTexture1->GetShaderResourceView();
+	return m_CloudTexture->GetShaderResourceView();
 }
 
-ID3D11ShaderResourceView* SkyPlane::GetCloudTexture2()
+ID3D11ShaderResourceView* SkyPlane::GetPerturbTexture()
 {
-	return m_CloudTexture2->GetShaderResourceView();
+	return m_PerturbTexture->GetShaderResourceView();
+}
+
+float SkyPlane::GetScale()
+{
+	return m_scale;
 }
 
 float SkyPlane::GetBrightness()
@@ -123,7 +110,7 @@ float SkyPlane::GetBrightness()
 
 float SkyPlane::GetTranslation(int index)
 {
-	return m_textureTranslation[index];
+	return m_translation;
 }
 
 bool SkyPlane::InitializeSkyPlane(int skyPlaneResolution, float skyPlaneWidth, float skyPlaneTop, float skyPlaneBottom, int textureRepeat)
@@ -273,21 +260,6 @@ bool SkyPlane::InitializeBuffers(ID3D11Device* device, int skyPlaneResolution)
 	}
 
 	// Set up the description of the vertex buffer.
-	/*
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(VertexType) * m_vertexCount;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
-	vertexBufferDesc.MiscFlags = 0;
-	vertexBufferDesc.StructureByteStride = 0;
-
-	// Give the subresource structure a pointer to the vertex data.
-	vertexData.pSysMem = vertices;
-	vertexData.SysMemPitch = 0;
-	vertexData.SysMemSlicePitch = 0;
-
-	// Now finally create the vertex buffer.
-	result = device->CreateBuffer(&vertexBufferDesc, &vertexData, &m_vertexBuffer);*/
 	result = BufferManager::GetInstance()->CreateVertexBuffer(device, sizeof(VertexType) * m_vertexCount, vertices, &m_vertexBuffer);
 	if(FAILED(result))
 	{
@@ -295,23 +267,6 @@ bool SkyPlane::InitializeBuffers(ID3D11Device* device, int skyPlaneResolution)
 	}
 
 	// Set up the description of the index buffer.
-	/*
-	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexBufferDesc.ByteWidth = sizeof(unsigned long) * m_indexCount;
-	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.CPUAccessFlags = 0;
-	indexBufferDesc.MiscFlags = 0;
-	indexBufferDesc.StructureByteStride = 0;
-
-	// Give the subresource structure a pointer to the index data.
-	indexData.pSysMem = indices;
-	indexData.SysMemPitch = 0;
-	indexData.SysMemSlicePitch = 0;
-
-	// Create the index buffer.
-	result = device->CreateBuffer(&indexBufferDesc, &indexData, &m_indexBuffer);
-	*/
-
 	result = BufferManager::GetInstance()->CreateIndexBuffer(device, sizeof(unsigned long) * m_indexCount, indices, &m_indexBuffer);
 	if(FAILED(result))
 	{
@@ -372,18 +327,18 @@ void SkyPlane::RenderBuffers(ID3D11DeviceContext* deviceContext)
 void SkyPlane::ReleaseTextures()
 {
 	// Release the texture objects.
-	if(m_CloudTexture1)
+	if(m_CloudTexture)
 	{
-		m_CloudTexture1->Shutdown();
-		delete m_CloudTexture1;
-		m_CloudTexture1 = 0;
+		m_CloudTexture->Shutdown();
+		delete m_CloudTexture;
+		m_CloudTexture = 0;
 	}
 
-	if(m_CloudTexture2)
+	if(m_PerturbTexture)
 	{
-		m_CloudTexture2->Shutdown();
-		delete m_CloudTexture2;
-		m_CloudTexture2 = 0;
+		m_PerturbTexture->Shutdown();
+		delete m_PerturbTexture;
+		m_PerturbTexture = 0;
 	}
 
 	return;

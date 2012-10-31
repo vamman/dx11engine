@@ -280,7 +280,7 @@ HRESULT GraphicsClass::Init(int screenWidth, int screenHeight, HWND hwnd)
 	// Create the sky plane object.
 	m_SkyPlane = new SkyPlane;
 	if(!m_SkyPlane)	{ return false;	}
-	V_RETURN(m_SkyPlane->Initialize(mD3D->GetDevice(), L"cloud001", L"cloud002"), L"Error", L"Could not initialize the sky plane object");
+	V_RETURN(m_SkyPlane->Initialize(mD3D->GetDevice(), L"cloud001", L"perturb001"), L"Error", L"Could not initialize the sky plane object");
 	return result;
 }
 
@@ -1010,17 +1010,15 @@ void GraphicsClass::RenderSkyPlane(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix
 	m_SkyPlane->Render(mD3D->GetDeviceContext());
 
 	vector<ID3D11ShaderResourceView*> textureArray;
-	textureArray.push_back(m_SkyPlane->GetCloudTexture1());
-	textureArray.push_back(m_SkyPlane->GetCloudTexture2());
+	textureArray.push_back(m_SkyPlane->GetCloudTexture());
+	textureArray.push_back(m_SkyPlane->GetPerturbTexture());
 
 	m_SkyPlaneShader->SetTextureArray(mD3D->GetDeviceContext(), textureArray);
-
-	m_SkyPlaneShader->SetSkyBuffer(mD3D->GetDeviceContext(), m_SkyPlane->GetTranslation(0), m_SkyPlane->GetTranslation(1), 
-								   m_SkyPlane->GetTranslation(2), m_SkyPlane->GetTranslation(3), m_SkyPlane->GetBrightness());
-
+	m_SkyPlaneShader->SetSkyBuffer(mD3D->GetDeviceContext(), m_SkyPlane->GetTranslation(0), m_SkyPlane->GetScale(), m_SkyPlane->GetBrightness());
 	m_SkyPlaneShader->Render(mD3D->GetDeviceContext(), m_SkyPlane->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix);
+
 	// Turn off blending.
-	//mD3D->TurnOffAlphaBlending();
+	mD3D->TurnOffAlphaBlending();
 }
 
 HRESULT GraphicsClass::Render2D()
@@ -1063,7 +1061,7 @@ HRESULT GraphicsClass::Render2D()
 	}
 
 	// Turn on the alpha blending before rendering the text.
-	// mD3D->TurnOnAlphaBlending();
+	mD3D->TurnOnAlphaBlending();
 
 	// Render the mini map.
 	float cameraRotX, cameraRotY, cameraRotZ;
@@ -1094,7 +1092,8 @@ HRESULT GraphicsClass::Render2D()
 	RenderText();
 
 	// Turn off alpha blending after rendering the text.
-	// mD3D->TurnOffAlphaBlending();
+	mD3D->TurnOffAlphaBlending();
+
 	// Turn the Z buffer back on now that all 2D rendering has completed.
 	mD3D->TurnZBufferOn();
 

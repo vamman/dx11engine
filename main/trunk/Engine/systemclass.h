@@ -50,7 +50,6 @@ class SystemClass
 		HINSTANCE m_hinstance;
 		HWND m_hwnd;
 		GraphicsClass* m_Graphics;
-		// PositionClass* m_Position;
 
 		SoundClass* m_Sound;
 };

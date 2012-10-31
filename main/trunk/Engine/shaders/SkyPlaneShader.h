@@ -13,12 +13,10 @@ class SkyPlaneShader : public BasicShader
 	private:
 		struct SkyBufferType
 		{
-			float firstTranslationX;
-			float firstTranslationZ;
-			float secondTranslationX;
-			float secondTranslationZ;
+			float translation;
+			float scale;
 			float brightness;
-			D3DXVECTOR3 padding;
+			float padding;
 		};
 
 	public:
@@ -32,8 +30,8 @@ class SkyPlaneShader : public BasicShader
 				    D3DXMATRIX viewMatrix, 
 				    D3DXMATRIX projectionMatrix);
 		void SetTextureArray(ID3D11DeviceContext* deviceContext, vector<ID3D11ShaderResourceView*>& textureArray);
-		HRESULT SetSkyBuffer(ID3D11DeviceContext* deviceContext, float firstTranslationX, float firstTranslationZ,
-			float secondTranslationX, float secondTranslationZ, float brightness);
+		HRESULT SetSkyBuffer(ID3D11DeviceContext* deviceContext, float translation, float scale,
+			float brightness);
 
 	private:
 		HRESULT InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname, 
