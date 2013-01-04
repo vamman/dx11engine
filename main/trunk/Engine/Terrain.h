@@ -67,6 +67,13 @@ class Terrain
 		};
 
 	public:
+
+		enum TerrainRenderType
+		{
+			RENDER_QUAD_TREE = 0,
+			RENDER_MATERIAL
+		};
+
 		Terrain();
 		Terrain(const Terrain&);
 		~Terrain();
@@ -74,8 +81,8 @@ class Terrain
 		bool InitializeWithQuadTree(ID3D11Device* device, const wchar_t* heightMapFileName, wchar_t* textureFilename,
 									const wchar_t* colorMapFilename);
 
-		bool InitializeWithMaterials(ID3D11Device* device, wchar_t* heightMapFileName, char* materialsFilename,
-									char* materialMapFilename, wchar_t* colorMapFilename, wchar_t* detailMapFilename);
+		bool InitializeWithMaterials(ID3D11Device* device, const wchar_t* heightMapFileName, const wchar_t* materialsFilename,
+									 const wchar_t* materialMapFilename, const wchar_t* colorMapFilename, wchar_t* detailMapFilename);
 
 		bool Render(ID3D11DeviceContext* deviceContext, TerrainShader* shader, D3DXMATRIX worldMatrix, 
 			D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix);
@@ -101,8 +108,8 @@ class Terrain
 		bool InitializeBuffers(ID3D11Device*);
 		void ShutdownBuffers();
 
-		bool LoadMaterialFile(char* filename, char* materialMapFilename, ID3D11Device* device);
-		bool LoadMaterialMap(char*);
+		bool LoadMaterialFile(const wchar_t* filename, const wchar_t* materialMapFilename, ID3D11Device* device);
+		bool LoadMaterialMap(const wchar_t* filename);
 		bool LoadMaterialBuffers(ID3D11Device*);
 		void ReleaseMaterials();
 

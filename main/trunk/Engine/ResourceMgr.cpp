@@ -24,6 +24,65 @@ ResourceMgr::ResourceMgr(void)
 	, m_TextureFirstIndex(-1)
 	, m_TextureLastIndex(-1)
 {
+	LightShader* ambientLightShader = new LightShader;
+	mShadersMap[L"AmbientLight"] = ambientLightShader;
+
+	BasicShader* basicShader = new BasicShader;
+	mShadersMap[L"BasicShader"] = basicShader;
+
+	FontShader* cursorShader = new FontShader;
+	mShadersMap[L"CursorShader"] = cursorShader;
+
+	FireShader* fireShader = new FireShader;
+	mShadersMap[L"FireShader"] = fireShader;
+
+	FogShader* fogShader = new FogShader;
+	mShadersMap[L"FogShader"] = fogShader;
+
+	FontShader* fontShader = new FontShader;
+	mShadersMap[L"FontShader"] = fontShader;
+
+	MultitextureShader* lightMapShader = new MultitextureShader;
+	mShadersMap[L"LightmapShader"] = lightMapShader;
+
+	MultitextureShader* multitextureShader = new MultitextureShader;
+	mShadersMap[L"MultitextureShader"] = multitextureShader;
+
+	NormalMapShader* normalMapShader = new NormalMapShader;
+	mShadersMap[L"NormalMapShader"] = normalMapShader;
+
+	LightShader* pointLightShader = new LightShader;
+	mShadersMap[L"PointLight"] = pointLightShader;
+
+	ReflectionShader* reflectionShader = new ReflectionShader;
+	mShadersMap[L"ReflectionShader"] = reflectionShader;
+
+	SkyDomeShader* skyDomeShader = new SkyDomeShader;
+	mShadersMap[L"SkyDomeShader"] = skyDomeShader;
+
+	SkyPlaneShader* skyPlaneShader = new SkyPlaneShader;
+	mShadersMap[L"SkyPlaneShader"] = skyPlaneShader;
+
+	SpecMapShader* specMapShader = new SpecMapShader;
+	mShadersMap[L"SpecMapShader"] = specMapShader;
+
+	SpecMapShader* specMapShaderNonInstanced = new SpecMapShader;
+	mShadersMap[L"SpecMapShaderNonInstanced"] = specMapShaderNonInstanced;
+
+	LightShader* specularLightShader = new LightShader;
+	mShadersMap[L"SpecularLight"] = specularLightShader;
+
+	TerrainShader* terrainWithMaterialShader = new TerrainShader;
+	mShadersMap[L"TerrainWithMaterials"] = terrainWithMaterialShader;
+
+	TerrainShader* terrainWithQuadTreeShader = new TerrainShader;
+	mShadersMap[L"TerrainWithQuadTree"] = terrainWithQuadTreeShader;
+
+	TextureShader* textureShaderInstanced = new TextureShader;
+	mShadersMap[L"TextureShaderInstanced"] = textureShaderInstanced;
+
+	TextureShader* textureShaderNonInstanced = new TextureShader;
+	mShadersMap[L"TextureShaderNonInstanced"] = textureShaderNonInstanced;	
 }
 
 
@@ -115,7 +174,10 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 						}
 
 						wstring filePath = path + wstring(L"/") + ffd.cFileName;
-
+						if (strcmp(FileSystemHelper::ConvertWStringToString(resourceName).c_str(), "AmbientLight") != 0)
+						{
+							LoadShader(filePath, resourceName);
+						}
 					}
 
 					// TODO: Load all models
@@ -153,6 +215,22 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 	}
 
 	return true;
+}
+
+// TODO: Rename all vertex and pixel shader functions the same way (for example VertextShader(...) and PixelShader(...)), so Resource Manager can load all shaders inspite of its function names.
+// TODO: Check if common shader loading is possible along with different layouts needed for each shader...
+HRESULT ResourceMgr::LoadShader(wstring filePath, wstring resourceName)
+{
+	HWND hwnd = FindWindow(L"Engine", NULL);
+
+	// Create shader
+	//BasicShader* shader = mShadersMap[resourceName];
+	V_RETURN(mShadersMap[resourceName]->Initialize(D3DClass::GetInstance()->GetDevice(), hwnd,
+		const_cast<WCHAR*>(filePath.c_str()),
+		"LightVertexShader", "LightPixelShader"), L"Error", L"Could not initialize the basic shader object.");
+
+	mShadersMap[resourceName]->SetResourceName(FileSystemHelper::ConvertWStringToString(resourceName).c_str());
+	m_Resources.push_back(mShadersMap[resourceName]);
 }
 
 BasicResource* ResourceMgr::GetResourceByName(wstring name, ResourceType resourceType)

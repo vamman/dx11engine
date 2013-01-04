@@ -254,12 +254,5 @@ HRESULT FireShader::RenderOrdinary( ID3D11DeviceContext* deviceContext,
 	// Render the triangle.
 	deviceContext->DrawIndexed(indexCount, 0, 0);
 
-	/*
-	deviceContext->PSSetSamplers(0, 1, &m_sampleState);
-	deviceContext->PSSetSamplers(1, 1, &m_sampleState2);
-
-	// Now render the prepared buffers with the shader.
-	BasicShader::RenderShaderOrdinary(deviceContext, indexCount);
-	*/
 	return result;
 }

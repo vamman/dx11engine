@@ -14,6 +14,24 @@
 #include "BasicResource.h"
 #include "Log.h"
 
+// Shaders
+#include "Shaders/BasicShader.h"
+#include "Shaders/TextureShader.h"
+#include "Shaders/LightShader.h"
+#include "Shaders/MultitextureShader.h"
+#include "Shaders/NormalMapShader.h"
+#include "Shaders/SpecMapShader.h"
+#include "Shaders/FogShader.h"
+#include "Shaders/ReflectionShader.h"
+#include "Shaders/TerrainShader.h"
+#include "shaders/SkyDomeShader.h"
+#include "shaders/SkyPlaneShader.h"
+#include "shaders/FireShader.h"
+#include "shaders/FontShader.h"
+#include "shaders/FireShader.h"
+
+#include <map>
+
 using namespace std;
 
 class ResourceMgr
@@ -38,14 +56,16 @@ class ResourceMgr
 		ResourceMgr(void);
 		BasicResource* FindResourceByName(wstring name, int firstIndex, int lastIndex);
 		bool ListFiles(wstring path, wstring mask, vector<wstring>& files);
+		HRESULT LoadShader(wstring filePath, wstring resourceName);
 
 	private:
-		static ResourceMgr*		m_pInstance;
-		ModelLoader*			m_ModelLoader;
-		ShaderLoader*			m_ShaderLoader;
-		vector<BasicResource* > m_Resources;
-		int						m_TextureFirstIndex;
-		int						m_TextureLastIndex;
+		static ResourceMgr*			m_pInstance;
+		ModelLoader*				m_ModelLoader;
+		ShaderLoader*				m_ShaderLoader;
+		vector<BasicResource* >		m_Resources;
+		int							m_TextureFirstIndex;
+		int							m_TextureLastIndex;
+		map<wstring, BasicShader* > mShadersMap;
 };
 
 #endif

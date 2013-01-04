@@ -13,6 +13,7 @@
 #include <fstream>
 #include <vector>
 #include "BaseShaderClass.h"
+#include "../BasicResource.h"
 
 using namespace std;
 
@@ -28,7 +29,7 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: BasicShader
 ////////////////////////////////////////////////////////////////////////////////
-class BasicShader: public BaseShaderClass
+class BasicShader: public BasicResource// BaseShaderClass
 {
 	public:
 		BasicShader(void);

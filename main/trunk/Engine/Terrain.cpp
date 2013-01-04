@@ -64,8 +64,8 @@ bool Terrain::InitializeWithQuadTree(ID3D11Device* device, const wchar_t* height
 	return true;
 }
 
-bool Terrain::InitializeWithMaterials(ID3D11Device* device, wchar_t* heightMapFileName, char* materialsFilename,
-									  char* materialMapFilename, wchar_t* colorMapFilename, wchar_t* detailMapFilename)
+bool Terrain::InitializeWithMaterials(ID3D11Device* device, const wchar_t* heightMapFileName, const wchar_t* materialsFilename,
+									  const wchar_t* materialMapFilename, const wchar_t* colorMapFilename, wchar_t* detailMapFilename)
 {
 	bool result;
 	DWORD funcTime = -1;
@@ -556,7 +556,7 @@ HRESULT Terrain::LoadColorMap(const wchar_t* filename)
 }
 
 // TODO: Each method more than 30 lines has be checked for result by assert
-bool Terrain::LoadMaterialFile(char* filename, char* materialMapFilename, ID3D11Device* device)
+bool Terrain::LoadMaterialFile(const wchar_t* filename, const wchar_t* materialMapFilename, ID3D11Device* device)
 {
 	ifstream fin;
 	char input;
@@ -605,11 +605,8 @@ bool Terrain::LoadMaterialFile(char* filename, char* materialMapFilename, ID3D11
 		}
 
 		// Load the texture or alpha map.
-		WCHAR buf[200] = L"This is some UTF8 string.";
-		int num = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)textureFilename, strlen(FileSystemHelper::ConvertWStringToString(buf).c_str()) + 1, NULL, 0);
-
 		Texture* newTexture = new Texture();
-		newTexture = reinterpret_cast<Texture* >(ResourceMgr::GetInstance()->GetResourceByName(FileSystemHelper::GetFilenameWithoutExtension(buf), ResourceMgr::ResourceTypeTexture));
+		newTexture = reinterpret_cast<Texture* >(ResourceMgr::GetInstance()->GetResourceByName(FileSystemHelper::GetFilenameWithoutExtension(textureFilename), ResourceMgr::ResourceTypeTexture));
 		m_Textures[i].Initialize(device, textureFilename);
 	}
 
@@ -665,7 +662,7 @@ bool Terrain::LoadMaterialFile(char* filename, char* materialMapFilename, ID3D11
 }
 
 // TODO: Each method more than 30 lines has be checked for result by assert
-bool Terrain::LoadMaterialMap(char* filename)
+bool Terrain::LoadMaterialMap(const wchar_t* filename)
 {
 	int error, imageSize, i, j, k, index;
 	FILE* filePtr;
@@ -676,7 +673,7 @@ bool Terrain::LoadMaterialMap(char* filename)
 
 
 	// Open the material map file in binary.
-	error = fopen_s(&filePtr, filename, "rb");
+	error = fopen_s(&filePtr, FileSystemHelper::ConvertWStringToString(wstring(filename)).c_str(), "rb");
 	if(error != 0)
 	{
 		return false;
