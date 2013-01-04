@@ -180,6 +180,8 @@ class GraphicsClass
 
 		SkyPlane *m_SkyPlane;
 		SkyPlaneShader* m_SkyPlaneShader;
+
+		Terrain::TerrainRenderType mTerrainRenderType;
 };
 
 #endif

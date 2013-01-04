@@ -86,7 +86,14 @@ HRESULT TextureShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D
 void TextureShader::SetTextureArray(ID3D11DeviceContext* deviceContext, vector<ID3D11ShaderResourceView*>& textureArray)
 {
 	// Set shader texture resource in the pixel shader.
-	deviceContext->PSSetShaderResources(0, textureArray.size(), &textureArray[0]);
+	vector<ID3D11ShaderResourceView*>::iterator texturelIt;
+	int count = 0;
+	for (texturelIt = textureArray.begin(); texturelIt != textureArray.end(); ++texturelIt)
+	{
+		ID3D11ShaderResourceView* texture = (*texturelIt);
+		deviceContext->PSSetShaderResources(count, 1, &texture);
+		count++;
+	}
 }
 
 HRESULT TextureShader::RenderInstanced(ID3D11DeviceContext* deviceContext,

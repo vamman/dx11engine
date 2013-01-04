@@ -53,6 +53,7 @@ GraphicsClass::GraphicsClass()
 	{
 		mPointLights[i] = 0;
 	}
+	mTerrainRenderType = Terrain::TerrainRenderType::RENDER_QUAD_TREE; // RENDER_MATERIAL RENDER_QUAD_TREE
 }
 
 
@@ -198,29 +199,34 @@ HRESULT GraphicsClass::Init(int screenWidth, int screenHeight, HWND hwnd)
 	// Create the terrain object.
 	mTerrain = new Terrain;
 	if(!mTerrain) { return result; }
-	// heightmap01.bmp / heightmap513; materialmap01 / materialmap02; colorm01.bmp / colorm513
-//	V_RETURN(mTerrain->InitializeWithMaterials( device,	"Engine/data/textures/terrain/simple_hmap_512_24.bmp",
-//												"Engine/data/textures/terrain/legend.txt",
-//												"Engine/data/textures/terrain/materialmap02.bmp",
-//												"Engine/data/textures/terrain/colorm513.bmp", "detail001"),	L"Error",
-//												L"Could not initialize the terrain object" );
-	
-	// simple_hmap_512_24
-	V_RETURN
-	(
-		mTerrain->InitializeWithQuadTree
-		(
-			device, FileSystemHelper::GetResourcePath(L"/textures/terrain/simple_hmap_512_24.bmp").c_str(),
-			L"dirt01", FileSystemHelper::GetResourcePath(L"/textures/terrain/colorm513.bmp").c_str() 
-		),
-		L"Error", L"Could not initialize the terrain object"
-	);
-	// Create the quad tree object.
-	mQuadTree = new QuadTree;
-	if(!mQuadTree) { return false; }
 
-	V_RETURN(mQuadTree->Initialize(mTerrain, device), L"Error",	L"Could not initialize the quad tree object");
-	
+	if (mTerrainRenderType == Terrain::TerrainRenderType::RENDER_MATERIAL)
+	{
+		// heightmap01.bmp / heightmap513; materialmap01 / materialmap02; colorm01.bmp / colorm513
+		V_RETURN(mTerrain->InitializeWithMaterials( device,	FileSystemHelper::GetResourcePath(L"/textures/terrain/simple_hmap_512_24.bmp").c_str(), // heightmap513.bmp simple_hmap_512_24.bmp
+													FileSystemHelper::GetResourcePath(L"/textures/terrain/legend.txt").c_str(),
+													FileSystemHelper::GetResourcePath(L"/textures/terrain/materialmap02.bmp").c_str(),
+													FileSystemHelper::GetResourcePath(L"/textures/terrain/colorm513.bmp").c_str(), L"detail001"),	L"Error",
+													L"Could not initialize the terrain object" );
+	}
+	else if (mTerrainRenderType == Terrain::TerrainRenderType::RENDER_QUAD_TREE)
+	{
+		// simple_hmap_512_24
+		V_RETURN
+		(
+			mTerrain->InitializeWithQuadTree
+			(
+				device, FileSystemHelper::GetResourcePath(L"/textures/terrain/simple_hmap_512_24.bmp").c_str(),
+				L"dirt01", FileSystemHelper::GetResourcePath(L"/textures/terrain/colorm513.bmp").c_str() 
+			),
+			L"Error", L"Could not initialize the terrain object"
+		);
+		// Create the quad tree object.
+		mQuadTree = new QuadTree;
+		if(!mQuadTree) { return false; }
+
+		V_RETURN(mQuadTree->Initialize(mTerrain, device), L"Error",	L"Could not initialize the quad tree object");
+	}
 
 	// Create the render to texture object.
 	m_RenderTexture = new RenderTextureClass;
@@ -865,11 +871,14 @@ bool GraphicsClass::Render()
 	position = mCamera->GetPosition();
 
 	// Get the height of the triangle that is directly underneath the given camera position.
-	foundHeight =  mQuadTree->GetHeightAtPosition(position.x, position.z, height);
-	if(foundHeight)
+	if (mTerrainRenderType == Terrain::TerrainRenderType::RENDER_QUAD_TREE)
 	{
-		// If there was a triangle under the camera then position the camera just above it by two units.
-		mCamera->SetPosition(position.x, height + 2.0f, position.z);
+		foundHeight =  mQuadTree->GetHeightAtPosition(position.x, position.z, height);
+		if(foundHeight)
+		{
+			// If there was a triangle under the camera then position the camera just above it by two units.
+			mCamera->SetPosition(position.x, height + 2.0f, position.z);
+		}
 	}
 
 	//result = RenderToTextureFromReflectionView(); // TODO
@@ -990,11 +999,20 @@ bool GraphicsClass::RenderScene()
 	
 	RenderFire();
 
-//	RenderTerrainWithMaterials(worldMatrix, viewMatrix, projectionMatrix);
-	RenderTerrainWithQuadTree(worldMatrix, viewMatrix, projectionMatrix);
+	if (mTerrainRenderType == Terrain::TerrainRenderType::RENDER_MATERIAL)
+	{
+		RenderTerrainWithMaterials(worldMatrix, viewMatrix, projectionMatrix);
+	}
+	else if (mTerrainRenderType == Terrain::TerrainRenderType::RENDER_QUAD_TREE)
+	{
+		RenderTerrainWithQuadTree(worldMatrix, viewMatrix, projectionMatrix);
+	}
 
 	ModelObject* modelObj = ModelFactory::GetInstance()->GetObjectByName("floor");
-	SetPositionAboveTerrain(modelObj, 0.1f);
+	if (mTerrainRenderType == Terrain::TerrainRenderType::RENDER_QUAD_TREE)
+	{
+		SetPositionAboveTerrain(modelObj, 0.1f);
+	}
 	RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirAmbLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
 
 	RenderObjects(worldMatrix, viewMatrix, projectionMatrix, fogStart, fogEnd);
@@ -1019,7 +1037,7 @@ void GraphicsClass::RenderSkyPlane(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix
 	m_SkyPlaneShader->Render(mD3D->GetDeviceContext(), m_SkyPlane->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix);
 
 	// Turn off blending.
-	mD3D->TurnOffAlphaBlending();
+	//mD3D->TurnOffAlphaBlending();
 }
 
 HRESULT GraphicsClass::Render2D()
@@ -1151,7 +1169,7 @@ HRESULT GraphicsClass::RenderFire()
 										  viewMatrix, projectionMatrix, frameTime, scrollSpeeds, scales, distortion1, 
 										  distortion2, distortion3, distortionScale, distortionBias);
 	// Turn off alpha blending.
-	mD3D->TurnOffAlphaBlending();
+	//mD3D->TurnOffAlphaBlending();
 
 	return result;
 }
@@ -1295,7 +1313,10 @@ bool GraphicsClass::RenderObjects(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
 		// Render instanced objects
 		if (modelObj->IsInstanced())
 		{
-			SetPositionAboveTerrain(modelObj, 1.0f);
+			if (mTerrainRenderType == Terrain::TerrainRenderType::RENDER_QUAD_TREE)
+			{
+				SetPositionAboveTerrain(modelObj, 1.0f);
+			}
 			RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_SPECULAR_LIGHT, true);	
 		}
 		// Render non-instanced objects
@@ -1477,7 +1498,10 @@ HRESULT GraphicsClass::RenderText()
 
 	mCameraMovement->GetPosition(posX, posY, posZ);
 	mCameraMovement->GetRotation(rotX, rotY, rotZ);
-	terrinDrawCount = mQuadTree->GetDrawCount();
+	if (mTerrainRenderType == Terrain::TerrainRenderType::RENDER_QUAD_TREE)
+	{
+		terrinDrawCount = mQuadTree->GetDrawCount();
+	}
 
 	// Truncate the position if it exceeds either 9999 or -9999.
 	if(posX > 9999) { posX = 9999; }
