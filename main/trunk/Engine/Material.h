@@ -3,6 +3,7 @@
 #include <vector>
 #include "textureclass.h"
 #include "Shaders/BasicShader.h"
+#include "BasicResource.h"
 
 using namespace std;
 
@@ -28,7 +29,7 @@ class Material
 		vector<ID3D11ShaderResourceView*>& GetTextureVector();
 		char* GetMaterialName();
 		void Shutdown();
-		void SetMaterialShader(BasicShader* shader);
+		void SetMaterialShader(BasicShader* shader); // BasicShader
 		BasicShader* GetMaterialShader();
 
 	private:

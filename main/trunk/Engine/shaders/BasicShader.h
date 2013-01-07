@@ -35,7 +35,7 @@ class BasicShader: public BasicResource// BaseShaderClass
 		BasicShader(void);
 		BasicShader(const BasicShader&);
 		~BasicShader();
-		virtual HRESULT Initialize(ID3D11Device*, HWND, WCHAR*, LPCSTR, LPCSTR);
+		virtual HRESULT Initialize(LightClass* lightSource, ID3D11Device*, HWND, WCHAR*, LPCSTR, LPCSTR);
 		HRESULT InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
 							  LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts);
 		// void OutputShaderErrorMessage(ID3D10Blob*, HWND, WCHAR*);

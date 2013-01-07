@@ -16,7 +16,7 @@ BasicShader::~BasicShader()
 {
 }
 
-HRESULT BasicShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname)
+HRESULT BasicShader::Initialize(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* FXfilename, LPCSTR VSname, LPCSTR PSname)
 {
 	HRESULT result;
 	vector<char *> layouts;

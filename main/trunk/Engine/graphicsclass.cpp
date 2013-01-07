@@ -23,28 +23,6 @@ GraphicsClass::GraphicsClass()
 	, m_RenderTexture(0)
 	, m_Text(0)
 	, m_Frustum(0)
-
-	// Shaders
-	, m_MultiTextureShader(0)
-	, m_BumpMapShader(0)
-	, m_SpecMapShader(0)
-	, m_SpecMapShaderNonInstanced(0)
-	, m_FogShader(0)
-	, m_ReflectionShader(0)
-	, mCursorShader(0)
-	, mBasicShader(0)
-	, mTextureShaderMiniMap(0)
-	, mTextureShaderCamDisplay(0)
-	, mDirSpecLightShader (0)
-	, mDirAmbLightShader(0)
-	, mPointLightShader(0)
-	, mDirSpecLight(0)
-	, mTerrainWithMaterialsShader(0)
-	, mTerrainWithQuadTreeShader(0)
-	, mSkyDomeShader(0)
-	, m_FireShader(0)
-	, m_SkyPlaneShader(0)
-
 	, mSkyDome(0)
 	, m_SkyPlane(0)
 	, mNumObjectsRendered(0)
@@ -166,7 +144,7 @@ HRESULT GraphicsClass::Init(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	InitLights();
-	InitShaders(hwnd);
+//	InitShaders(hwnd);
 	InitMaterials();
 	
 	for (int i = 0; i < 4; ++i)
@@ -337,135 +315,6 @@ bool GraphicsClass::InitLights()
 	return true;
 }
 
-HRESULT GraphicsClass::InitShaders(HWND hwnd)
-{
-	HRESULT result = S_FALSE;
-	DWORD funcTime = -1;
-
-	Timer::GetInstance()->SetTimeA();
-
-	// Create basic shader
-	mBasicShader = new BasicShader;
-	V_RETURN(mBasicShader->Initialize(mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/BasicShader.fx").c_str()),
-	"BasicVertexShader", "BasicPixelShader"), L"Error", L"Could not initialize the basic shader object.");
-
-	// Create the texture shader object for mini map.
-	mTextureShaderMiniMap = new TextureShader;
-	V_RETURN(mTextureShaderMiniMap->Initialize(mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/TextureShaderNonInstanced.fx").c_str()),
-	"TextureVertexShader", "TexturePixelShader"), L"Error", L"Could not initialize the texture shader object.");
-
-	// Create the texture shader object for camera display.
-	mTextureShaderCamDisplay = new TextureShader;
-	V_RETURN(mTextureShaderCamDisplay->Initialize(mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/TextureShaderNonInstanced.fx").c_str()),
-	"TextureVertexShader", "TexturePixelShader"), L"Error", L"Could not initialize the texture shader object.");
-
-	// Create directional specular light shader object.
-	mDirSpecLightShader = new LightShader;
-	V_RETURN(mDirSpecLightShader->Initialize(mDirSpecLight, mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/SpecularLight.fx").c_str()),
-	"LightVertexShader", "LightPixelShader"), L"Error", L"Could not initialize the light shader object.");
-
-	// Create directional ambient light shader object.
-	mDirAmbLightShader = new LightShader;
-	V_RETURN(mDirAmbLightShader->Initialize(mDirAmbLight, mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/AmbientLight.fx").c_str()),
-	"LightVertexShader", "LightPixelShader"), L"Error", L"Could not initialize the light shader object.");
-
-	// Create terrain shader for terrain with materials
-	mTerrainWithMaterialsShader = new TerrainShader;
-	V_RETURN(mTerrainWithMaterialsShader->Initialize(mDirAmbLight, mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/TerrainWithMaterials.fx").c_str()),
-	"TerrainVertexShader", "TerrainPixelShader"), L"Error", L"Could not initialize the terrain shader object.");
-
-	// Create terrain shader for terrain with quad tree
-	mTerrainWithQuadTreeShader = new TerrainShader;
-	V_RETURN(mTerrainWithQuadTreeShader->Initialize(mDirAmbLight, mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/TerrainWithQuadTree.fx").c_str()),
-	"TerrainVertexShader", "TerrainPixelShader"), L"Error", L"Could not initialize the terrain shader object.");
-
-	// Create point light shader object.
-	/*
-	mPointLightShader = new LightShader;
-	V_RETURN(mPointLightShader->Initialize(mPointLights[0], mD3D->GetDevice(), hwnd, L"data/shaders/PointLight.fx", "LightVertexShader", "LightPixelShader"),
-		L"Error", L"Could not initialize the point light shader object.");
-	*/
-
-	// Create the multitexture shader object.
-	m_MultiTextureShader = new MultitextureShader;
-	V_RETURN(m_MultiTextureShader->Initialize(mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/LightmapShader.fx").c_str()),
-	"LightMapVertexShader", "LightMapPixelShader"),	L"Error", L"Could not initialize the multitexture shader object.");
-
-	// Create the bump map shader object.
-	m_BumpMapShader = new NormalMapShader;
-	V_RETURN(m_BumpMapShader->Initialize(mDirAmbLight, mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/NormalMapShader.fx").c_str()),
-	"BumpMapVertexShader", "BumpMapPixelShader"), L"Error", L"Could not initialize the bump map shader object.");
-
-	// Create the specular map shader object.
-	m_SpecMapShader = new SpecMapShader;
-	V_RETURN(m_SpecMapShader->Initialize(mDirSpecLight, mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/SpecMapShader.fx").c_str()),
-	"SpecMapVertexShader", "SpecMapPixelShader"), L"Error", L"Could not initialize the specular map instanced shader object.");
-
-	// Create the specular map shader object.
-	m_SpecMapShaderNonInstanced = new SpecMapShader();
-	V_RETURN(m_SpecMapShaderNonInstanced->Initialize(mDirSpecLight, mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/SpecMapShaderNonInstanced.fx").c_str()),
-	"SpecMapVertexShader", "SpecMapPixelShader"), L"Error", L"Could not initialize the specular map non inctansed shader object.");
-	
-	// Create the fog shader object.
-	m_FogShader = new FogShader;
-	V_RETURN(m_FogShader->Initialize(mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/FogShader.fx").c_str()),
-	"FogVertexShader", "FogPixelShader"), L"Error", L"Could not initialize the fog shader object.");
-
-	// Create the reflection shader object.
-	m_ReflectionShader = new ReflectionShader;
-	V_RETURN(m_ReflectionShader->Initialize(mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/ReflectionShader.fx").c_str()),
-	"ReflectionVertexShader", "ReflectionPixelShader"),	L"Error", L"Could not initialize the reflection shader object.");
-
-	// Create cursor shader object
-	mCursorShader = new FontShader;
-	V_RETURN(mCursorShader->Initialize(mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/CursorShader.fx").c_str()),
-	"CursorVertexShader", "CursorPixelShader"),	L"Error", L"Could not initialize the cursor shader object.");
-
-	// Create the sky dome shader object.
-	mSkyDomeShader = new SkyDomeShader;
-	V_RETURN(mSkyDomeShader->Initialize(mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/SkyDomeShader.fx").c_str()),
-	"SkyDomeVertexShader", "SkyDomePixelShader"), L"Error", L"Could not initialize the sky dome shader object.");
-
-	// Create the sky plane shader object.
-	m_SkyPlaneShader = new SkyPlaneShader;
-	V_RETURN(m_SkyPlaneShader->Initialize(mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/SkyPlaneShader.fx").c_str()),
-	"SkyPlaneVertexShader", "SkyPlanePixelShader"),	L"Error", L"Could not initialize the sky plane shader object.");
-
-	// Create the fire shader.
-	m_FireShader = new FireShader;
-	V_RETURN(m_FireShader->Initialize(mD3D->GetDevice(), hwnd,
-	const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/FireShader.fx").c_str()),
-	"FireVertexShader", "FirePixelShader"),	L"Error", L"Could not initialize the sky plane shader object.");
-
-
-	Timer::GetInstance()->SetTimeB();
-	funcTime = Timer::GetInstance()->GetDeltaTime();
-
-	if (funcTime != -1)
-	{
-		Log::GetInstance()->WriteTimedMessageToFile(funcTime, "	GraphicsClass::InitializeShaders time: ");
-		Log::GetInstance()->WriteTimedMessageToOutput(funcTime, "	GraphicsClass::InitializeShaders time: ");
-	}
-
-	return result;
-}
-
 bool GraphicsClass::InitMaterials()
 {
 	Material* material = new Material("defaultMaterial");
@@ -485,21 +334,21 @@ bool GraphicsClass::InitMaterials()
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"spec02");
 	if(!result) { return false; }
 
-	material->SetMaterialShader(m_SpecMapShader);
+	material->SetMaterialShader((BasicShader*) ResourceMgr::GetInstance()->GetResourceByName(L"SpecMapShader", ResourceMgr::ResourceType::ResourceTypeShader)); // m_SpecMapShader
 
 	// Create material "BlueFloor"
 	material = MaterialFactory::GetInstance()->CreateMaterial("BlueFloor");
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"blue01");
 	if(!result) { return false; }
 
-	material->SetMaterialShader(mDirSpecLightShader);
+	material->SetMaterialShader((BasicShader*) ResourceMgr::GetInstance()->GetResourceByName(L"SpecularLight", ResourceMgr::ResourceType::ResourceTypeShader)); // mDirSpecLightShaders
 
 	// Create material "TexturedFloor"
 	material = MaterialFactory::GetInstance()->CreateMaterial("TexturedFloor");
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"stone02");
 	if(!result) { return false; }
-
-	material->SetMaterialShader(mDirAmbLightShader);
+	
+	material->SetMaterialShader((BasicShader*) ResourceMgr::GetInstance()->GetResourceByName(L"AmbientLight", ResourceMgr::ResourceType::ResourceTypeShader)); // mDirAmbLightShader
 
 	// Create normal map material for space compound
 	material = MaterialFactory::GetInstance()->CreateMaterial("spaceCompoundMaterial");
@@ -508,8 +357,8 @@ bool GraphicsClass::InitMaterials()
 
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"bump01");
 	if(!result) { return false; }
-
-	material->SetMaterialShader(m_BumpMapShader);
+	
+	material->SetMaterialShader((BasicShader*) ResourceMgr::GetInstance()->GetResourceByName(L"NormalMapShader", ResourceMgr::ResourceType::ResourceTypeShader)); // m_BumpMapShader
 
 	// Create fire material
 	material = MaterialFactory::GetInstance()->CreateMaterial("fireMaterial");
@@ -521,8 +370,8 @@ bool GraphicsClass::InitMaterials()
 
 	material->AppentTextureToMaterial(mD3D->GetDevice(), L"alpha01");
 	if(!result) { return false; }
-
-	material->SetMaterialShader(m_FireShader);
+	
+	material->SetMaterialShader((BasicShader*) ResourceMgr::GetInstance()->GetResourceByName(L"FireShader", ResourceMgr::ResourceType::ResourceTypeShader)); // m_FireShader
 
 	Timer::GetInstance()->SetTimeB();
 	funcTime = Timer::GetInstance()->GetDeltaTime();
@@ -612,6 +461,8 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 
 void GraphicsClass::Shutdown()
 {
+	ResourceMgr::GetInstance()->Shutdown();
+
 	// Release the text object.
 	SHUTDOWN_OBJ(m_Text);
 	// Release the render to texture object.
@@ -635,8 +486,6 @@ void GraphicsClass::Shutdown()
 		delete mDirAmbLight;
 		mDirAmbLight = 0;
 	}
-
-	ShutdownShaders();
 
 	// Release the frustum object.
 	if(m_Frustum)
@@ -671,45 +520,10 @@ void GraphicsClass::Shutdown()
 
 	SHUTDOWN_OBJ(mD3D);
 
-	SHUTDOWN_OBJ(m_SkyPlaneShader);
-
 	SHUTDOWN_OBJ(m_SkyPlane);
 
 	return;
 }
-
-void GraphicsClass::ShutdownShaders()
-{
-	// Release the reflection shader object.
-	SHUTDOWN_OBJ(m_ReflectionShader);
-	// Release the fog shader object.
-	SHUTDOWN_OBJ(m_FogShader);
-	// Release the terrain shader object.
-	SHUTDOWN_OBJ(mTerrainWithMaterialsShader);
-	// Release the terrain shader object.
-	SHUTDOWN_OBJ(mTerrainWithQuadTreeShader);
-	// Release the multitexture shader object.
-	SHUTDOWN_OBJ(m_MultiTextureShader);
-	// Release the directional specular light shader object.
-	SHUTDOWN_OBJ(mDirSpecLightShader);
-	// Release the directional ambient light shader object.
-	SHUTDOWN_OBJ(mDirAmbLightShader);	
-	// Release the texture shader object for mini map.
-	SHUTDOWN_OBJ(mTextureShaderMiniMap);
-	// Release the texture shader object for camera display.
-	SHUTDOWN_OBJ(mTextureShaderCamDisplay);
-	// Release the color shader object.
-	SHUTDOWN_OBJ(mBasicShader);
-	// Release the bump map shader object.
-	SHUTDOWN_OBJ(m_BumpMapShader);
-	// Release the specular map shader object.
-	SHUTDOWN_OBJ(m_SpecMapShader);
-	// Release the cursor shader object.
-	SHUTDOWN_OBJ(mCursorShader);
-	// Release the sky dome shader object.
-	SHUTDOWN_OBJ(mSkyDomeShader);
-}
-
 
 bool GraphicsClass::Frame()
 {
@@ -973,13 +787,14 @@ bool GraphicsClass::RenderScene()
 	
 	// Render the sky dome using the sky dome shader.
 	mSkyDome->Render(deviceContext, mSkyShape);
-	mSkyDomeShader->Render(deviceContext, mSkyDome->GetIndexCount(mSkyShape), worldMatrix, viewMatrix, projectionMatrix,
-						   mSkyDome->GetApexColor(), mSkyDome->GetCenterColor(), (float) mSkyPixelShaderType);
+	SkyDomeShader* shader = (SkyDomeShader*) ResourceMgr::GetInstance()->GetResourceByName(L"SkyDomeShader", ResourceMgr::ResourceType::ResourceTypeShader);
+	shader->Render(deviceContext, mSkyDome->GetIndexCount(mSkyShape), worldMatrix, viewMatrix, projectionMatrix,
+					mSkyDome->GetApexColor(), mSkyDome->GetCenterColor(), (float) mSkyPixelShaderType);
 
 	// Turn back face culling back on.
 	mD3D->TurnOnCulling();
 	
-	RenderSkyPlane(worldMatrix, viewMatrix, projectionMatrix);
+	// RenderSkyPlane(worldMatrix, viewMatrix, projectionMatrix);
 
 	// Turn the Z buffer back on.
 	mD3D->TurnZBufferOn();
@@ -1032,12 +847,13 @@ void GraphicsClass::RenderSkyPlane(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix
 	textureArray.push_back(m_SkyPlane->GetCloudTexture());
 	textureArray.push_back(m_SkyPlane->GetPerturbTexture());
 
-	m_SkyPlaneShader->SetTextureArray(mD3D->GetDeviceContext(), textureArray);
-	m_SkyPlaneShader->SetSkyBuffer(mD3D->GetDeviceContext(), m_SkyPlane->GetTranslation(0), m_SkyPlane->GetScale(), m_SkyPlane->GetBrightness());
-	m_SkyPlaneShader->Render(mD3D->GetDeviceContext(), m_SkyPlane->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix);
+	SkyPlaneShader* shader = (SkyPlaneShader*) ResourceMgr::GetInstance()->GetResourceByName(L"SkyPlaneShader", ResourceMgr::ResourceType::ResourceTypeShader);
+	shader->SetTextureArray(mD3D->GetDeviceContext(), textureArray);
+	shader->SetSkyBuffer(mD3D->GetDeviceContext(), m_SkyPlane->GetTranslation(0), m_SkyPlane->GetScale(), m_SkyPlane->GetBrightness());
+	shader->Render(mD3D->GetDeviceContext(), m_SkyPlane->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix);
 
 	// Turn off blending.
-	//mD3D->TurnOffAlphaBlending();
+	mD3D->TurnOffAlphaBlending();
 }
 
 HRESULT GraphicsClass::Render2D()
@@ -1070,12 +886,13 @@ HRESULT GraphicsClass::Render2D()
 		textureArray.push_back(m_RenderTexture->GetShaderResourceView());
 
 		// Render the bitmap with the texture shader.
-		mTextureShaderCamDisplay->SetTextureArray(deviceContext, textureArray);
-		result = mTextureShaderCamDisplay->RenderOrdinary(deviceContext,
-														  mBitmap->GetIndexCount(),
-														  worldMatrix,
-														  mBaseViewMatrix, 
-														  orthoMatrix);
+		TextureShader* shader = (TextureShader*) ResourceMgr::GetInstance()->GetResourceByName(L"TextureShaderNonInstanced", ResourceMgr::ResourceType::ResourceTypeShader);
+		shader->SetTextureArray(deviceContext, textureArray);
+		result = shader->RenderOrdinary(deviceContext,
+										mBitmap->GetIndexCount(),
+										worldMatrix,
+										mBaseViewMatrix, 
+										orthoMatrix);
 		if(FAILED(result)) { return result; }
 	}
 
@@ -1085,7 +902,8 @@ HRESULT GraphicsClass::Render2D()
 	// Render the mini map.
 	float cameraRotX, cameraRotY, cameraRotZ;
 	mCameraMovement->GetRotation(cameraRotX, cameraRotY, cameraRotZ);
-	result = m_MiniMap->Render(deviceContext, worldMatrix, orthoMatrix, mTextureShaderMiniMap, cameraRotY);
+	TextureShader* miniMapShader = (TextureShader*) ResourceMgr::GetInstance()->GetResourceByName(L"TextureShaderNonInstanced", ResourceMgr::ResourceType::ResourceTypeShader);
+	result = m_MiniMap->Render(deviceContext, worldMatrix, orthoMatrix, miniMapShader, cameraRotY);
 	if(FAILED(result)) { return result; }
 
 	// Render cursor object
@@ -1098,9 +916,10 @@ HRESULT GraphicsClass::Render2D()
 	textureArray.push_back(mCursor->GetTexture());
 
 	// Render the bitmap with the texture shader.
-	mCursorShader->SetTextureArray(mD3D->GetDeviceContext(), textureArray);
-	mCursorShader->SetPixelBufferColor(deviceContext, pixelColor);
-	result = mCursorShader->RenderOrdinary(deviceContext,
+	FontShader* shader = (FontShader*) ResourceMgr::GetInstance()->GetResourceByName(L"CursorShader", ResourceMgr::ResourceType::ResourceTypeShader);
+	shader->SetTextureArray(mD3D->GetDeviceContext(), textureArray);
+	shader->SetPixelBufferColor(deviceContext, pixelColor);
+	result = shader->RenderOrdinary(deviceContext,
 		mCursor->GetIndexCount(),
 		worldMatrix,
 		mBaseViewMatrix, 
@@ -1121,12 +940,16 @@ HRESULT GraphicsClass::Render2D()
 
 HRESULT GraphicsClass::RenderFire()
 {
-	D3DXMATRIX worldMatrix, viewMatrix, projectionMatrix;
+	D3DXMATRIX worldMatrix, viewMatrix, projectionMatrix, translateMatrix;
 	HRESULT result;
 	D3DXVECTOR3 scrollSpeeds, scales;
 	D3DXVECTOR2 distortion1, distortion2, distortion3;
 	float distortionScale, distortionBias;
 	static float frameTime = 0.0f;
+
+	D3DXVECTOR3 cameraPosition, modelPosition;
+	double angle;
+	float rotation;
 
 	// Increment the frame time counter.
 	frameTime += 0.01f;
@@ -1150,6 +973,8 @@ HRESULT GraphicsClass::RenderFire()
 	distortionScale = 0.8f;
 	distortionBias = 0.5f;
 
+	cameraPosition = mCamera->GetPosition();
+
 	// Get the world, view, and projection matrices from the camera and d3d objects.
 	mCamera->GetViewMatrix(viewMatrix);
 	mD3D->GetProjectionMatrix(projectionMatrix);
@@ -1158,18 +983,35 @@ HRESULT GraphicsClass::RenderFire()
 	mD3D->TurnOnAlphaBlending();
 
 	ModelObject* modelObj = ModelFactory::GetInstance()->GetObjectByName("fireObj");
+	modelPosition = modelObj->GetPosition();
+	// Calculate the rotation that needs to be applied to the billboard model to face the current camera position using the arc tangent function.
+	angle = atan2(modelPosition.x - cameraPosition.x, modelPosition.z - cameraPosition.z) * (180.0 / D3DX_PI);
+
+	// Convert rotation into radians.
+	rotation = (float)angle * 0.0174532925f;
+
 	modelObj->GetModel()->RenderOrdinary(mD3D->GetDeviceContext(), ModelClass::TextureVertexType);
-	worldMatrix = modelObj->GetWorldMatrix();
+
+	// Setup the rotation the billboard at the origin using the world matrix.
+	D3DXMatrixRotationY(&worldMatrix, rotation);
+
+	// Setup the translation matrix from the billboard model.
+	D3DXMatrixTranslation(&translateMatrix, modelPosition.x, modelPosition.y, modelPosition.z);
+
+	// Finally combine the rotation and translation matrices to create the final world matrix for the billboard model.
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &translateMatrix); 
 
 	vector<ID3D11ShaderResourceView*> textureArray;
 	Material* material = MaterialFactory::GetInstance()->GetMaterialByName("fireMaterial");
-	m_FireShader->SetTextureArray(mD3D->GetDeviceContext(), material->GetTextureVector());
+	
+	FireShader* shader = (FireShader*) ResourceMgr::GetInstance()->GetResourceByName(L"FireShader", ResourceMgr::ResourceType::ResourceTypeShader);
+	shader->SetTextureArray(mD3D->GetDeviceContext(), material->GetTextureVector());
 
-	result = m_FireShader->RenderOrdinary(mD3D->GetDeviceContext(), modelObj->GetModel()->GetIndexCount(), worldMatrix,
+	result = shader->RenderOrdinary(mD3D->GetDeviceContext(), modelObj->GetModel()->GetIndexCount(), worldMatrix,
 										  viewMatrix, projectionMatrix, frameTime, scrollSpeeds, scales, distortion1, 
 										  distortion2, distortion3, distortionScale, distortionBias);
 	// Turn off alpha blending.
-	//mD3D->TurnOffAlphaBlending();
+	mD3D->TurnOffAlphaBlending();
 
 	return result;
 }
@@ -1233,13 +1075,13 @@ HRESULT GraphicsClass::RenderTerrainWithMaterials(D3DXMATRIX worldMatrix, D3DXMA
 
 	// Render the terrain buffers.
 	vector<ID3D11ShaderResourceView*> texArr;
-
-	mTerrainWithMaterialsShader->SetLightSource(deviceContext, mDirAmbLight);
+	TerrainShader* shader = (TerrainShader*) ResourceMgr::GetInstance()->GetResourceByName(L"TerrainWithMaterials", ResourceMgr::ResourceType::ResourceTypeShader);
+	shader->SetLightSource(deviceContext, mDirAmbLight);
 	
-	result = mTerrainWithMaterialsShader->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, false);
+	result = shader->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, false);
 	if(FAILED(result)) { return result; }
 	
-	result = mTerrain->Render(deviceContext, mTerrainWithMaterialsShader, worldMatrix, viewMatrix, projectionMatrix);
+	result = mTerrain->Render(deviceContext, shader, worldMatrix, viewMatrix, projectionMatrix);
 	return result;
 }
 
@@ -1253,13 +1095,14 @@ HRESULT GraphicsClass::RenderTerrainWithQuadTree(D3DXMATRIX worldMatrix, D3DXMAT
 	texArr.push_back(mTerrain->GetTexture());
 
 	// Render the terrain using the terrain shader.
-	mTerrainWithQuadTreeShader->SetTextureArray(deviceContext, texArr, false);
-	mTerrainWithQuadTreeShader->SetLightSource(deviceContext, mDirAmbLight);
-	result = mTerrainWithQuadTreeShader->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, false);
+	TerrainShader* shader = (TerrainShader*) ResourceMgr::GetInstance()->GetResourceByName(L"TerrainWithQuadTree", ResourceMgr::ResourceType::ResourceTypeShader);
+	shader->SetTextureArray(deviceContext, texArr, false);
+	shader->SetLightSource(deviceContext, mDirAmbLight);
+	result = shader->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, false);
 	if(FAILED(result)) { return result; }
 
 	// Render the terrain using the quad tree and terrain shader.
-	mQuadTree->Render(m_Frustum, deviceContext, mTerrainWithQuadTreeShader, mIsAllowToBBRender);
+	mQuadTree->Render(m_Frustum, deviceContext, shader, mIsAllowToBBRender);
 	return result;
 }
 

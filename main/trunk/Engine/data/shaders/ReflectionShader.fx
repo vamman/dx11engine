@@ -34,7 +34,7 @@ Texture2D reflectionTexture;
 ////////////////////////////////////////////////////////////////////////////////
 // Vertex Shader
 ////////////////////////////////////////////////////////////////////////////////
-PixelInputType ReflectionVertexShader(VertexInputType input)
+PixelInputType VertexShaderFunction(VertexInputType input)
 {
     PixelInputType output;
     matrix reflectProjectWorld;
@@ -60,7 +60,7 @@ PixelInputType ReflectionVertexShader(VertexInputType input)
     return output;
 }
 
-float4 ReflectionPixelShader(PixelInputType input) : SV_TARGET
+float4 PixelShaderFunction(PixelInputType input) : SV_TARGET
 {
     float4 textureColor;
     float2 reflectTexCoord;

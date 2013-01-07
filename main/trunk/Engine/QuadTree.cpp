@@ -173,6 +173,7 @@ void QuadTree::CreateTreeNode(NodeType* node, float positionX, float positionZ, 
 	// Count the number of triangles that are inside this node.
 	numTriangles = CountTriangles(positionX, positionZ, width);
 
+	Log::GetInstance()->WriteTimedMessageToOutput((DWORD) numTriangles, "	QuadTree::CreateTreeNode numTriangles: ");
 	// Case 1: If there are no triangles in this node then return as it is empty and requires no processing.
 	if(numTriangles == 0)
 	{

@@ -15,7 +15,7 @@ SkyPlaneShader::~SkyPlaneShader(void)
 {
 }
 
-HRESULT SkyPlaneShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
+HRESULT SkyPlaneShader::Initialize(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
 {
 	HRESULT result;
 	vector<char *> layouts;
