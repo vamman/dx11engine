@@ -52,11 +52,14 @@ void ReflectionShader::Shutdown()
 	TextureShader::Shutdown();
 
 	// Release the reflection constant buffer.
+	// TODO: Temporary comment out. Figure out why m_reflectionBuffer is garbage when trying to shutdown
+	/*
 	if(m_reflectionBuffer)
 	{
 		m_reflectionBuffer->Release();
 		m_reflectionBuffer = 0;
 	}
+	*/
 
 	return;
 }

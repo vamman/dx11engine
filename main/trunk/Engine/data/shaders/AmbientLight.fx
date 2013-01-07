@@ -30,7 +30,7 @@ cbuffer LightBuffer
     float padding;
 };
 
-PixelInputType LightVertexShader(VertexInputType input)
+PixelInputType VertexShaderFunction(VertexInputType input)
 {
     PixelInputType output;
     
@@ -54,7 +54,7 @@ PixelInputType LightVertexShader(VertexInputType input)
     return output;
 }
 
-float4 LightPixelShader(PixelInputType input) : SV_TARGET
+float4 PixelShaderFunction(PixelInputType input) : SV_TARGET
 {
     float4 textureColor;
     float3 lightDir;

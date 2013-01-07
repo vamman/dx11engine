@@ -25,8 +25,8 @@
 #include "positionclass.h"
 #include "SoundClass.h"
 
-#define RESOLUTION_X 1600
-#define RESOLUTION_Y 900
+#define RESOLUTION_X 1024
+#define RESOLUTION_Y 768
 
 
 ////////////////////////////////////////////////////////////////////////////////

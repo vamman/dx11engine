@@ -35,7 +35,7 @@ SamplerState SampleType;
 ////////////////////////////////////////////////////////////////////////////////
 // Vertex Shader
 ////////////////////////////////////////////////////////////////////////////////
-PixelInputType MultitextureVertexShader(VertexInputType input)
+PixelInputType VertexShaderFunction(VertexInputType input)
 {
     PixelInputType output;
     
@@ -57,7 +57,7 @@ PixelInputType MultitextureVertexShader(VertexInputType input)
 ////////////////////////////////////////////////////////////////////////////////
 // Pixel Shader
 ////////////////////////////////////////////////////////////////////////////////
-float4 MultitexturePixelShader(PixelInputType input) : SV_TARGET
+float4 PixelShaderFunction(PixelInputType input) : SV_TARGET
 {
     float4 color1;
     float4 color2;

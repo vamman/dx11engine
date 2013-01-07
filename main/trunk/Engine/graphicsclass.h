@@ -73,7 +73,6 @@ class GraphicsClass
 		bool HandleInput(float);
 		
 		bool InitLights();
-		HRESULT InitShaders(HWND hwnd);
 		bool InitMaterials();
 		bool InitObjects(HWND hwnd);
 
@@ -85,7 +84,6 @@ class GraphicsClass
 		bool RenderScene();
 		void RenderSkyPlane(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix);
 		bool RenderObjects(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, float fogStart, float fogEnd);
-		void ShutdownShaders();
 		HRESULT Render2D();
 		HRESULT RenderFire();
 		bool SetFillMode(D3D11_FILL_MODE mode);
@@ -127,26 +125,7 @@ class GraphicsClass
 		BitmapClass* mBitmap, *mCursor;
 		RenderTextureClass* m_RenderTexture;
 
-		TextClass* m_Text;
-
-		// Shaders
-		BasicShader*		mBasicShader;
-		TextureShader*		mTextureShaderMiniMap;
-		TextureShader*		mTextureShaderCamDisplay;
-		FontShader*			mCursorShader;
-		LightShader*		mDirSpecLightShader;
-		LightShader*		mPointLightShader;
-		LightShader*		mDirAmbLightShader;
-		TerrainShader*		mTerrainWithMaterialsShader;
-		TerrainShader*		mTerrainWithQuadTreeShader;
-		MultitextureShader*	m_MultiTextureShader;
-		NormalMapShader*	m_BumpMapShader;
-		SpecMapShader*		m_SpecMapShader;
-		SpecMapShader*		m_SpecMapShaderNonInstanced;
-		FogShader*			m_FogShader;
-		SkyDomeShader*		mSkyDomeShader;
-		FireShader*			m_FireShader;
-		
+		TextClass* m_Text;		
 
 		int mNumObjectsRendered;
 
@@ -177,9 +156,7 @@ class GraphicsClass
 		bool mIsWireFrameModeOn;
 		SkyShape mSkyShape;
 		SkyPixelShaderType mSkyPixelShaderType;
-
 		SkyPlane *m_SkyPlane;
-		SkyPlaneShader* m_SkyPlaneShader;
 
 		Terrain::TerrainRenderType mTerrainRenderType;
 };

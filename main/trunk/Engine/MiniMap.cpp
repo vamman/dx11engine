@@ -75,7 +75,7 @@ HRESULT MiniMap::Initialize(ID3D11Device* device, HWND hwnd, int screenWidth, in
 	}
 
 	// Initialize the point bitmap object.
-	result = mPlayerView->Initialize(device, screenWidth, screenHeight, L"PlayerView" /* , mPlayerViewImageWidth, mPlayerViewImageHeight */ );
+	result = mPlayerView->Initialize(device, screenWidth, screenHeight, L"PlayerView");
 	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the point object.", L"Error", MB_OK);
@@ -86,15 +86,6 @@ HRESULT MiniMap::Initialize(ID3D11Device* device, HWND hwnd, int screenWidth, in
 	mPlayerViewShader = new FontShader;
 	if(!mPlayerViewShader)
 	{
-		return result;
-	}
-
-	// Initialize the cursor shader object.
-	result = mPlayerViewShader->Initialize(device, hwnd, const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/CursorShader.fx").c_str()), 
-		"CursorVertexShader", "CursorPixelShader");
-	if(FAILED(result))
-	{
-		MessageBox(hwnd, L"Could not initialize the player view shader object.", L"Error", MB_OK);
 		return result;
 	}
 
@@ -149,8 +140,9 @@ HRESULT MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatr
 	// Render the border bitmap using the texture shader.
 	vector<ID3D11ShaderResourceView*> borderTextureArray;
 	borderTextureArray.push_back(m_Border->GetTexture());
-	textureShader->SetTextureArray(deviceContext, borderTextureArray);
-	textureShader->RenderOrdinary(deviceContext, m_Border->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
+	TextureShader* shader = (TextureShader*) ResourceMgr::GetInstance()->GetResourceByName(L"TextureShaderNonInstanced", ResourceMgr::ResourceType::ResourceTypeShader);
+	shader->SetTextureArray(deviceContext, borderTextureArray);
+	shader->RenderOrdinary(deviceContext, m_Border->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
 
 	// Put the mini-map bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	result = m_MiniMapBitmap->Render(deviceContext, m_mapLocationX, m_mapLocationY);
@@ -159,8 +151,8 @@ HRESULT MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatr
 	// Render the mini-map bitmap using the texture shader.
 	vector<ID3D11ShaderResourceView*> minimapTextureArray;
 	minimapTextureArray.push_back(m_MiniMapBitmap->GetTexture());
-	textureShader->SetTextureArray(deviceContext, minimapTextureArray);
-	textureShader->RenderOrdinary(deviceContext, m_MiniMapBitmap->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
+	shader->SetTextureArray(deviceContext, minimapTextureArray);
+	shader->RenderOrdinary(deviceContext, m_MiniMapBitmap->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
 
 	
 	// Put the player view bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
@@ -183,9 +175,11 @@ HRESULT MiniMap::Render(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatr
 	D3DXVECTOR4 pixelColor = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
 	vector<ID3D11ShaderResourceView*> pointTextureArray;
 	pointTextureArray.push_back(mPlayerView->GetTexture());
-	mPlayerViewShader->SetTextureArray(deviceContext, pointTextureArray);
-	mPlayerViewShader->SetPixelBufferColor(deviceContext, pixelColor);
-	mPlayerViewShader->RenderOrdinary(deviceContext, mPlayerView->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
+
+	FontShader* fontShader = (FontShader*) ResourceMgr::GetInstance()->GetResourceByName(L"CursorShader", ResourceMgr::ResourceType::ResourceTypeShader);
+	fontShader->SetTextureArray(deviceContext, pointTextureArray);
+	fontShader->SetPixelBufferColor(deviceContext, pixelColor);
+	fontShader->RenderOrdinary(deviceContext, mPlayerView->GetIndexCount(), worldMatrix, m_viewMatrix, orthoMatrix);
 
 	return result;
 }

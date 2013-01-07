@@ -22,7 +22,7 @@ class SkyPlaneShader : public BasicShader
 	public:
 		SkyPlaneShader(void);
 		virtual ~SkyPlaneShader(void);
-		HRESULT Initialize(ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname);
+		HRESULT Initialize(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname);
 		void Shutdown();
 		HRESULT Render(ID3D11DeviceContext* deviceContext,
 				    int indexCount,

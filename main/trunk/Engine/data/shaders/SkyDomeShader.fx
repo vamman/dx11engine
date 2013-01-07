@@ -31,7 +31,7 @@ TextureCube SkyMap;
 ////////////////////////////////////////////////////////////////////////////////
 // Vertex Shader
 ////////////////////////////////////////////////////////////////////////////////
-PixelInputType SkyDomeVertexShader(VertexInputType input)
+PixelInputType VertexShaderFunction(VertexInputType input)
 {
     PixelInputType output;
     
@@ -50,7 +50,7 @@ PixelInputType SkyDomeVertexShader(VertexInputType input)
     return output;
 }
 // TODO: Modify pixel shader to support both gradient and cube map shpere mapping
-float4 SkyDomePixelShader(PixelInputType input) : SV_TARGET
+float4 PixelShaderFunction(PixelInputType input) : SV_TARGET
 {
     float height;
     float4 outputColor;

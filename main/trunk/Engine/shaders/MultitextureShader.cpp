@@ -15,10 +15,10 @@ void MultitextureShader::Shutdown()
 	TextureShader::Shutdown();
 }
 
-HRESULT MultitextureShader::Initialize(ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
+HRESULT MultitextureShader::Initialize(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname)
 {
 	HRESULT result;
-	result = TextureShader::Initialize(device, hwnd, filename, VSname, PSname);
+	result = TextureShader::Initialize(lightSource, device, hwnd, filename, VSname, PSname);
 	if(FAILED(result))
 	{
 		return result;

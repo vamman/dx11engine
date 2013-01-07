@@ -59,8 +59,9 @@ HRESULT TextClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceC
 	}
 
 	// Initialize the font shader object.
-	result = m_FontShader->Initialize(device, hwnd, const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/FontShader.fx").c_str()),
-		"FontVertexShader", "FontPixelShader");
+	LightClass* lightSource = new LightClass;
+	result = m_FontShader->Initialize(lightSource, device, hwnd, const_cast<WCHAR*>(FileSystemHelper::GetResourcePath(L"/shaders/FontShader.fx").c_str()),
+		"VertexShaderFunction", "PixelShaderFunction");
 	if(FAILED(result))
 	{
 		MessageBox(hwnd, L"Could not initialize the font shader object.", L"Error", MB_OK);
@@ -373,9 +374,10 @@ HRESULT TextClass::RenderSentence(ID3D11DeviceContext* deviceContext, SentenceTy
 	// Render the text using the font shader.
 	vector<ID3D11ShaderResourceView*> textureArray;
 	textureArray.push_back(m_Font->GetTexture());
-	m_FontShader->SetTextureArray(deviceContext, textureArray);
-	m_FontShader->SetPixelBufferColor(deviceContext, pixelColor);
-	result = m_FontShader->RenderOrdinary(deviceContext, sentence->indexCount, worldMatrix, m_baseViewMatrix, orthoMatrix);
+	FontShader* shader = (FontShader*) ResourceMgr::GetInstance()->GetResourceByName(L"FontShader", ResourceMgr::ResourceType::ResourceTypeShader);
+	shader->SetTextureArray(deviceContext, textureArray);
+	shader->SetPixelBufferColor(deviceContext, pixelColor);
+	result = shader->RenderOrdinary(deviceContext, sentence->indexCount, worldMatrix, m_baseViewMatrix, orthoMatrix);
 	if(FAILED(result)) { false; }
 
 	return result;

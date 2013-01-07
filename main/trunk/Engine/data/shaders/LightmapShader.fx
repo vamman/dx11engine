@@ -34,7 +34,7 @@ SamplerState SampleType;
 ////////////////////////////////////////////////////////////////////////////////
 // Vertex Shader
 ////////////////////////////////////////////////////////////////////////////////
-PixelInputType LightMapVertexShader(VertexInputType input)
+PixelInputType VertexShaderFunction(VertexInputType input)
 {
     PixelInputType output;
     
@@ -56,7 +56,7 @@ PixelInputType LightMapVertexShader(VertexInputType input)
 ////////////////////////////////////////////////////////////////////////////////
 // Pixel Shader
 ////////////////////////////////////////////////////////////////////////////////
-float4 LightMapPixelShader(PixelInputType input) : SV_TARGET
+float4 PixelShaderFunction(PixelInputType input) : SV_TARGET
 {
     float4 color;
     float4 lightColor;

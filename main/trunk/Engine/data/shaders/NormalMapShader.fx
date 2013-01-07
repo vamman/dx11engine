@@ -50,7 +50,7 @@ cbuffer LightBuffer
 ////////////////////////////////////////////////////////////////////////////////
 // Vertex Shader
 ////////////////////////////////////////////////////////////////////////////////
-PixelInputType BumpMapVertexShader(VertexInputType input)
+PixelInputType VertexShaderFunction(VertexInputType input)
 {
     PixelInputType output;
 
@@ -89,7 +89,7 @@ PixelInputType BumpMapVertexShader(VertexInputType input)
 
 // Pixel Shader
 ////////////////////////////////////////////////////////////////////////////////
-float4 BumpMapPixelShader(PixelInputType input) : SV_TARGET
+float4 PixelShaderFunction(PixelInputType input) : SV_TARGET
 {
     float4 textureColor;
     float4 bumpMap;

@@ -21,8 +21,6 @@ ResourceMgr* ResourceMgr::GetInstance()
 ResourceMgr::ResourceMgr(void)
 	: m_ModelLoader(0)
 	, m_ShaderLoader(0)
-	, m_TextureFirstIndex(-1)
-	, m_TextureLastIndex(-1)
 {
 	LightShader* ambientLightShader = new LightShader;
 	mShadersMap[L"AmbientLight"] = ambientLightShader;
@@ -107,6 +105,35 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 	directories.push(path);
 	files.clear();
 
+	// Create directional specular light object.
+	LightClass* dirSpecLight = new LightClass;
+	if(!dirSpecLight)
+	{
+		return false;
+	}
+
+	dirSpecLight->SetLightType(LightClass::DIRECTIONAL_SPECULAR_LIGHT);
+	// Initialize the light object.
+	dirSpecLight->SetAmbientColor(0.4f, 0.4f, 0.4f, 1.0f);
+	dirSpecLight->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
+	dirSpecLight->SetDirection(0.0f, 0.0f, 0.75f);
+	dirSpecLight->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
+	dirSpecLight->SetSpecularPower(16.0f);
+
+	// Create directional ambient light object.
+	LightClass* dirAmbLight = new LightClass;
+	if(!dirAmbLight)
+	{
+		return false;
+	}
+
+	dirAmbLight->SetLightType(LightClass::DIRECTIONAL_AMBIENT_LIGHT);
+	// Initialize the light object.
+	dirAmbLight->SetAmbientColor(0.5f, 0.5f, 0.5f, 1.0f); // 0.5f, 0.5f, 0.5f, 1.0f
+	dirAmbLight->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
+	dirAmbLight->SetDirection(0.0f, 0.0f, 0.75f); //  -0.5f, -1.0f, 0.0f
+
+	// Go through resource directories and load all content
 	while (!directories.empty()) 
 	{
 		path = directories.top();
@@ -144,12 +171,6 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 						fileExtension == FileSystemHelper::ExtensionPNG || fileExtension == FileSystemHelper::ExtensionRAW || 
 						fileExtension == FileSystemHelper::ExtensionBMP)
 					{
-						// Set first index for textures
-						if (m_TextureFirstIndex == -1)
-						{
-							m_TextureFirstIndex = m_Resources.size();
-						}
-
 						Texture* newTexture = new Texture();
 						wstring filePath = path + wstring(L"/") + ffd.cFileName;
 
@@ -162,40 +183,26 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 						newTexture->SetHeight(imageInfo.Height);
 
 						newTexture->SetResourceName(FileSystemHelper::ConvertWStringToString(resourceName).c_str());
-						m_Resources.push_back(newTexture);
+						m_Resources[resourceName] = newTexture;
 					}
 
 					// TODO: Load all shaders
 					if (fileExtension == FileSystemHelper::ExtensionFX)
 					{
-						if (m_TextureFirstIndex != -1 && m_TextureLastIndex == -1)
-						{
-							m_TextureLastIndex =  m_Resources.size();
-						}
-
 						wstring filePath = path + wstring(L"/") + ffd.cFileName;
-						if (strcmp(FileSystemHelper::ConvertWStringToString(resourceName).c_str(), "AmbientLight") != 0)
-						{
-							LoadShader(filePath, resourceName);
-						}
+						LoadShader(filePath, resourceName, dirAmbLight, dirSpecLight);
 					}
 
 					// TODO: Load all models
 					if (fileExtension == FileSystemHelper::ExtensionOBJ)
 					{
-						if (m_TextureFirstIndex != -1 && m_TextureLastIndex == -1)
-						{
-							m_TextureLastIndex =  m_Resources.size();
-						}
+						
 					}
 
 					// TODO: Load all audio
 					if (fileExtension == FileSystemHelper::ExtensionWAV)
 					{
-						if (m_TextureFirstIndex != -1 && m_TextureLastIndex == -1)
-						{
-							m_TextureLastIndex =  m_Resources.size();
-						}
+						
 					}
 
 					files.push_back(path + L"\\" + ffd.cFileName);
@@ -217,45 +224,52 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 	return true;
 }
 
-// TODO: Rename all vertex and pixel shader functions the same way (for example VertextShader(...) and PixelShader(...)), so Resource Manager can load all shaders inspite of its function names.
-// TODO: Check if common shader loading is possible along with different layouts needed for each shader...
-HRESULT ResourceMgr::LoadShader(wstring filePath, wstring resourceName)
+HRESULT ResourceMgr::LoadShader(wstring filePath, wstring resourceName, LightClass* lightSource1, LightClass* lightSource2)
 {
 	HWND hwnd = FindWindow(L"Engine", NULL);
 
 	// Create shader
-	//BasicShader* shader = mShadersMap[resourceName];
-	V_RETURN(mShadersMap[resourceName]->Initialize(D3DClass::GetInstance()->GetDevice(), hwnd,
-		const_cast<WCHAR*>(filePath.c_str()),
-		"LightVertexShader", "LightPixelShader"), L"Error", L"Could not initialize the basic shader object.");
-
-	mShadersMap[resourceName]->SetResourceName(FileSystemHelper::ConvertWStringToString(resourceName).c_str());
-	m_Resources.push_back(mShadersMap[resourceName]);
+	BasicShader* shader = mShadersMap[resourceName];
+	
+	// Initialize method due to shader class instance. 
+	if (strcmp(FileSystemHelper::ConvertWStringToString(resourceName).c_str(), "AmbientLight") == 0 ||
+		strcmp(FileSystemHelper::ConvertWStringToString(resourceName).c_str(), "TerrainWithMaterials") == 0 ||
+		strcmp(FileSystemHelper::ConvertWStringToString(resourceName).c_str(), "TerrainWithQuadTree") == 0 ||
+		strcmp(FileSystemHelper::ConvertWStringToString(resourceName).c_str(), "NormalMapShader") == 0)
+	{
+		V_RETURN(shader->Initialize(lightSource1, D3DClass::GetInstance()->GetDevice(), hwnd,
+			const_cast<WCHAR*>(filePath.c_str()),
+			"VertexShaderFunction", "PixelShaderFunction"), L"Error", /*L"Could not initialize the basic shader object."*/ resourceName.c_str());
+	}
+	else
+	{
+		V_RETURN(shader->Initialize(lightSource2, D3DClass::GetInstance()->GetDevice(), hwnd,
+			const_cast<WCHAR*>(filePath.c_str()),
+			"VertexShaderFunction", "PixelShaderFunction"), L"Error", /*L"Could not initialize the basic shader object."*/ resourceName.c_str());
+	}
+	
+	shader->SetResourceName(FileSystemHelper::ConvertWStringToString(resourceName).c_str());
+	m_Resources[resourceName] = shader;
 }
 
 BasicResource* ResourceMgr::GetResourceByName(wstring name, ResourceType resourceType)
 {
-	switch (resourceType)
+	BasicResource* resource = m_Resources[name];
+	if (resource != NULL)
 	{
-		case ResourceTypeTexture:
-		{
-			return FindResourceByName(name, m_TextureFirstIndex, m_TextureLastIndex);
-			break;
-		}
-		default:
-			Log::GetInstance()->WriteTextMessageToOutput("No such type of resource !");
+		return resource;
 	}
-}
 
-BasicResource* ResourceMgr::FindResourceByName(wstring name, int firstIndex, int lastIndex)
-{
-	for (int i = firstIndex; i < lastIndex; ++i)
-	{
-		if (strcmp(m_Resources[i]->GetResourceName(), FileSystemHelper::ConvertWStringToString(name).c_str()) == 0)
-		{
-			return m_Resources[i];
-		}
-	}
 	ASSERT(false, L"Resource not found");
 	return NULL;
+}
+
+void ResourceMgr::Shutdown()
+{
+	map<wstring, BasicResource* >::iterator iter;
+
+	for (iter = m_Resources.begin(); iter != m_Resources.end(); iter++)
+	{
+		iter->second->Shutdown();
+	}
 }

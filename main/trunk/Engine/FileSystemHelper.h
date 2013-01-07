@@ -50,7 +50,7 @@ namespace FileSystemHelper
 
 	inline wstring GetResourceFolder()
 	{
-		return L"../Engine/data";
+		return L"data";
 	}
 
 	inline wstring GetFilenameWithoutExtension(wstring fileName)

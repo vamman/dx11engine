@@ -6,7 +6,7 @@ class TextureShader : public BasicShader
 		TextureShader(void);
 		~TextureShader(void);
 
-		virtual HRESULT Initialize(ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname);
+		virtual HRESULT Initialize(LightClass* lightSource, ID3D11Device* device, HWND hwnd, WCHAR* filename, LPCSTR VSname, LPCSTR PSname);
 		HRESULT InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* FXfilename,
 							  LPCSTR VSname, LPCSTR PSname, vector<char *>& layouts);
 		virtual void Shutdown();

@@ -29,7 +29,7 @@ cbuffer SkyBuffer
     float padding;
 };
 
-PixelInputType SkyPlaneVertexShader(VertexInputType input)
+PixelInputType VertexShaderFunction(VertexInputType input)
 {
     PixelInputType output;
     
@@ -46,7 +46,7 @@ PixelInputType SkyPlaneVertexShader(VertexInputType input)
     return output;
 }
 
-float4 SkyPlanePixelShader(PixelInputType input) : SV_TARGET
+float4 PixelShaderFunction(PixelInputType input) : SV_TARGET
 {
     float4 perturbValue;
     float4 cloudColor;

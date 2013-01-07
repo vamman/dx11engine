@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <typeinfo>
 #include <iostream>
 
 #include "d3dclass.h"
@@ -51,20 +52,18 @@ class ResourceMgr
 		static ResourceMgr* GetInstance();
 		bool LoadResources();
 		BasicResource* GetResourceByName(wstring name, ResourceType resourceType);
+		void Shutdown();
 
 	private:
 		ResourceMgr(void);
-		BasicResource* FindResourceByName(wstring name, int firstIndex, int lastIndex);
 		bool ListFiles(wstring path, wstring mask, vector<wstring>& files);
-		HRESULT LoadShader(wstring filePath, wstring resourceName);
+		HRESULT LoadShader(wstring filePath, wstring resourceName, LightClass* lightSource1, LightClass* lightSource2);
 
 	private:
 		static ResourceMgr*			m_pInstance;
 		ModelLoader*				m_ModelLoader;
 		ShaderLoader*				m_ShaderLoader;
-		vector<BasicResource* >		m_Resources;
-		int							m_TextureFirstIndex;
-		int							m_TextureLastIndex;
+		map<wstring, BasicResource* > m_Resources;
 		map<wstring, BasicShader* > mShadersMap;
 };
 
