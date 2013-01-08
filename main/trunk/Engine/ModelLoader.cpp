@@ -1,6 +1,5 @@
 #include "ModelLoader.h"
 
-
 ModelLoader::ModelLoader(void)
 {
 }
