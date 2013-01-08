@@ -19,68 +19,8 @@ ResourceMgr* ResourceMgr::GetInstance()
 }
 
 ResourceMgr::ResourceMgr(void)
-	: m_ModelLoader(0)
-	, m_ShaderLoader(0)
 {
-	LightShader* ambientLightShader = new LightShader;
-	mShadersMap[L"AmbientLight"] = ambientLightShader;
-
-	BasicShader* basicShader = new BasicShader;
-	mShadersMap[L"BasicShader"] = basicShader;
-
-	FontShader* cursorShader = new FontShader;
-	mShadersMap[L"CursorShader"] = cursorShader;
-
-	FireShader* fireShader = new FireShader;
-	mShadersMap[L"FireShader"] = fireShader;
-
-	FogShader* fogShader = new FogShader;
-	mShadersMap[L"FogShader"] = fogShader;
-
-	FontShader* fontShader = new FontShader;
-	mShadersMap[L"FontShader"] = fontShader;
-
-	MultitextureShader* lightMapShader = new MultitextureShader;
-	mShadersMap[L"LightmapShader"] = lightMapShader;
-
-	MultitextureShader* multitextureShader = new MultitextureShader;
-	mShadersMap[L"MultitextureShader"] = multitextureShader;
-
-	NormalMapShader* normalMapShader = new NormalMapShader;
-	mShadersMap[L"NormalMapShader"] = normalMapShader;
-
-	LightShader* pointLightShader = new LightShader;
-	mShadersMap[L"PointLight"] = pointLightShader;
-
-	ReflectionShader* reflectionShader = new ReflectionShader;
-	mShadersMap[L"ReflectionShader"] = reflectionShader;
-
-	SkyDomeShader* skyDomeShader = new SkyDomeShader;
-	mShadersMap[L"SkyDomeShader"] = skyDomeShader;
-
-	SkyPlaneShader* skyPlaneShader = new SkyPlaneShader;
-	mShadersMap[L"SkyPlaneShader"] = skyPlaneShader;
-
-	SpecMapShader* specMapShader = new SpecMapShader;
-	mShadersMap[L"SpecMapShader"] = specMapShader;
-
-	SpecMapShader* specMapShaderNonInstanced = new SpecMapShader;
-	mShadersMap[L"SpecMapShaderNonInstanced"] = specMapShaderNonInstanced;
-
-	LightShader* specularLightShader = new LightShader;
-	mShadersMap[L"SpecularLight"] = specularLightShader;
-
-	TerrainShader* terrainWithMaterialShader = new TerrainShader;
-	mShadersMap[L"TerrainWithMaterials"] = terrainWithMaterialShader;
-
-	TerrainShader* terrainWithQuadTreeShader = new TerrainShader;
-	mShadersMap[L"TerrainWithQuadTree"] = terrainWithQuadTreeShader;
-
-	TextureShader* textureShaderInstanced = new TextureShader;
-	mShadersMap[L"TextureShaderInstanced"] = textureShaderInstanced;
-
-	TextureShader* textureShaderNonInstanced = new TextureShader;
-	mShadersMap[L"TextureShaderNonInstanced"] = textureShaderNonInstanced;	
+	ShaderLoader* shaderLoader = new ShaderLoader();
 }
 
 
@@ -165,23 +105,15 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 
 					wstring resourceName = FileSystemHelper::GetFilenameWithoutExtension(FileSystemHelper::ConvertStringToWString(fileNameString));
 					FileSystemHelper::FileExtensions fileExtension = FileSystemHelper::GetFileExtension(FileSystemHelper::ConvertStringToWString(fileNameString));
+					
+					wstring filePath = path + wstring(L"/") + ffd.cFileName;
 
 					// Load all texures
 					if (fileExtension == FileSystemHelper::ExtensionDDS || fileExtension == FileSystemHelper::ExtensionJPG || 
 						fileExtension == FileSystemHelper::ExtensionPNG || fileExtension == FileSystemHelper::ExtensionRAW || 
 						fileExtension == FileSystemHelper::ExtensionBMP)
 					{
-						Texture* newTexture = new Texture();
-						wstring filePath = path + wstring(L"/") + ffd.cFileName;
-
-						D3DX11_IMAGE_INFO imageInfo;
-						CreateShaderResourceViewFromFile(D3DClass::GetInstance()->GetDevice(),
-														 (WCHAR* )filePath.c_str(), newTexture->GetShaderView(),
-														 &imageInfo);
-
-						newTexture->SetWidth(imageInfo.Width);
-						newTexture->SetHeight(imageInfo.Height);
-
+						Texture* newTexture = TextureLoader::LoadTexture((WCHAR* )filePath.c_str());
 						newTexture->SetResourceName(FileSystemHelper::ConvertWStringToString(resourceName).c_str());
 						m_Resources[resourceName] = newTexture;
 					}
@@ -189,8 +121,9 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 					// TODO: Load all shaders
 					if (fileExtension == FileSystemHelper::ExtensionFX)
 					{
-						wstring filePath = path + wstring(L"/") + ffd.cFileName;
-						LoadShader(filePath, resourceName, dirAmbLight, dirSpecLight);
+						BasicShader* shader = ShaderLoader::LoadShader(filePath, resourceName);
+						shader->SetResourceName(FileSystemHelper::ConvertWStringToString(resourceName).c_str());
+						m_Resources[resourceName] = shader;
 					}
 
 					// TODO: Load all models
@@ -222,34 +155,6 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 	}
 
 	return true;
-}
-
-HRESULT ResourceMgr::LoadShader(wstring filePath, wstring resourceName, LightClass* lightSource1, LightClass* lightSource2)
-{
-	HWND hwnd = FindWindow(L"Engine", NULL);
-
-	// Create shader
-	BasicShader* shader = mShadersMap[resourceName];
-	
-	// Initialize method due to shader class instance. 
-	if (strcmp(FileSystemHelper::ConvertWStringToString(resourceName).c_str(), "AmbientLight") == 0 ||
-		strcmp(FileSystemHelper::ConvertWStringToString(resourceName).c_str(), "TerrainWithMaterials") == 0 ||
-		strcmp(FileSystemHelper::ConvertWStringToString(resourceName).c_str(), "TerrainWithQuadTree") == 0 ||
-		strcmp(FileSystemHelper::ConvertWStringToString(resourceName).c_str(), "NormalMapShader") == 0)
-	{
-		V_RETURN(shader->Initialize(lightSource1, D3DClass::GetInstance()->GetDevice(), hwnd,
-			const_cast<WCHAR*>(filePath.c_str()),
-			"VertexShaderFunction", "PixelShaderFunction"), L"Error", /*L"Could not initialize the basic shader object."*/ resourceName.c_str());
-	}
-	else
-	{
-		V_RETURN(shader->Initialize(lightSource2, D3DClass::GetInstance()->GetDevice(), hwnd,
-			const_cast<WCHAR*>(filePath.c_str()),
-			"VertexShaderFunction", "PixelShaderFunction"), L"Error", /*L"Could not initialize the basic shader object."*/ resourceName.c_str());
-	}
-	
-	shader->SetResourceName(FileSystemHelper::ConvertWStringToString(resourceName).c_str());
-	m_Resources[resourceName] = shader;
 }
 
 BasicResource* ResourceMgr::GetResourceByName(wstring name, ResourceType resourceType)

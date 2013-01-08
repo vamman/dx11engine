@@ -57,12 +57,9 @@ class ResourceMgr
 	private:
 		ResourceMgr(void);
 		bool ListFiles(wstring path, wstring mask, vector<wstring>& files);
-		HRESULT LoadShader(wstring filePath, wstring resourceName, LightClass* lightSource1, LightClass* lightSource2);
 
 	private:
 		static ResourceMgr*			m_pInstance;
-		ModelLoader*				m_ModelLoader;
-		ShaderLoader*				m_ShaderLoader;
 		map<wstring, BasicResource* > m_Resources;
 		map<wstring, BasicShader* > mShadersMap;
 };
