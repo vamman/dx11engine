@@ -14,23 +14,6 @@
 #include "ModelLoader.h"
 #include "BasicResource.h"
 #include "Log.h"
-
-// Shaders
-#include "Shaders/BasicShader.h"
-#include "Shaders/TextureShader.h"
-#include "Shaders/LightShader.h"
-#include "Shaders/MultitextureShader.h"
-#include "Shaders/NormalMapShader.h"
-#include "Shaders/SpecMapShader.h"
-#include "Shaders/FogShader.h"
-#include "Shaders/ReflectionShader.h"
-#include "Shaders/TerrainShader.h"
-#include "shaders/SkyDomeShader.h"
-#include "shaders/SkyPlaneShader.h"
-#include "shaders/FireShader.h"
-#include "shaders/FontShader.h"
-#include "shaders/FireShader.h"
-
 #include <map>
 
 using namespace std;
@@ -61,7 +44,6 @@ class ResourceMgr
 	private:
 		static ResourceMgr*			m_pInstance;
 		map<wstring, BasicResource* > m_Resources;
-		map<wstring, BasicShader* > mShadersMap;
 };
 
 #endif
