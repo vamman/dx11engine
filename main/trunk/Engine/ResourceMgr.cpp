@@ -45,34 +45,6 @@ bool ResourceMgr::ListFiles(wstring path, wstring mask, vector<wstring>& files)
 	directories.push(path);
 	files.clear();
 
-	// Create directional specular light object.
-	LightClass* dirSpecLight = new LightClass;
-	if(!dirSpecLight)
-	{
-		return false;
-	}
-
-	dirSpecLight->SetLightType(LightClass::DIRECTIONAL_SPECULAR_LIGHT);
-	// Initialize the light object.
-	dirSpecLight->SetAmbientColor(0.4f, 0.4f, 0.4f, 1.0f);
-	dirSpecLight->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
-	dirSpecLight->SetDirection(0.0f, 0.0f, 0.75f);
-	dirSpecLight->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
-	dirSpecLight->SetSpecularPower(16.0f);
-
-	// Create directional ambient light object.
-	LightClass* dirAmbLight = new LightClass;
-	if(!dirAmbLight)
-	{
-		return false;
-	}
-
-	dirAmbLight->SetLightType(LightClass::DIRECTIONAL_AMBIENT_LIGHT);
-	// Initialize the light object.
-	dirAmbLight->SetAmbientColor(0.5f, 0.5f, 0.5f, 1.0f); // 0.5f, 0.5f, 0.5f, 1.0f
-	dirAmbLight->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
-	dirAmbLight->SetDirection(0.0f, 0.0f, 0.75f); //  -0.5f, -1.0f, 0.0f
-
 	// Go through resource directories and load all content
 	while (!directories.empty()) 
 	{
