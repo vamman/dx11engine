@@ -41,9 +41,6 @@ bool FontClass::Initialize(ID3D11Device* device, const wchar_t* fontFilename, co
 
 void FontClass::Shutdown()
 {
-	// Release the font texture.
-	ReleaseTexture();
-
 	// Release the font data.
 	ReleaseFontData();
 
@@ -102,19 +99,6 @@ void FontClass::ReleaseFontData()
 	{
 		delete [] m_Font;
 		m_Font = 0;
-	}
-
-	return;
-}
-
-void FontClass::ReleaseTexture()
-{
-	// Release the texture object.
-	if(m_Texture)
-	{
-		m_Texture->Shutdown();
-		delete m_Texture;
-		m_Texture = 0;
 	}
 
 	return;

@@ -136,8 +136,8 @@ BasicResource* ResourceMgr::GetResourceByName(wstring name, ResourceType resourc
 	{
 		return resource;
 	}
-
-	ASSERT(false, L"Resource not found");
+	wstring messageStr = L"Resource not found : " + name;
+	ASSERT(false, messageStr.c_str());
 	return NULL;
 }
 

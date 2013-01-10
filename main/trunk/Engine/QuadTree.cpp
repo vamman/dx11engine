@@ -372,20 +372,6 @@ void QuadTree::ReleaseNode(NodeType* node)
 		}
 	}
 
-	// Release the vertex buffer for this node.
-	if(node->vertexBuffer)
-	{
-		node->vertexBuffer->Release();
-		node->vertexBuffer = 0;
-	}
-
-	// Release the index buffer for this node.
-	if(node->indexBuffer)
-	{
-		node->indexBuffer->Release();
-		node->indexBuffer = 0;
-	}
-
 	// Release the vertex array for this node.
 	if(node->vertexArray)
 	{

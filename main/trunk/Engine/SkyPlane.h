@@ -47,9 +47,7 @@ class SkyPlane
 		void ShutdownSkyPlane();
 
 		bool InitializeBuffers(ID3D11Device*, int);
-		void ShutdownBuffers();
 		void RenderBuffers(ID3D11DeviceContext*);
-		void ReleaseTextures();
 
 	private:
 		SkyPlaneType* m_skyPlane;

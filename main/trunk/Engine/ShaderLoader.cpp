@@ -66,6 +66,10 @@ ShaderLoader::ShaderLoader()
 	TextureShader* textureShaderNonInstanced = new TextureShader;
 	mShadersMap[L"TextureShaderNonInstanced"] = textureShaderNonInstanced;
 
+	ParticleShader* particleShader = new ParticleShader;
+	mShadersMap[L"ParticleShader"] = particleShader;
+
+
 	// Create directional specular light object.
 	m_DirSpecLight = new LightClass;
 	m_DirSpecLight->SetLightType(LightClass::DIRECTIONAL_SPECULAR_LIGHT);
@@ -83,6 +87,7 @@ ShaderLoader::~ShaderLoader()
 BasicShader* ShaderLoader::LoadShader(wstring filePath, wstring resourceName)
 {
 	HWND hwnd = FindWindow(L"Engine", NULL);
+	wstring messageStr = L"Could not initialize shader: " + resourceName;
 
 	// Create shader
 	BasicShader* shader = mShadersMap[resourceName];
@@ -95,13 +100,13 @@ BasicShader* ShaderLoader::LoadShader(wstring filePath, wstring resourceName)
 	{
 		V_RETURN(shader->Initialize(m_DirAmbLight, D3DClass::GetInstance()->GetDevice(), hwnd,
 			const_cast<WCHAR*>(filePath.c_str()),
-			"VertexShaderFunction", "PixelShaderFunction"), L"Error", /*L"Could not initialize the basic shader object."*/ resourceName.c_str());
+			"VertexShaderFunction", "PixelShaderFunction"), L"Error", messageStr.c_str());
 	}
 	else
 	{
 		V_RETURN(shader->Initialize(m_DirSpecLight, D3DClass::GetInstance()->GetDevice(), hwnd,
 			const_cast<WCHAR*>(filePath.c_str()),
-			"VertexShaderFunction", "PixelShaderFunction"), L"Error", /*L"Could not initialize the basic shader object."*/ resourceName.c_str());
+			"VertexShaderFunction", "PixelShaderFunction"), L"Error", messageStr.c_str());
 	}
 
 	return shader;

@@ -28,6 +28,7 @@
 #include "shaders/SkyDomeShader.h"
 #include "shaders/SkyPlaneShader.h"
 #include "shaders/FireShader.h"
+#include "shaders/ParticleShader.h"
 
 #include "Terrain.h"
 #include "QuadTree.h"
@@ -45,6 +46,8 @@
 #include "cpuclass.h"
 
 #include "SkyDome.h"
+
+#include "ParticleSystem.h"
 
 /////////////
 // GLOBALS //
@@ -86,6 +89,7 @@ class GraphicsClass
 		bool RenderObjects(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix, float fogStart, float fogEnd);
 		HRESULT Render2D();
 		HRESULT RenderFire();
+		HRESULT RenderParticles();
 		bool SetFillMode(D3D11_FILL_MODE mode);
 		HRESULT RenderObject(ModelObject* modelObj, ID3D11DeviceContext* deviceContext, D3DXMATRIX viewMatrix,
 						  D3DXMATRIX projectionMatrix, LightClass* lightSource, LightClass::LightTypes lightType, bool isInstanced);
@@ -159,6 +163,8 @@ class GraphicsClass
 		SkyPlane *m_SkyPlane;
 
 		Terrain::TerrainRenderType mTerrainRenderType;
+
+		ParticleSystem* m_ParticleSystem;
 };
 
 #endif

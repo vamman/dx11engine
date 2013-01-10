@@ -34,6 +34,7 @@ class BufferManager
 								   UINT bindFlag = D3D11_BIND_VERTEX_BUFFER, UINT cpuAccessFlag = 0);
 		HRESULT CreateIndexBuffer(ID3D11Device* device, int bufferSize, void * indices, ID3D11Buffer** indexBuffer);
 		HRESULT CreateInstanceBuffer(ID3D11Device* device, int bufferSize, void * instances, ID3D11Buffer** instanceBuffer);
+		void Shutdown();
 
 	private:
 		BufferManager();  // Private so that it can  not be called

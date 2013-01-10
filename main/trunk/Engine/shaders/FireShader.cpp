@@ -225,15 +225,44 @@ HRESULT FireShader::RenderInstanced(ID3D11DeviceContext* deviceContext,
 // TODO: Figure out situation with sampler states here and in TextureShader. 
 // Because of their conflict the rendering of fire works incorrect.
 HRESULT FireShader::RenderOrdinary( ID3D11DeviceContext* deviceContext,
-									int indexCount,
-									D3DXMATRIX worldMatrix, 
-									D3DXMATRIX viewMatrix, 
-									D3DXMATRIX projectionMatrix, float frameTime,
+									ModelObject* modelObj, CameraClass* activeCamera, float frameTime,
 									D3DXVECTOR3 scrollSpeeds, D3DXVECTOR3 scales, 
 									D3DXVECTOR2 distortion1, D3DXVECTOR2 distortion2,
 									D3DXVECTOR2 distortion3, float distortionScale, float distortionBias )
 {
 	HRESULT result = S_OK;
+
+	//////////////////////////////////////////
+	// Encapsulate positioning and billboard rotation of the renderable object within shader itself.
+	// TODO: Probably need to do this step for all shaders as we know camera and model positions
+	D3DXMATRIX worldMatrix, viewMatrix, projectionMatrix, translateMatrix;
+	D3DXVECTOR3 cameraPosition, modelPosition;
+	double angle;
+	float rotation;
+
+	cameraPosition = activeCamera->GetPosition();
+
+	// Get the world, view, and projection matrices from the camera and d3d objects.
+	activeCamera->GetViewMatrix(viewMatrix);
+	D3DClass::GetInstance()->GetProjectionMatrix(projectionMatrix);
+
+	modelPosition = modelObj->GetPosition();
+	// Calculate the rotation that needs to be applied to the billboard model to face the current camera position using the arc tangent function.
+	angle = atan2(modelPosition.x - cameraPosition.x, modelPosition.z - cameraPosition.z) * (180.0 / D3DX_PI);
+
+	// Convert rotation into radians.
+	rotation = (float)angle * 0.0174532925f;
+
+	// Setup the rotation the billboard at the origin using the world matrix.
+	D3DXMatrixRotationY(&worldMatrix, rotation);
+
+	// Setup the translation matrix from the billboard model.
+	D3DXMatrixTranslation(&translateMatrix, modelPosition.x, modelPosition.y, modelPosition.z);
+
+	// Finally combine the rotation and translation matrices to create the final world matrix for the billboard model.
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &translateMatrix); 
+
+	///////////////////////////////////////////
 
 	// Set the shader parameters that it will use for rendering.
 	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, frameTime, scrollSpeeds, scales,
@@ -252,7 +281,7 @@ HRESULT FireShader::RenderOrdinary( ID3D11DeviceContext* deviceContext,
 	deviceContext->PSSetSamplers(1, 1, &m_sampleState2);
 
 	// Render the triangle.
-	deviceContext->DrawIndexed(indexCount, 0, 0);
+	deviceContext->DrawIndexed(modelObj->GetModel()->GetIndexCount(), 0, 0);
 
 	return result;
 }
