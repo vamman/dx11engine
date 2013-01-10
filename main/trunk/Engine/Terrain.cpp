@@ -110,9 +110,6 @@ bool Terrain::InitializeWithMaterials(ID3D11Device* device, const wchar_t* heigh
 
 void Terrain::Shutdown()
 {
-	// Release the texture.
-	ReleaseTexture();
-
 	// Release the height map data.
 	ShutdownHeightMap();
 
@@ -999,27 +996,6 @@ void Terrain::ReleaseMaterials()
 
 		delete [] m_Textures;
 		m_Textures = 0;
-	}
-
-	return;
-}
-
-void Terrain::ReleaseTexture()
-{
-	// Release the texture object.
-	if(m_Texture)
-	{
-		m_Texture->Shutdown();
-		delete m_Texture;
-		m_Texture = 0;
-	}
-
-	// Release the detail map texture object.
-	if(m_DetailTexture)
-	{
-		m_DetailTexture->Shutdown();
-		delete m_DetailTexture;
-		m_DetailTexture = 0;
 	}
 
 	return;

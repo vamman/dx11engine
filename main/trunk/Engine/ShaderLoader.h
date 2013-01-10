@@ -22,6 +22,7 @@
 #include "shaders/FireShader.h"
 #include "shaders/FontShader.h"
 #include "shaders/FireShader.h"
+#include "shaders/ParticleShader.h"
 
 #include "MacroHelper.h"
 

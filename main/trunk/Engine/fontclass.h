@@ -51,7 +51,6 @@ private:
 	bool LoadFontData(const wchar_t*);
 	void ReleaseFontData();
 	bool LoadTexture(ID3D11Device*, WCHAR*);
-	void ReleaseTexture();
 
 private:
 	FontType* m_Font;

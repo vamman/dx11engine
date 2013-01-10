@@ -1,5 +1,9 @@
 #pragma once
 #include "TextureShader.h"
+#include "..\ModelObject.h"
+#include "..\d3dclass.h"
+#include "..\cameraclass.h"
+
 class FireShader : public TextureShader
 {
 	private:
@@ -43,13 +47,10 @@ class FireShader : public TextureShader
 										D3DXMATRIX projectionMatrix);
 
 		virtual HRESULT RenderOrdinary( ID3D11DeviceContext* deviceContext,
-										int indexCount,
-										D3DXMATRIX worldMatrix, 
-										D3DXMATRIX viewMatrix, 
-										D3DXMATRIX projectionMatrix, float frameTime,
+										ModelObject* modelObj, CameraClass* activeCamera, float frameTime,
 										D3DXVECTOR3 scrollSpeeds, D3DXVECTOR3 scales, 
 										D3DXVECTOR2 distortion1, D3DXVECTOR2 distortion2,
-										D3DXVECTOR2 distortion3, float distortionScale, float distortionBias );
+										D3DXVECTOR2 distortion3, float distortionScale, float distortionBias);
 
 	private:
 		ID3D11Buffer* m_noiseBuffer;

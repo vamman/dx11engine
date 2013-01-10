@@ -59,12 +59,6 @@ bool BitmapClass::Initialize(ID3D11Device* device, int screenWidth, int screenHe
 
 void BitmapClass::Shutdown()
 {
-	// Release the model texture.
-	ReleaseTexture();
-
-	// Shutdown the vertex and index buffers.
-	ShutdownBuffers();
-
 	return;
 }
 
@@ -155,25 +149,6 @@ bool BitmapClass::InitializeBuffers(ID3D11Device* device)
 	indices = 0;
 
 	return true;
-}
-
-void BitmapClass::ShutdownBuffers()
-{
-	// Release the index buffer.
-	if(m_indexBuffer)
-	{
-		m_indexBuffer->Release();
-		m_indexBuffer = 0;
-	}
-
-	// Release the vertex buffer.
-	if(m_vertexBuffer)
-	{
-		m_vertexBuffer->Release();
-		m_vertexBuffer = 0;
-	}
-
-	return;
 }
 
 HRESULT BitmapClass::UpdateBuffers(ID3D11DeviceContext* deviceContext, int positionX, int positionY)
@@ -276,19 +251,6 @@ void BitmapClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 
 	// Set the type of primitive that should be rendered from this vertex buffer, in this case triangles.
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	return;
-}
-
-void BitmapClass::ReleaseTexture()
-{
-	// Release the texture object.
-	if(m_Texture)
-	{
-		m_Texture->Shutdown();
-		delete m_Texture;
-		m_Texture = 0;
-	}
 
 	return;
 }

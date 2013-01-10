@@ -119,8 +119,6 @@ bool ModelClass::LoadTXTModel(wstring modelFilename)
 
 void ModelClass::Shutdown()
 {
-	// Release the vertex and index buffers.
-	ShutdownBuffers();
 	// Release the model data.
 	ReleaseModel();
 	return;
@@ -1424,25 +1422,6 @@ void ModelClass::ReleaseModel()
 		delete [] mModel;
 		mModel = 0;
 	}
-	return;
-}
-
-void ModelClass::ShutdownBuffers()
-{
-	// Release the instance buffer.
-	if(mInstanceBuffer)
-	{
-		mInstanceBuffer->Release();
-		mInstanceBuffer = 0;
-	}
-	
-	// Release the vertex buffer.
-	if(mVertexBuffer)
-	{
-		mVertexBuffer->Release();
-		mVertexBuffer = 0;
-	}
-
 	return;
 }
 

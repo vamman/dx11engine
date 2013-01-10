@@ -149,8 +149,6 @@ class ModelClass : BasicResource
 		bool InitializeBuffersOrdinary(ID3D11Device* device);
 		bool CreateVertexBuffer(ID3D11Device* device, size_t size, void* vertices, ID3D11Buffer** buffer);
 
-		void ShutdownBuffers();
-
 		bool LoadModelFromTXT(wstring modelFilename);
 		bool LoadTXTModel(wstring modelFilename);
 		bool LoadModelFromOBJ(ID3D11Device* device, wstring modelFilename);

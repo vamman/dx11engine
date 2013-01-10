@@ -47,9 +47,14 @@ HRESULT BufferManager::CreateVertexBuffer(ID3D11Device* device, int bufferSize, 
 		return result;
 	}
 
-	string bufferName = string("test");
+	//char* numStr;
+	char numStr[10];
+	sprintf(numStr,"%d",mVertexBufferList.size());
+	string numString = string(numStr);
+	string bufferName = string("vertexBuffer_") + numString;
 	BufferInfo bufInfo = BufferInfo(bufferName, *vertexBuffer);
 	mVertexBufferList.push_back(bufInfo);
+
 	return result;
 }
 
@@ -78,15 +83,17 @@ HRESULT BufferManager::CreateIndexBuffer(ID3D11Device* device, int bufferSize, v
 	{
 		return false;
 	}
+
+	//char* numStr;
+	char numStr[10];
+	sprintf(numStr,"%d", mIndexBufferList.size());
+	string numString = string(numStr);
+	string bufferName = string("indexBuffer_") + numString;
+	BufferInfo bufInfo = BufferInfo(bufferName, *indexBuffer);
+	mIndexBufferList.push_back(bufInfo);
+
 	return result;
 }
-
-/*
-void BufferManager::SetBufferUsage()
-{
-
-}
-*/
 
 HRESULT BufferManager::CreateInstanceBuffer(ID3D11Device* device, int bufferSize, void * instances, ID3D11Buffer** instanceBuffer)
 {
@@ -113,5 +120,35 @@ HRESULT BufferManager::CreateInstanceBuffer(ID3D11Device* device, int bufferSize
 	{
 		return false;
 	}
+
+	//char* numStr;
+	char numStr[10];
+	sprintf(numStr,"%d",mInstanceBufferList.size());
+	string numString = string(numStr);
+	string bufferName = string("instanceBuffer_") + numString;
+	BufferInfo bufInfo = BufferInfo(bufferName, *instanceBuffer);
+	mInstanceBufferList.push_back(bufInfo);
+
 	return result;
 }
+
+void BufferManager::Shutdown()
+{
+	vector<BufferInfo>::iterator iter;
+
+	for (iter = mVertexBufferList.begin(); iter != mVertexBufferList.end(); iter++)
+	{
+		iter->buffer->Release();
+	}
+
+	for (iter = mIndexBufferList.begin(); iter != mIndexBufferList.end(); iter++)
+	{
+		iter->buffer->Release();
+	}
+
+	for (iter = mInstanceBufferList.begin(); iter != mInstanceBufferList.end(); iter++)
+	{
+		iter->buffer->Release();
+	}
+}
+

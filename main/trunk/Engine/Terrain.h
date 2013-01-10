@@ -103,7 +103,6 @@ class Terrain
 		void CalculateTextureCoordinates();
 		bool LoadTexture(ID3D11Device*, WCHAR*);
 		HRESULT LoadColorMap(const wchar_t*);
-		void ReleaseTexture();
 
 		bool InitializeBuffers(ID3D11Device*);
 		void ShutdownBuffers();

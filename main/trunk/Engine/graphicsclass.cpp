@@ -26,6 +26,7 @@ GraphicsClass::GraphicsClass()
 	, mSkyDome(0)
 	, m_SkyPlane(0)
 	, mNumObjectsRendered(0)
+	, m_ParticleSystem(0)
 {
 	for (int i = 0; i < 4; ++i)
 	{
@@ -247,15 +248,6 @@ HRESULT GraphicsClass::Init(int screenWidth, int screenHeight, HWND hwnd)
 
 	InputClass::GetInstance()->CenterMouseLocation();
 
-	Timer::GetInstance()->SetTimeB();
-	funcTime = Timer::GetInstance()->GetDeltaTime();
-
-	if (funcTime != -1)
-	{
-		Log::GetInstance()->WriteTimedMessageToFile(funcTime, "GraphicsClass::Initialize time: ");
-		Log::GetInstance()->WriteTimedMessageToOutput(funcTime, "GraphicsClass::Initialize time: ");
-	}
-
 	// Create the sky dome object.
 	mSkyDome = new SkyDome;
 	if(!mSkyDome) { return false; }
@@ -266,6 +258,23 @@ HRESULT GraphicsClass::Init(int screenWidth, int screenHeight, HWND hwnd)
 	m_SkyPlane = new SkyPlane;
 	if(!m_SkyPlane)	{ return false;	}
 	V_RETURN(m_SkyPlane->Initialize(mD3D->GetDevice(), L"cloud001", L"perturb001"), L"Error", L"Could not initialize the sky plane object");
+	
+	// Create the particle system object.
+	m_ParticleSystem = new ParticleSystem;
+
+	// Initialize the particle system object.
+	V_RETURN(m_ParticleSystem->Initialize(mD3D->GetDevice(), L"star"), L"Error", L"Could not initialize the sky dome cube map object");
+	m_ParticleSystem->SetPosition(D3DXVECTOR3(128.0f, 8.0f, 129.0f));
+
+	Timer::GetInstance()->SetTimeB();
+	funcTime = Timer::GetInstance()->GetDeltaTime();
+
+	if (funcTime != -1)
+	{
+		Log::GetInstance()->WriteTimedMessageToFile(funcTime, "GraphicsClass::Initialize time: ");
+		Log::GetInstance()->WriteTimedMessageToOutput(funcTime, "GraphicsClass::Initialize time: ");
+	}
+	
 	return result;
 }
 
@@ -463,6 +472,8 @@ void GraphicsClass::Shutdown()
 {
 	ResourceMgr::GetInstance()->Shutdown();
 
+	BufferManager::GetInstance()->Shutdown();
+
 	// Release the text object.
 	SHUTDOWN_OBJ(m_Text);
 	// Release the render to texture object.
@@ -473,6 +484,8 @@ void GraphicsClass::Shutdown()
 	SHUTDOWN_OBJ(mCursor);
 	// Release the mini map object.
 	SHUTDOWN_OBJ(m_MiniMap);
+	// Shutdown particle system
+	SHUTDOWN_OBJ(m_ParticleSystem);
 
 	// Release the light object.
 	if(mDirSpecLight)
@@ -544,6 +557,9 @@ bool GraphicsClass::Frame()
 
 	// Do the sky plane frame processing.
 	m_SkyPlane->Frame();
+
+	// Run the frame processing for the particle system.
+	m_ParticleSystem->Frame(mTimer->GetTime(), mD3D->GetDeviceContext());
 
 	// Render the graphics scene.
 	result = Render();
@@ -814,6 +830,8 @@ bool GraphicsClass::RenderScene()
 	
 	RenderFire();
 
+	RenderParticles();
+	
 	if (mTerrainRenderType == Terrain::TerrainRenderType::RENDER_MATERIAL)
 	{
 		RenderTerrainWithMaterials(worldMatrix, viewMatrix, projectionMatrix);
@@ -940,16 +958,11 @@ HRESULT GraphicsClass::Render2D()
 
 HRESULT GraphicsClass::RenderFire()
 {
-	D3DXMATRIX worldMatrix, viewMatrix, projectionMatrix, translateMatrix;
 	HRESULT result;
 	D3DXVECTOR3 scrollSpeeds, scales;
 	D3DXVECTOR2 distortion1, distortion2, distortion3;
 	float distortionScale, distortionBias;
 	static float frameTime = 0.0f;
-
-	D3DXVECTOR3 cameraPosition, modelPosition;
-	double angle;
-	float rotation;
 
 	// Increment the frame time counter.
 	frameTime += 0.01f;
@@ -973,33 +986,11 @@ HRESULT GraphicsClass::RenderFire()
 	distortionScale = 0.8f;
 	distortionBias = 0.5f;
 
-	cameraPosition = mCamera->GetPosition();
-
-	// Get the world, view, and projection matrices from the camera and d3d objects.
-	mCamera->GetViewMatrix(viewMatrix);
-	mD3D->GetProjectionMatrix(projectionMatrix);
-
 	// Turn on alpha blending for the fire transparency.
 	mD3D->TurnOnAlphaBlending();
 
 	ModelObject* modelObj = ModelFactory::GetInstance()->GetObjectByName("fireObj");
-	modelPosition = modelObj->GetPosition();
-	// Calculate the rotation that needs to be applied to the billboard model to face the current camera position using the arc tangent function.
-	angle = atan2(modelPosition.x - cameraPosition.x, modelPosition.z - cameraPosition.z) * (180.0 / D3DX_PI);
-
-	// Convert rotation into radians.
-	rotation = (float)angle * 0.0174532925f;
-
 	modelObj->GetModel()->RenderOrdinary(mD3D->GetDeviceContext(), ModelClass::TextureVertexType);
-
-	// Setup the rotation the billboard at the origin using the world matrix.
-	D3DXMatrixRotationY(&worldMatrix, rotation);
-
-	// Setup the translation matrix from the billboard model.
-	D3DXMatrixTranslation(&translateMatrix, modelPosition.x, modelPosition.y, modelPosition.z);
-
-	// Finally combine the rotation and translation matrices to create the final world matrix for the billboard model.
-	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &translateMatrix); 
 
 	vector<ID3D11ShaderResourceView*> textureArray;
 	Material* material = MaterialFactory::GetInstance()->GetMaterialByName("fireMaterial");
@@ -1007,12 +998,72 @@ HRESULT GraphicsClass::RenderFire()
 	FireShader* shader = (FireShader*) ResourceMgr::GetInstance()->GetResourceByName(L"FireShader", ResourceMgr::ResourceType::ResourceTypeShader);
 	shader->SetTextureArray(mD3D->GetDeviceContext(), material->GetTextureVector());
 
-	result = shader->RenderOrdinary(mD3D->GetDeviceContext(), modelObj->GetModel()->GetIndexCount(), worldMatrix,
-										  viewMatrix, projectionMatrix, frameTime, scrollSpeeds, scales, distortion1, 
+	result = shader->RenderOrdinary(mD3D->GetDeviceContext(), modelObj, mCamera, frameTime, scrollSpeeds, scales, distortion1, 
 										  distortion2, distortion3, distortionScale, distortionBias);
 	// Turn off alpha blending.
 	mD3D->TurnOffAlphaBlending();
 
+	return result;
+}
+
+HRESULT GraphicsClass::RenderParticles()
+{
+	D3DXMATRIX worldMatrix, viewMatrix, projectionMatrix, translateMatrix;
+	HRESULT result;
+	D3DXVECTOR3 cameraPosition, particlesPosition;
+	double angle;
+	float rotation;
+
+	// Turn on alpha blending.
+	mD3D->TurnOnAlphaBlending();
+
+	// Put the particle system vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_ParticleSystem->Render(mD3D->GetDeviceContext());
+
+	vector<ID3D11ShaderResourceView*> textureArray;
+	textureArray.push_back(m_ParticleSystem->GetTexture());
+
+	//////////////////////////////////////////
+	// Billboard the particles
+	// ///////////////////////////////////////
+	/*
+	cameraPosition = mCamera->GetPosition();
+
+	// Get the world, view, and projection matrices from the camera and d3d objects.
+	mCamera->GetViewMatrix(viewMatrix);
+	D3DClass::GetInstance()->GetProjectionMatrix(projectionMatrix);
+
+	particlesPosition = m_ParticleSystem->GetPosition();
+	// Calculate the rotation that needs to be applied to the billboard model to face the current camera position using the arc tangent function.
+	angle = atan2(particlesPosition.x - cameraPosition.x, particlesPosition.z - cameraPosition.z) * (180.0 / D3DX_PI);
+
+	// Convert rotation into radians.
+	rotation = (float)angle * 0.0174532925f;
+
+	// Setup the rotation the billboard at the origin using the world matrix.
+	D3DXMatrixRotationY(&worldMatrix, rotation);
+
+	// Setup the translation matrix from the billboard model.
+	D3DXMatrixTranslation(&translateMatrix, particlesPosition.x, particlesPosition.y, particlesPosition.z);
+
+	// Finally combine the rotation and translation matrices to create the final world matrix for the billboard model.
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &translateMatrix); 
+	*/
+	//////////////////////////////////////////
+	
+	// Get the world, view, and projection matrices from the camera and d3d objects.
+	mD3D->GetWorldMatrix(worldMatrix);
+	mCamera->GetViewMatrix(viewMatrix);
+	mD3D->GetProjectionMatrix(projectionMatrix);
+
+	// Render the model using the texture shader.
+	ParticleShader* particleShader = (ParticleShader*) ResourceMgr::GetInstance()->GetResourceByName(L"ParticleShader", ResourceMgr::ResourceType::ResourceTypeShader);
+	particleShader->SetTextureArray(mD3D->GetDeviceContext(), textureArray);
+	result = particleShader->RenderOrdinary(mD3D->GetDeviceContext(), m_ParticleSystem->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix);
+
+	// Turn off alpha blending.
+	mD3D->TurnOffAlphaBlending();
+	
 	return result;
 }
 

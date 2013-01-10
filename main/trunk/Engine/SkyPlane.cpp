@@ -57,12 +57,6 @@ bool SkyPlane::Initialize(ID3D11Device* device, wchar_t* cloudTextureFilename, w
 
 void SkyPlane::Shutdown()
 {
-	// Release the sky plane textures.
-	ReleaseTextures();
-
-	// Release the vertex and index buffer that were used for rendering the sky plane.
-	ShutdownBuffers();
-
 	// Release the sky plane array.
 	ShutdownSkyPlane();
 }
@@ -283,25 +277,6 @@ bool SkyPlane::InitializeBuffers(ID3D11Device* device, int skyPlaneResolution)
 	return true;
 }
 
-void SkyPlane::ShutdownBuffers()
-{
-	// Release the index buffer.
-	if(m_indexBuffer)
-	{
-		m_indexBuffer->Release();
-		m_indexBuffer = 0;
-	}
-
-	// Release the vertex buffer.
-	if(m_vertexBuffer)
-	{
-		m_vertexBuffer->Release();
-		m_vertexBuffer = 0;
-	}
-
-	return;
-}
-
 void SkyPlane::RenderBuffers(ID3D11DeviceContext* deviceContext)
 {
 	unsigned int stride;
@@ -323,24 +298,3 @@ void SkyPlane::RenderBuffers(ID3D11DeviceContext* deviceContext)
 
 	return;
 }
-
-void SkyPlane::ReleaseTextures()
-{
-	// Release the texture objects.
-	if(m_CloudTexture)
-	{
-		m_CloudTexture->Shutdown();
-		delete m_CloudTexture;
-		m_CloudTexture = 0;
-	}
-
-	if(m_PerturbTexture)
-	{
-		m_PerturbTexture->Shutdown();
-		delete m_PerturbTexture;
-		m_PerturbTexture = 0;
-	}
-
-	return;
-}
-
