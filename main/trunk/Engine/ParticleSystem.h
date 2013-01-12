@@ -47,7 +47,7 @@ class ParticleSystem
 		void SetPosition(D3DXVECTOR3 position);
 		D3DXVECTOR3 GetPosition();
 		void Shutdown();
-		bool Frame(float, ID3D11DeviceContext*);
+		bool Frame(float, ID3D11DeviceContext*, D3DXVECTOR3 cameraPosition);
 		void Render(ID3D11DeviceContext*);
 
 		ID3D11ShaderResourceView* GetTexture();
@@ -63,7 +63,7 @@ class ParticleSystem
 		void UpdateParticles(float);
 		void KillParticles(float frameTime);
 
-		bool UpdateBuffers(ID3D11DeviceContext*);
+		bool UpdateBuffers(ID3D11DeviceContext*, D3DXVECTOR3 cameraPosition);
 
 		void RenderBuffers(ID3D11DeviceContext*);
 

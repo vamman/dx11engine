@@ -559,7 +559,7 @@ bool GraphicsClass::Frame()
 	m_SkyPlane->Frame();
 
 	// Run the frame processing for the particle system.
-	m_ParticleSystem->Frame(mTimer->GetTime(), mD3D->GetDeviceContext());
+	m_ParticleSystem->Frame(mTimer->GetTime(), mD3D->GetDeviceContext(), mCamera->GetPosition());
 
 	// Render the graphics scene.
 	result = Render();

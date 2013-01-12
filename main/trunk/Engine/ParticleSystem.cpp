@@ -51,7 +51,7 @@ void ParticleSystem::Shutdown()
 	return;
 }
 
-bool ParticleSystem::Frame(float frameTime, ID3D11DeviceContext* deviceContext)
+bool ParticleSystem::Frame(float frameTime, ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition)
 {
 	bool result;
 
@@ -65,7 +65,7 @@ bool ParticleSystem::Frame(float frameTime, ID3D11DeviceContext* deviceContext)
 	UpdateParticles(frameTime);
 
 	// Update the dynamic vertex buffer with the new position of each particle.
-	result = UpdateBuffers(deviceContext);
+	result = UpdateBuffers(deviceContext, cameraPosition);
 	if(!result)
 	{
 		return false;
@@ -355,13 +355,14 @@ void ParticleSystem::KillParticles(float frameTime)
 	return;
 }
 
-bool ParticleSystem::UpdateBuffers(ID3D11DeviceContext* deviceContext)
+bool ParticleSystem::UpdateBuffers(ID3D11DeviceContext* deviceContext, D3DXVECTOR3 cameraPosition)
 {
 	int index, i;
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	VertexType* verticesPtr;
-
+	double angle;
+	float rotation, cosAlpha, sinAlpha;
 
 	// Initialize vertex array to zeros at first.
 	memset(m_vertices, 0, (sizeof(VertexType) * m_vertexCount));
@@ -371,38 +372,48 @@ bool ParticleSystem::UpdateBuffers(ID3D11DeviceContext* deviceContext)
 
 	for(i=0; i<m_currentParticleCount; i++)
 	{
+		// Calculate the rotation that needs to be applied to the billboard model to face the current camera position using the arc tangent function.
+		angle = atan2(m_particleList[i].positionX - cameraPosition.x, m_particleList[i].positionZ - cameraPosition.z) * (180.0 / D3DX_PI);
+
+		// Convert rotation into radians.
+		rotation = (float)angle * 0.0174532925f;
+
+		cosAlpha = cos(rotation);
+		sinAlpha = sin(rotation);
+
+
 		// Bottom left.
-		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX - m_particleSize, m_particleList[i].positionY - m_particleSize, m_particleList[i].positionZ);
+		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX - cosAlpha * m_particleSize, m_particleList[i].positionY - m_particleSize, m_particleList[i].positionZ - sinAlpha * m_particleSize);
 		m_vertices[index].texture = D3DXVECTOR2(0.0f, 1.0f);
 		m_vertices[index].color = D3DXVECTOR4(m_particleList[i].red, m_particleList[i].green, m_particleList[i].blue, 1.0f);
 		index++;
 
 		// Top left.
-		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX - m_particleSize, m_particleList[i].positionY + m_particleSize, m_particleList[i].positionZ);
+		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX - cosAlpha * m_particleSize, m_particleList[i].positionY + m_particleSize, m_particleList[i].positionZ - sinAlpha * m_particleSize);
 		m_vertices[index].texture = D3DXVECTOR2(0.0f, 0.0f);
 		m_vertices[index].color = D3DXVECTOR4(m_particleList[i].red, m_particleList[i].green, m_particleList[i].blue, 1.0f);
 		index++;
 
 		// Bottom right.
-		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX + m_particleSize, m_particleList[i].positionY - m_particleSize, m_particleList[i].positionZ);
+		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX + cosAlpha * m_particleSize, m_particleList[i].positionY - m_particleSize, m_particleList[i].positionZ + sinAlpha * m_particleSize);
 		m_vertices[index].texture = D3DXVECTOR2(1.0f, 1.0f);
 		m_vertices[index].color = D3DXVECTOR4(m_particleList[i].red, m_particleList[i].green, m_particleList[i].blue, 1.0f);
 		index++;
 
 		// Bottom right.
-		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX + m_particleSize, m_particleList[i].positionY - m_particleSize, m_particleList[i].positionZ);
+		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX + cosAlpha * m_particleSize, m_particleList[i].positionY - m_particleSize, m_particleList[i].positionZ + sinAlpha * m_particleSize);
 		m_vertices[index].texture = D3DXVECTOR2(1.0f, 1.0f);
 		m_vertices[index].color = D3DXVECTOR4(m_particleList[i].red, m_particleList[i].green, m_particleList[i].blue, 1.0f);
 		index++;
 
 		// Top left.
-		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX - m_particleSize, m_particleList[i].positionY + m_particleSize, m_particleList[i].positionZ);
+		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX - cosAlpha * m_particleSize, m_particleList[i].positionY + m_particleSize, m_particleList[i].positionZ - sinAlpha * m_particleSize);
 		m_vertices[index].texture = D3DXVECTOR2(0.0f, 0.0f);
 		m_vertices[index].color = D3DXVECTOR4(m_particleList[i].red, m_particleList[i].green, m_particleList[i].blue, 1.0f);
 		index++;
 
 		// Top right.
-		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX + m_particleSize, m_particleList[i].positionY + m_particleSize, m_particleList[i].positionZ);
+		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX + cosAlpha * m_particleSize, m_particleList[i].positionY + m_particleSize, m_particleList[i].positionZ + sinAlpha * m_particleSize);
 		m_vertices[index].texture = D3DXVECTOR2(1.0f, 0.0f);
 		m_vertices[index].color = D3DXVECTOR4(m_particleList[i].red, m_particleList[i].green, m_particleList[i].blue, 1.0f);
 		index++;
