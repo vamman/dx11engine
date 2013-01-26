@@ -67,12 +67,18 @@ class ParticleSystem
 
 		void RenderBuffers(ID3D11DeviceContext*);
 
+		D3DXVECTOR3 RotatePointByXAxis(D3DXVECTOR3 vec, float sinAlpha, float cosAlpha);
+		D3DXVECTOR3 RotatePointByYAxis(D3DXVECTOR3 vec, float sinAlpha, float cosAlpha);
+		D3DXVECTOR3 RotatePointByZAxis(D3DXVECTOR3 vec, float sinAlpha, float cosAlpha);
+
 	private:
 		float m_PositionX, m_PositionY, m_PositionZ, m_particleDeviationX, m_particleDeviationY, m_particleDeviationZ;
 		float m_particleVelocity, m_particleVelocityVariation;
 		float m_particleSize, m_particlesPerSecond;
 		int m_maxParticles;
 		float m_ParticleLifeTime;
+
+		float m_VerticleAngle;
 
 		int m_currentParticleCount;
 		float m_accumulatedTime;

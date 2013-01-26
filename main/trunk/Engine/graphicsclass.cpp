@@ -780,6 +780,9 @@ bool GraphicsClass::RenderScene()
 	}
 
 	////////////////// RENDER SKY DOME BEGIN //////////////////////////
+	
+	/*
+	
 	// Get the position of the camera.
 	cameraPosition = mCamera->GetPosition();
 
@@ -817,6 +820,8 @@ bool GraphicsClass::RenderScene()
 
 	// Reset the world matrix.
 	mD3D->GetWorldMatrix(worldMatrix);
+	
+	*/
 	////////////////// RENDER SKY DOME END //////////////////////////
 	
 	if (mIsWireFrameModeOn)
