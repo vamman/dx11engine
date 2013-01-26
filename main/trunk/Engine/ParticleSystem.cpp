@@ -11,6 +11,7 @@ ParticleSystem::ParticleSystem(void) :
 	, m_vertexBuffer(0)	
 	, m_indexBuffer(0)
 	, m_ParticleLifeTime(0)
+	, m_VerticleAngle(0)
 {
 }
 
@@ -361,8 +362,8 @@ bool ParticleSystem::UpdateBuffers(ID3D11DeviceContext* deviceContext, D3DXVECTO
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	VertexType* verticesPtr;
-	double angle;
-	float rotation, cosAlpha, sinAlpha;
+	double horizontalAngle, verticalAngle;
+	float horizontalRotation, verticalRotation, cosHorizontalAlpha, cosVerticalAlpha, sinHorizontalAlpha, sinVerticalAlpha;
 
 	// Initialize vertex array to zeros at first.
 	memset(m_vertices, 0, (sizeof(VertexType) * m_vertexCount));
@@ -373,47 +374,78 @@ bool ParticleSystem::UpdateBuffers(ID3D11DeviceContext* deviceContext, D3DXVECTO
 	for(i=0; i<m_currentParticleCount; i++)
 	{
 		// Calculate the rotation that needs to be applied to the billboard model to face the current camera position using the arc tangent function.
-		angle = atan2(m_particleList[i].positionX - cameraPosition.x, m_particleList[i].positionZ - cameraPosition.z) * (180.0 / D3DX_PI);
+		horizontalAngle = atan2(m_particleList[i].positionX - cameraPosition.x, m_particleList[i].positionZ - cameraPosition.z) * (180.0 / D3DX_PI);
+		// verticalAngle	= atan2(m_particleList[i].positionY - cameraPosition.y, m_particleList[i].positionZ - cameraPosition.z) * (180.0 / D3DX_PI);
+		m_VerticleAngle += 0.00001f * (180.0 / D3DX_PI);
+		verticalAngle	=  m_VerticleAngle;
+		//horizontalAngle	=  m_VerticleAngle;
+
 
 		// Convert rotation into radians.
-		rotation = (float)angle * 0.0174532925f;
+		horizontalRotation = (float)horizontalAngle * 0.0174532925f;
+		verticalRotation   = (float)verticalAngle * 0.0174532925f;
 
-		cosAlpha = cos(rotation);
-		sinAlpha = sin(rotation);
+		cosHorizontalAlpha = cos(horizontalRotation);
+		sinHorizontalAlpha = sin(horizontalRotation);
 
+		cosVerticalAlpha = cos(verticalRotation);
+		sinVerticalAlpha = sin(verticalRotation);
+
+		// Coordinates without rotations :
+		// Bottom left
+		float bottomLeftX = m_particleList[i].positionX - m_particleSize;
+		float bottomLeftY = m_particleList[i].positionY - m_particleSize;
+		float bottomLeftZ = m_particleList[i].positionZ + m_particleSize;
+
+		// Top left
+		float topLeftX = m_particleList[i].positionX - m_particleSize;
+		float topLeftY = m_particleList[i].positionY + m_particleSize;
+		float topLeftZ = m_particleList[i].positionZ + m_particleSize;
+
+		// Bottom right
+		float bottomRightX = m_particleList[i].positionX + m_particleSize;
+		float bottomRightY = m_particleList[i].positionY - m_particleSize;
+		float bottomRightZ = m_particleList[i].positionZ - m_particleSize;
+
+		// Top right
+		float topRightX = m_particleList[i].positionX + m_particleSize;
+		float topRightY = m_particleList[i].positionY + m_particleSize;
+		float topRightZ = m_particleList[i].positionZ - m_particleSize;
+
+		// For horizontal rotation we need to multiply m_particleSize in z component on - sinHorizontalAlpha
 
 		// Bottom left.
-		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX - cosAlpha * m_particleSize, m_particleList[i].positionY - m_particleSize, m_particleList[i].positionZ + sinAlpha * m_particleSize);
+		m_vertices[index].position = /*RotatePointByYAxis(D3DXVECTOR3(bottomLeftX, bottomLeftY, bottomLeftZ), sinHorizontalAlpha, cosHorizontalAlpha);*/ D3DXVECTOR3(m_particleList[i].positionX - /*cosHorizontalAlpha */ m_particleSize, m_particleList[i].positionY - sinVerticalAlpha *  m_particleSize, m_particleList[i].positionZ - /*sinHorizontalAlpha*/ cosVerticalAlpha * m_particleSize);
 		m_vertices[index].texture = D3DXVECTOR2(0.0f, 1.0f);
 		m_vertices[index].color = D3DXVECTOR4(m_particleList[i].red, m_particleList[i].green, m_particleList[i].blue, 1.0f);
 		index++;
 
 		// Top left.
-		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX - cosAlpha * m_particleSize, m_particleList[i].positionY + m_particleSize, m_particleList[i].positionZ + sinAlpha * m_particleSize);
+		m_vertices[index].position = /*RotatePointByYAxis(D3DXVECTOR3(topLeftX, topLeftY, topLeftZ), sinHorizontalAlpha, cosHorizontalAlpha);*/ D3DXVECTOR3(m_particleList[i].positionX - /*cosHorizontalAlpha */ m_particleSize, m_particleList[i].positionY + sinVerticalAlpha * m_particleSize, m_particleList[i].positionZ - /*sinHorizontalAlpha*/ cosVerticalAlpha * m_particleSize);
 		m_vertices[index].texture = D3DXVECTOR2(0.0f, 0.0f);
 		m_vertices[index].color = D3DXVECTOR4(m_particleList[i].red, m_particleList[i].green, m_particleList[i].blue, 1.0f);
 		index++;
 
 		// Bottom right.
-		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX + cosAlpha * m_particleSize, m_particleList[i].positionY - m_particleSize, m_particleList[i].positionZ - sinAlpha * m_particleSize);
+		m_vertices[index].position = /*RotatePointByYAxis(D3DXVECTOR3(bottomRightX, bottomRightY, bottomRightZ), sinHorizontalAlpha, cosHorizontalAlpha);*/ D3DXVECTOR3(m_particleList[i].positionX + /*cosHorizontalAlpha */ m_particleSize, m_particleList[i].positionY - sinVerticalAlpha * m_particleSize, m_particleList[i].positionZ + /*sinHorizontalAlpha*/ cosVerticalAlpha * m_particleSize);
 		m_vertices[index].texture = D3DXVECTOR2(1.0f, 1.0f);
 		m_vertices[index].color = D3DXVECTOR4(m_particleList[i].red, m_particleList[i].green, m_particleList[i].blue, 1.0f);
 		index++;
 
 		// Bottom right.
-		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX + cosAlpha * m_particleSize, m_particleList[i].positionY - m_particleSize, m_particleList[i].positionZ - sinAlpha * m_particleSize);
+		m_vertices[index].position = /*RotatePointByYAxis(D3DXVECTOR3(bottomRightX, bottomRightY, bottomRightZ), sinHorizontalAlpha, cosHorizontalAlpha);*/ D3DXVECTOR3(m_particleList[i].positionX + /*cosHorizontalAlpha */ m_particleSize, m_particleList[i].positionY - sinVerticalAlpha * m_particleSize, m_particleList[i].positionZ + /*sinHorizontalAlpha */ cosVerticalAlpha * m_particleSize);
 		m_vertices[index].texture = D3DXVECTOR2(1.0f, 1.0f);
 		m_vertices[index].color = D3DXVECTOR4(m_particleList[i].red, m_particleList[i].green, m_particleList[i].blue, 1.0f);
 		index++;
 
 		// Top left.
-		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX - cosAlpha * m_particleSize, m_particleList[i].positionY + m_particleSize, m_particleList[i].positionZ + sinAlpha * m_particleSize);
+		m_vertices[index].position = /*RotatePointByYAxis(D3DXVECTOR3(topLeftX, topLeftY, topLeftZ), sinHorizontalAlpha, cosHorizontalAlpha);*/ D3DXVECTOR3(m_particleList[i].positionX - /*cosHorizontalAlpha */ m_particleSize, m_particleList[i].positionY + sinVerticalAlpha * m_particleSize, m_particleList[i].positionZ - /*sinHorizontalAlpha*/ cosVerticalAlpha * m_particleSize);
 		m_vertices[index].texture = D3DXVECTOR2(0.0f, 0.0f);
 		m_vertices[index].color = D3DXVECTOR4(m_particleList[i].red, m_particleList[i].green, m_particleList[i].blue, 1.0f);
 		index++;
 
 		// Top right.
-		m_vertices[index].position = D3DXVECTOR3(m_particleList[i].positionX + cosAlpha * m_particleSize, m_particleList[i].positionY + m_particleSize, m_particleList[i].positionZ - sinAlpha * m_particleSize);
+		m_vertices[index].position = /*RotatePointByYAxis(D3DXVECTOR3(topRightX, topRightY, topRightZ), sinHorizontalAlpha, cosHorizontalAlpha);*/ D3DXVECTOR3(m_particleList[i].positionX + /*cosHorizontalAlpha */ m_particleSize, m_particleList[i].positionY + sinVerticalAlpha * m_particleSize, m_particleList[i].positionZ + /*sinHorizontalAlpha*/ cosVerticalAlpha * m_particleSize);
 		m_vertices[index].texture = D3DXVECTOR2(1.0f, 0.0f);
 		m_vertices[index].color = D3DXVECTOR4(m_particleList[i].red, m_particleList[i].green, m_particleList[i].blue, 1.0f);
 		index++;
@@ -436,6 +468,30 @@ bool ParticleSystem::UpdateBuffers(ID3D11DeviceContext* deviceContext, D3DXVECTO
 	deviceContext->Unmap(m_vertexBuffer, 0);
 
 	return true;
+}
+
+D3DXVECTOR3 ParticleSystem::RotatePointByXAxis(D3DXVECTOR3 vec, float sinAlpha, float cosAlpha)
+{
+	float xNew = vec.x;
+	float yNew = vec.y * cosAlpha - vec.z * sinAlpha;
+	float zNew = vec.y * sinAlpha + vec.z * cosAlpha;
+	return D3DXVECTOR3(xNew, yNew, zNew);
+}
+
+D3DXVECTOR3 ParticleSystem::RotatePointByYAxis(D3DXVECTOR3 vec, float sinAlpha, float cosAlpha)
+{
+	float xNew = vec.x * cosAlpha - vec.z * sinAlpha;
+	float yNew = vec.y;
+	float zNew = (-1 * vec.x) * sinAlpha + vec.z * cosAlpha;
+	return D3DXVECTOR3(xNew, yNew, zNew);
+}
+
+D3DXVECTOR3 ParticleSystem::RotatePointByZAxis(D3DXVECTOR3 vec, float sinAlpha, float cosAlpha)
+{
+	float xNew = vec.x * cosAlpha - vec.y * sinAlpha;
+	float yNew = vec.x * sinAlpha + vec.y * cosAlpha;
+	float zNew = vec.z;
+	return D3DXVECTOR3(xNew, yNew, zNew);
 }
 
 void ParticleSystem::RenderBuffers(ID3D11DeviceContext* deviceContext)
