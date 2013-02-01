@@ -50,7 +50,7 @@ namespace FileSystemHelper
 
 	inline wstring GetResourceFolder()
 	{
-		return L"../Engine/data"; // L"data" - for laptop machine; L"../Engine/data" - for desktop machine
+		return L"data"; // L"data" - for laptop machine; L"../Engine/data" - for desktop machine
 	}
 
 	inline wstring GetFilenameWithoutExtension(wstring fileName)

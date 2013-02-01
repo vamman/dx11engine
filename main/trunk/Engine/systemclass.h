@@ -25,8 +25,8 @@
 #include "positionclass.h"
 #include "SoundClass.h"
 
-#define RESOLUTION_X 1600 // 1600 - for desktop machine; 1024 - for laptop machine
-#define RESOLUTION_Y 900  // 900 - for desktop machine; 768 - for laptop machine 
+#define RESOLUTION_X 1024 // 1600 - for desktop machine; 1024 - for laptop machine
+#define RESOLUTION_Y 768  // 900 - for desktop machine; 768 - for laptop machine 
 
 
 ////////////////////////////////////////////////////////////////////////////////

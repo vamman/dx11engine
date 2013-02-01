@@ -13,16 +13,16 @@ class ModelObject
 {
 public:
 	ModelObject();
-	ModelObject(D3DXVECTOR3 position, ModelClass* model, const char* modelName,
+	ModelObject(D3DXVECTOR3 position, ModelClass* model, wstring modelName,
 				bool isInstanced, vector<InstanceType*>& instancesVector);
-	ModelObject(D3DXVECTOR3 position, ModelClass* model, const char* modelName);
+	ModelObject(D3DXVECTOR3 position, ModelClass* model, wstring modelName);
 	~ModelObject();
 
 	Material* GetMaterial();
 	void SetMaterial(Material* material);
 	vector<InstanceType*>& GetInstances();
 	ModelClass* GetModel();
-	char* GetModelName();
+	wstring GetModelName();
 	bool IsInstanced();
 
 	inline D3DXVECTOR3 GetScale()
@@ -79,7 +79,7 @@ public:
 private:
 	D3DXVECTOR4* mColor;
 	ModelClass* mModel;
-	char mModelName[20];
+	wstring mModelName;
 	bool mIsInstanced;
 	Material* mMaterial;
 	vector<InstanceType*> mInstancesVector;

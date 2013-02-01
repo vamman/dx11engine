@@ -106,11 +106,6 @@ bool SkyDomeShader::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DX
 	GradientBufferType* dataPtr2;
 	unsigned int bufferNumber;
 
-	// Transpose the matrices to prepare them for the shader.
-	// D3DXMatrixTranspose(&worldMatrix, &worldMatrix);
-	// D3DXMatrixTranspose(&viewMatrix, &viewMatrix);
-	// D3DXMatrixTranspose(&projectionMatrix, &projectionMatrix);
-
 	BasicShader::SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, false);
 
 	// Lock the gradient constant buffer so it can be written to.

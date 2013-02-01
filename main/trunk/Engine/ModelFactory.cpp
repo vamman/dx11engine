@@ -28,7 +28,7 @@ ModelFactory::~ModelFactory()
 {
 }
 
-ModelObject* ModelFactory::CreateInstancedModel(ID3D11Device* device, HWND hwnd, char* modelName, wstring fileName, int numberOfModels)
+ModelObject* ModelFactory::CreateInstancedModel(ID3D11Device* device, HWND hwnd, wstring modelName, wstring fileName, int numberOfModels)
 {
 	bool result;
 	m_modelCount = numberOfModels;
@@ -74,31 +74,22 @@ ModelObject* ModelFactory::CreateInstancedModel(ID3D11Device* device, HWND hwnd,
 		return false;
 	}
 
-	D3DXVECTOR3 posVec = D3DXVECTOR3(positionX, positionY, positionZ);
-	ModelObject* modelObject = new ModelObject(posVec, model, modelName, true, instancesVector);
-
-	mVectorOfObjects.push_back(modelObject);
-
+	ModelObject* modelObject = new ModelObject(D3DXVECTOR3(positionX, positionY, positionZ), model, modelName, true, instancesVector);
+	mVectorOfObjects[modelName] = modelObject;
 	return modelObject;
 }
 
-ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, const char* modelName, wstring fileName, ModelClass::VertexTypes vertexType)
+ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, wstring modelName, wstring fileName, ModelClass::VertexTypes vertexType)
 {
 	bool result;
-	D3DXVECTOR3 posVec;
 	ModelClass* model = new ModelClass;
 
 	FileSystemHelper::FileExtensions fileFormat = FileSystemHelper::GetFileExtension(fileName);
 
-	int existingIndex = GetExistingModelIndex((char *)fileName.c_str(), false);
-	// If this model was already loaded before
-	if (existingIndex != -1)
+	if (mVectorOfObjects[modelName])
 	{
-		model = mVectorOfObjects[existingIndex]->GetModel();
-		// Copy the model
-		model = new ModelClass(*model);
+		return mVectorOfObjects[modelName];
 	}
-	// Else load it
 	else
 	{
 		// Initialize the model.
@@ -111,77 +102,24 @@ ModelObject* ModelFactory::CreateOrdinaryModel(ID3D11Device* device, HWND hwnd, 
 	}
 
 	// Set default position
-	posVec = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-
-	ModelObject* modelObject = new ModelObject(posVec, model, modelName);
-
-	mVectorOfObjects.push_back(modelObject);
-
+	ModelObject* modelObject = new ModelObject(D3DXVECTOR3(0.0f, 0.0f, 0.0f), model, modelName);
+	mVectorOfObjects[modelName] = modelObject;
 	return modelObject;
 }
 
-int ModelFactory::GetExistingModelIndex(char* modelFileName, bool isInstanced)
+void ModelFactory::SetPositionForObject(D3DXVECTOR3 positionVector, wstring modelName)
 {
-	vector<ModelObject*>::iterator modelIt;
-	int index = 0;
-	for (modelIt = mVectorOfObjects.begin(); modelIt != mVectorOfObjects.end(); ++modelIt)
-	{
-		ModelObject* modelObject = (*modelIt);
-		if ( (strcmp(modelObject->GetModel()->GetModelFileName(), modelFileName) == 0) && (modelObject->IsInstanced() == isInstanced) )
-		{
-			return index;
-		}
-		index++;
-	}
-	return -1;
-}
-
-void ModelFactory::SetPositionForObject(D3DXVECTOR3 positionVector, char * modelName)
-{
-	vector<ModelObject*>::iterator modelIt;
-	for (modelIt = mVectorOfObjects.begin(); modelIt != mVectorOfObjects.end(); ++modelIt)
-	{
-		if (strcmp((*modelIt)->GetModelName(), modelName) == 0)
-		{
-			(*modelIt)->SetPosition(positionVector);
-			break;
-		}
-	}
+	ModelObject* modelObj = mVectorOfObjects[modelName];
+	modelObj->SetPosition(positionVector);
 }
 
 void ModelFactory::Shutdown()
 {
-	vector<DeletedModelInfo*> vectorOfDeletedModelInfos;
-	vector<ModelObject*>::iterator modelIt;
-	int deletedModes = 0;
-
-	for (modelIt = mVectorOfObjects.begin(); modelIt != mVectorOfObjects.end(); ++modelIt)
+	map<wstring, ModelObject* >::iterator iter;
+	for (iter = mVectorOfObjects.begin(); iter != mVectorOfObjects.end(); iter++)
 	{
-		ModelObject* object = (*modelIt);
-		if (!HasObjectBeenDeleted(object, vectorOfDeletedModelInfos))
-		{
-			DeletedModelInfo* deletedModel = new DeletedModelInfo();
-			deletedModel->fileName = object->GetModel()->GetModelFileName();
-			deletedModel->isInst = object->IsInstanced();
-			object->GetModel()->Shutdown();
-			vectorOfDeletedModelInfos.push_back(deletedModel);
-			deletedModes++;
-		}
+		iter->second->GetModel()->Shutdown();
 	}
-}
-
-bool ModelFactory::HasObjectBeenDeleted(ModelObject* currentDeletingObject, vector<DeletedModelInfo*>& vectorOfDeletedModelInfos)
-{
-	vector<DeletedModelInfo*>::iterator currDeletedObjInfo;
-	for (currDeletedObjInfo = vectorOfDeletedModelInfos.begin(); currDeletedObjInfo != vectorOfDeletedModelInfos.end(); ++currDeletedObjInfo)
-	{
-		if (strcmp(currentDeletingObject->GetModel()->GetModelFileName() , (*currDeletedObjInfo)->fileName) == 0 &&
-			currentDeletingObject->IsInstanced() == (*currDeletedObjInfo)->isInst)
-		{
-			return true;
-		}
-	}
-	return false;
 }
 
 int ModelFactory::GetModelCount()
@@ -189,22 +127,14 @@ int ModelFactory::GetModelCount()
 	return m_modelCount;
 }
 
-vector<ModelObject*>& ModelFactory::GetVectorOfObjects()
+map<wstring, ModelObject*>& ModelFactory::GetVectorOfObjects()
 {
 	return mVectorOfObjects;
 }
 
-ModelObject* ModelFactory::GetObjectByName(const char * modelName)
+ModelObject* ModelFactory::GetObjectByName(wstring modelName)
 {
-	vector<ModelObject*>::iterator modelIt;
-	for (modelIt = mVectorOfObjects.begin(); modelIt != mVectorOfObjects.end(); ++modelIt)
-	{
-		if (strcmp((*modelIt)->GetModelName(), modelName) == 0)
-		{
-			return (*modelIt);
-		}
-	}
-	return 0;
+	return mVectorOfObjects[modelName];
 }
 
 ID3D11Buffer* ModelFactory::GetInstanceBuffer()
