@@ -64,7 +64,6 @@ class BasicShader: public BasicResource// BaseShaderClass
 		virtual void RenderShaderInstanced(ID3D11DeviceContext* deviceContext, int vertexCount, int instanceCount) const;
 		virtual void RenderShaderOrdinary(ID3D11DeviceContext* deviceContext, int indexCount) const;
 
-		// TODO: Temprory
 		ID3D11VertexShader* m_vertexShader;
 		ID3D11PixelShader* m_pixelShader;
 		ID3D11InputLayout* m_layout;

@@ -233,6 +233,7 @@ HRESULT FireShader::RenderOrdinary( ID3D11DeviceContext* deviceContext,
 	HRESULT result = S_OK;
 
 	//////////////////////////////////////////
+	// Put this code section into BaseShader class, so all derived shaders would perform transformations.
 	// Encapsulate positioning and billboard rotation of the renderable object within shader itself.
 	// TODO: Probably need to do this step for all shaders as we know camera and model positions
 	D3DXMATRIX worldMatrix, viewMatrix, projectionMatrix, translateMatrix;

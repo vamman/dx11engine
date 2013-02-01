@@ -145,16 +145,15 @@ HRESULT GraphicsClass::Init(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	InitLights();
-//	InitShaders(hwnd);
 	InitMaterials();
 	
 	for (int i = 0; i < 4; ++i)
 	{
-		char* prefix = "light_";
-		char resultName[20];
-		char number[5];
-		_itoa_s(i, number, 10);
-		sprintf_s(resultName, "%s%s", prefix, number);
+		wchar_t number[5];
+		_itow(i, number, 10);
+		wstring num = wstring(number);
+		wstring prefixW = L"light_";
+		wstring resultName = prefixW + num;
 
 		mPointLights[i] = new LightClass;
 		if(!mPointLights[i])
@@ -402,20 +401,20 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 	Timer::GetInstance()->SetTimeA();
 
 	//  Create instanced sphere
-	CREATE_INSTANCED_OBJ_WITH_MAT("instancedSphere", FileSystemHelper::GetResourcePath(L"/models/sphere.txt"), "NormalWithSpec", 5)
+	CREATE_INSTANCED_OBJ_WITH_MAT(L"instancedSphere", FileSystemHelper::GetResourcePath(L"/models/sphere.txt"), "NormalWithSpec", 5)
 
 	// Create floor
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "floor", FileSystemHelper::GetResourcePath(L"/models/floor.txt"), "TexturedFloor", ModelClass::NormalMapVertexType);
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, L"floor", FileSystemHelper::GetResourcePath(L"/models/floor.txt"), "TexturedFloor", ModelClass::NormalMapVertexType);
 	object->SetPosition(D3DXVECTOR3(130.0f, 1.0f, 132.0f)); 
 
 	// Create 10 ordinary spheres
 	for (int i = 0; i < 5; ++i)
 	{
-		char* prefix = "sphere_";
-		char resultName[20];
-		char number[5];
-		_itoa_s(i, number, 10);
-		sprintf_s(resultName, "%s%s", prefix, number);
+		wchar_t number[5];
+		_itow(i, number, 10);
+		wstring num = wstring(number);
+		wstring prefixW = L"sphere_";
+		wstring resultName = prefixW + num;
 
 		CREATE_ORDINARY_OBJ_WITH_MAT(object, resultName, FileSystemHelper::GetResourcePath(L"/models/sphere.txt"), "NormalWithSpec", ModelClass::NormalMapVertexType);
 
@@ -436,24 +435,22 @@ bool GraphicsClass::InitObjects(HWND hwnd)
 	}
 
 	// Create cube
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "cube", FileSystemHelper::GetResourcePath(L"/models/cube.txt"), "NormalWithSpec", ModelClass::NormalMapVertexType);
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, L"cube", FileSystemHelper::GetResourcePath(L"/models/cube.txt"), "NormalWithSpec", ModelClass::NormalMapVertexType);
 	object->SetPosition(D3DXVECTOR3(130.0f, 1.0f, 130.0f));
 
 	// Create space compound from TXT
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "spaceCompound", FileSystemHelper::GetResourcePath(L"/models/spaceCompound.txt"), "spaceCompoundMaterial", ModelClass::NormalMapVertexType);
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, L"spaceCompoundTxt", FileSystemHelper::GetResourcePath(L"/models/spaceCompound.txt"), "spaceCompoundMaterial", ModelClass::NormalMapVertexType);
 	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 132.0f));
 
 	// Create space compound from OBJ
-	/*
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "spaceCompound", string("data/models/spaceCompound/spaceCompound.obj"), "spaceCompoundMaterial");
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, L"spaceCompoundObj", FileSystemHelper::GetResourcePath(L"/models/spaceCompound/spaceCompound.obj"), "spaceCompoundMaterial", ModelClass::NormalMapVertexType);
 	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 132.0f));
-	*/
 
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "cubeObj", FileSystemHelper::GetResourcePath(L"/models/cube.obj"), "NormalWithSpec", ModelClass::NormalMapVertexType);
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, L"cubeObj", FileSystemHelper::GetResourcePath(L"/models/cube.obj"), "NormalWithSpec", ModelClass::NormalMapVertexType);
 	object->SetPosition(D3DXVECTOR3(130.0f, 0.0f, 125.0f));
 
 	// Create fire object
-	CREATE_ORDINARY_OBJ_WITH_MAT(object, "fireObj", FileSystemHelper::GetResourcePath(L"/models/square.txt"), "fireMaterial", ModelClass::TextureVertexType);
+	CREATE_ORDINARY_OBJ_WITH_MAT(object, L"fireObj", FileSystemHelper::GetResourcePath(L"/models/square.txt"), "fireMaterial", ModelClass::TextureVertexType);
 	object->SetPosition(D3DXVECTOR3(135.0f, 1.0f, 125.0f));
 
 	Timer::GetInstance()->SetTimeB();
@@ -781,8 +778,6 @@ bool GraphicsClass::RenderScene()
 
 	////////////////// RENDER SKY DOME BEGIN //////////////////////////
 	
-	/*
-	
 	// Get the position of the camera.
 	cameraPosition = mCamera->GetPosition();
 
@@ -813,7 +808,7 @@ bool GraphicsClass::RenderScene()
 	// Turn back face culling back on.
 	mD3D->TurnOnCulling();
 	
-	// RenderSkyPlane(worldMatrix, viewMatrix, projectionMatrix);
+	RenderSkyPlane(worldMatrix, viewMatrix, projectionMatrix);
 
 	// Turn the Z buffer back on.
 	mD3D->TurnZBufferOn();
@@ -821,7 +816,6 @@ bool GraphicsClass::RenderScene()
 	// Reset the world matrix.
 	mD3D->GetWorldMatrix(worldMatrix);
 	
-	*/
 	////////////////// RENDER SKY DOME END //////////////////////////
 	
 	if (mIsWireFrameModeOn)
@@ -846,7 +840,7 @@ bool GraphicsClass::RenderScene()
 		RenderTerrainWithQuadTree(worldMatrix, viewMatrix, projectionMatrix);
 	}
 
-	ModelObject* modelObj = ModelFactory::GetInstance()->GetObjectByName("floor");
+	ModelObject* modelObj = ModelFactory::GetInstance()->GetObjectByName(L"floor");
 	if (mTerrainRenderType == Terrain::TerrainRenderType::RENDER_QUAD_TREE)
 	{
 		SetPositionAboveTerrain(modelObj, 0.1f);
@@ -994,7 +988,7 @@ HRESULT GraphicsClass::RenderFire()
 	// Turn on alpha blending for the fire transparency.
 	mD3D->TurnOnAlphaBlending();
 
-	ModelObject* modelObj = ModelFactory::GetInstance()->GetObjectByName("fireObj");
+	ModelObject* modelObj = ModelFactory::GetInstance()->GetObjectByName(L"fireObj");
 	modelObj->GetModel()->RenderOrdinary(mD3D->GetDeviceContext(), ModelClass::TextureVertexType);
 
 	vector<ID3D11ShaderResourceView*> textureArray;
@@ -1028,34 +1022,6 @@ HRESULT GraphicsClass::RenderParticles()
 	vector<ID3D11ShaderResourceView*> textureArray;
 	textureArray.push_back(m_ParticleSystem->GetTexture());
 
-	//////////////////////////////////////////
-	// Billboard the particles
-	// ///////////////////////////////////////
-	/*
-	cameraPosition = mCamera->GetPosition();
-
-	// Get the world, view, and projection matrices from the camera and d3d objects.
-	mCamera->GetViewMatrix(viewMatrix);
-	D3DClass::GetInstance()->GetProjectionMatrix(projectionMatrix);
-
-	particlesPosition = m_ParticleSystem->GetPosition();
-	// Calculate the rotation that needs to be applied to the billboard model to face the current camera position using the arc tangent function.
-	angle = atan2(particlesPosition.x - cameraPosition.x, particlesPosition.z - cameraPosition.z) * (180.0 / D3DX_PI);
-
-	// Convert rotation into radians.
-	rotation = (float)angle * 0.0174532925f;
-
-	// Setup the rotation the billboard at the origin using the world matrix.
-	D3DXMatrixRotationY(&worldMatrix, rotation);
-
-	// Setup the translation matrix from the billboard model.
-	D3DXMatrixTranslation(&translateMatrix, particlesPosition.x, particlesPosition.y, particlesPosition.z);
-
-	// Finally combine the rotation and translation matrices to create the final world matrix for the billboard model.
-	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &translateMatrix); 
-	*/
-	//////////////////////////////////////////
-	
 	// Get the world, view, and projection matrices from the camera and d3d objects.
 	mD3D->GetWorldMatrix(worldMatrix);
 	mCamera->GetViewMatrix(viewMatrix);
@@ -1176,8 +1142,8 @@ bool GraphicsClass::RenderObjects(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
 	ModelObject* modelObj;
 	D3DXVECTOR3 posVector;
 
-	vector<ModelObject*> listOfModels = ModelFactory::GetInstance()->GetVectorOfObjects();
-	vector<ModelObject*>::iterator modelIt;
+	map<wstring, ModelObject*> modelsMap = ModelFactory::GetInstance()->GetVectorOfObjects();
+	map<wstring, ModelObject*>::iterator modelIt;
 	ID3D11DeviceContext* deviceContext = mD3D->GetDeviceContext();
 
 	float dirDeltaStep = 0.01f;
@@ -1194,13 +1160,13 @@ bool GraphicsClass::RenderObjects(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
 	rotation += (float)D3DX_PI * 0.00099f;
 	if(rotation > 360.0f) { rotation -= 360.0f; }
 
-	for (modelIt = listOfModels.begin(); modelIt != listOfModels.end(); ++modelIt)
+	for (modelIt = modelsMap.begin(); modelIt != modelsMap.end(); ++modelIt)
 	{
-		modelObj = (*modelIt);
+		modelObj = (*modelIt).second;
 		model = modelObj->GetModel();
 
 		// Exclusions. TODO: Create understandable way of excluding objects from main draw loop
-		if ( strcmp(modelObj->GetModelName(), "skyDomeSphere") == 0 || strcmp(modelObj->GetModelName(), "skyDomeCube") == 0 )
+		if (modelObj->GetModelName().compare(L"skyDomeSphere") == 0 || modelObj->GetModelName().compare(L"skyDomeCube") == 0)
 		{
 			continue;
 		}
@@ -1221,17 +1187,15 @@ bool GraphicsClass::RenderObjects(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
 		// Render non-instanced objects
 		else if (!modelObj->IsInstanced())
 		{
-			
 			// Draw cube
-			if (strcmp(modelObj->GetModelName(), "cube") == 0)
+			if (modelObj->GetModelName().compare(L"cube") == 0)
 			{
 				modelObj->SetRotation(rotation);
 			//	SetPositionAboveTerrain(modelObj, 1.0f);
 				RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_AMBIENT_LIGHT, false);
 			}
 			// Draw spaceCompound
-			/*
-			else if (strcmp(modelObj->GetModelName(), "spaceCompound") == 0)
+			else if (modelObj->GetModelName().compare(L"spaceCompoundObj") == 0 || modelObj->GetModelName().compare(L"spaceCompoundTxt") == 0)
 			{
 				// Turn back face culling back off.
 				mD3D->TurnOffCulling();
@@ -1239,9 +1203,9 @@ bool GraphicsClass::RenderObjects(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
 				// Turn back face culling back on.
 				mD3D->TurnOnCulling();
 			}
-			*/
+			
 			// Draw cubeObj
-			if (strcmp(modelObj->GetModelName(), "cubeObj") == 0)
+			if (modelObj->GetModelName().compare(L"cubeObj") == 0)
 			{
 				// Turn back face culling back off.
 				mD3D->TurnOffCulling();
@@ -1249,11 +1213,10 @@ bool GraphicsClass::RenderObjects(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
 				// Turn back face culling back on.
 				mD3D->TurnOnCulling();
 			}
-
-			else if (strcmp(modelObj->GetModelName(), "floor") != 0) // ordinary created spheras
+			else if (modelObj->GetModelName().compare(L"floor") != 0)
 			{
-				string objName(modelObj->GetModelName());
-				string sphereObjPrefix, lightObjPrefix;
+				wstring objName(modelObj->GetModelName());
+				wstring sphereObjPrefix, lightObjPrefix;
 
 				sphereObjPrefix = objName.substr(0, 7);
 				lightObjPrefix  = objName.substr(0, 6);
@@ -1267,14 +1230,14 @@ bool GraphicsClass::RenderObjects(D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
 				// If it can be seen then render it, if not skip this model and check the next sphere.
 				if(renderModel)
 				{
-					if (strcmp(sphereObjPrefix.c_str(), "sphere_") == 0)
+					if (sphereObjPrefix.compare(L"sphere_") == 0)
 					{
 						float rot = numIndex % 2 == 0 ? rotation : -rotation;
 						modelObj->SetRotation(rot);
 					//	SetPositionAboveTerrain(modelObj, radius);
 						RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_SPECULAR_LIGHT, false);
 					}
-					else if (strcmp(lightObjPrefix.c_str(), "light_") == 0)
+					else if (lightObjPrefix.compare(L"light_") == 0)
 					{
 						modelObj->SetScale(D3DXVECTOR3(0.2f, 0.2f, 0.2f));
 						RenderObject(modelObj, deviceContext, viewMatrix, projectionMatrix, mDirSpecLight, LightClass::DIRECTIONAL_SPECULAR_LIGHT, false);

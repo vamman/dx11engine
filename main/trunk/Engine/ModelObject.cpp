@@ -7,23 +7,23 @@ ModelObject::ModelObject() : mScale(1.0f, 1.0f, 1.0f), mRotationAngle(0)
 	mMaterial = 0;
 }
 
-ModelObject::ModelObject(D3DXVECTOR3 position, ModelClass* model, const char* modelName,
+ModelObject::ModelObject(D3DXVECTOR3 position, ModelClass* model, wstring modelName,
 	bool isInstanced, vector<InstanceType*>& instancesVector) : mScale(1.0f, 1.0f, 1.0f), mRotationAngle(0)
 {
 	mMaterial = 0; // Set default material instead
 	mPosition = position;
 	mModel = model;
-	strcpy_s(mModelName, modelName);
+	mModelName = modelName;
 	mIsInstanced = isInstanced;
 	mInstancesVector = instancesVector;
 }
 
-ModelObject::ModelObject(D3DXVECTOR3 position, ModelClass* model, const char* modelName) : mScale(1.0f, 1.0f, 1.0f), mRotationAngle(0)
+ModelObject::ModelObject(D3DXVECTOR3 position, ModelClass* model, wstring modelName) : mScale(1.0f, 1.0f, 1.0f), mRotationAngle(0)
 {
 	mMaterial = 0; // Set default material instead
 	mPosition = position;
 	mModel = model;
-	strcpy_s(mModelName, modelName);
+	mModelName = modelName;
 	mIsInstanced = false;
 }
 
@@ -47,7 +47,7 @@ ModelClass* ModelObject::GetModel()
 	return mModel;
 }
 
-char* ModelObject::GetModelName()
+wstring ModelObject::GetModelName()
 {
 	return mModelName;
 }
